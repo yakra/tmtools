@@ -68,16 +68,17 @@ class LengthArray
 	{	o = new char[NumFields];
 		n = new char[NumFields];
 	}
-};
+};//*/
 
 class field
 {	public:
 	char name[11];	// 11 B on disk; 10 B practical storage space. Final element is null terminator.
 	char type;	// Field type in ASCII (C, D, L, M, or N).
-	int DataAddx;
+	unsigned int DataAddx;
 	char len;
 	char DecCount;	// may be useful for numeric fields?
-	char padding[14];
+	char padding[6];
+	char *MaxVal; // only works with 64-bit memory addressing, E.G. x86-64
 	// No more variables! Must be able to write/read a whole array to/from disk.
 
 	char* FindMax(DBF *dbf, field *FieldArray, LengthArray &lenA, unsigned int index, unsigned short &rLen)
@@ -92,7 +93,7 @@ class field
 
 		char *value = new char[len+1]; value[len] = 0;
 		char max = 0;
-		char *MaxVal = new char[len+1];
+		char *oMaxVal = new char[len+1];
 
 		ifstream inDBF(dbf->name, ios::in);
 		inDBF.seekg(dbf->HeaLen+1);								// seek to first record
@@ -103,7 +104,7 @@ class field
 			while (value[strlen(value)-1] == ' ') value[strlen(value)-1] = 0;	// trim whitespace
 			if (strlen(value) > max)
 			{	max = strlen(value);
-				strcpy(MaxVal, value);
+				strcpy(oMaxVal, value);
 			}
 			inDBF.seekg(dbf->RecLen-len, ios::cur);
 			ProgBar5(rNum, dbf->NumRec+1);	// zeroth vs first
@@ -112,15 +113,17 @@ class field
 		inDBF.close();
 		lenA.n[index] = max;
 		rLen -= (len-max);
-		return MaxVal;
+		return oMaxVal;
 	}
-};
+}; //WARNING: functionality is predicated on sizeof(field) being 32 bytes. Meaning, 64-bit memory addressing; see comment for *MaxVal above
 
 int main(int argc, char *argv[])
 {	//ofstream timestamp("timestamp"); //TEST
 	cout << endl;
-	if (argc != 3)
-	{	cout << "usage: ./DBFtrim InputFile OutputFile\n\n";
+	if (argc != 3)	{ cout << "usage: ./DBFtrim InputFile OutputFile\n\n"; return 0; }
+	if (!strcmp(argv[1], argv[2]))
+	{	cout << "FATAL ERROR: input and output file paths match!\n";
+		cout << "If you wanna be clever, try /home/dave/foo.dbf & /home/dave/./foo.dbf or something\n\n";
 		return 0;
 	}
 
@@ -134,7 +137,6 @@ int main(int argc, char *argv[])
 	ifstream inDBF(argv[1], ios::in);
 	inDBF.seekg(0x20); // field descriptor array offset
 	inDBF.read((char*)FieldArray, 32*oDBF.NumFields);
-	//cout << &FieldArray[0] << '\t' << &FieldArray[1] << '\t' << &FieldArray[2] << endl; // TEST
 	cout << "FieldName\tType\tLength\tMax\tData\n";
 	for (unsigned int i = 0; i < oDBF.NumFields; i++)
 	{	char *MaxVal = FieldArray[i].FindMax(&oDBF, FieldArray, lenA, i, tDBF.RecLen);
@@ -145,11 +147,6 @@ int main(int argc, char *argv[])
 	}//*/
 
 	// write output file
-	if (!strcmp(argv[1], argv[2]))
-	{	cout << "FATAL ERROR: input and output file paths match!\n";
-		cout << "If you wanna be clever, try /home/dave/foo.dbf & /home/dave/./foo.dbf or something\n\n";
-		return 0;
-	} //TODO move earlier in main(), in order to not have to wait for the file crawl
 	ofstream outDBF(argv[2]);
 	// write header
 	outDBF.write((char*)&tDBF, 32);
