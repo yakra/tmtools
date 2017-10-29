@@ -3,6 +3,10 @@ using namespace std;
 #include <iostream>
 #include <cstring>
 
+inline void ProgBar5(unsigned int numerator, unsigned int denominator)
+{	cout << numerator << '/' << denominator << char(0x0D);
+}
+
 class DBF
 {	public:
 	// first 32 bytes of header, as contained in file	
@@ -94,14 +98,17 @@ class field
 		inDBF.seekg(dbf->HeaLen+1);								// seek to first record
 		for (unsigned int i = 0; i < index; i++) inDBF.seekg(FieldArray[i].len, ios::cur);	// seek to first record's Key Field
 		for (unsigned int rNum = 0; rNum < dbf->NumRec && inDBF.tellg() < dbf->size; rNum++)
-		{	inDBF.read(value, len);							// read in value from file
+		{	//unsigned char LastPct = 255; //TEST
+			inDBF.read(value, len);							// read in value from file
 			while (value[strlen(value)-1] == ' ') value[strlen(value)-1] = 0;	// trim whitespace
 			if (strlen(value) > max)
 			{	max = strlen(value);
 				strcpy(MaxVal, value);
 			}
 			inDBF.seekg(dbf->RecLen-len, ios::cur);
+			ProgBar5(rNum, dbf->NumRec+1);	// zeroth vs first
 		}
+			cout << "                                                                                " << char(0x0D);
 		inDBF.close();
 		lenA.n[index] = max;
 		rLen -= (len-max);
@@ -110,7 +117,8 @@ class field
 };
 
 int main(int argc, char *argv[])
-{	cout << endl;
+{	//ofstream timestamp("timestamp"); //TEST
+	cout << endl;
 	if (argc != 3)
 	{	cout << "usage: ./DBFtrim InputFile OutputFile\n\n";
 		return 0;
