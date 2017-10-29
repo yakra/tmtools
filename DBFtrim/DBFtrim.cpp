@@ -46,19 +46,6 @@ class DBF
 			cout << NumFields << " fields:\n";
 		     }
 	}
-
-	DBF(DBF *src) // copy from existing
-	{	ValidFile = src->ValidFile;
-		LastUpdate[0] = src->LastUpdate[0]; LastUpdate[1] = src->LastUpdate[1]; LastUpdate[2] = src->LastUpdate[2];
-		NumRec = src->NumRec;	HeaLen = src->HeaLen;	RecLen = src->RecLen;
-		for (char c = 0; c < 20; c++) reserved[c] = src->reserved[c];
-
-		size = src->size; //unused, but what the hey
-		NumFields = src->NumFields;
-		FirstChar = src->FirstChar; FinalChar = src->FinalChar;
-		borderline = src->borderline;
-		// not copying name, as it will be different
-	}
 };
 
 class LengthArray
@@ -129,7 +116,7 @@ int main(int argc, char *argv[])
 
 	bool OK;
 	DBF oDBF(argv[1], OK);	if (!OK) return 0;
-	DBF tDBF(&oDBF);
+	DBF tDBF(oDBF);
 	field *FieldArray = new field[oDBF.NumFields];
 	LengthArray lenA(oDBF.NumFields);
 
@@ -137,11 +124,11 @@ int main(int argc, char *argv[])
 	ifstream inDBF(argv[1], ios::in);
 	inDBF.seekg(0x20); // field descriptor array offset
 	inDBF.read((char*)FieldArray, 32*oDBF.NumFields);
+
 	cout << "FieldName\tType\tLength\tMax\tData\n";
 	for (unsigned int i = 0; i < oDBF.NumFields; i++)
 	{	char *MaxVal = FieldArray[i].FindMax(&oDBF, FieldArray, lenA, i, tDBF.RecLen);
-		cout << FieldArray[i].name;
-		if (strlen(FieldArray[i].name) < 8) cout << '\t'; // tab stop
+		cout << FieldArray[i].name;	if (strlen(FieldArray[i].name) < 8) cout << '\t'; // tab stop
 		cout << '\t' << FieldArray[i].type << '\t' << int(FieldArray[i].len);
 		cout << '\t' << int(lenA.n[i]) << '\t' << MaxVal << endl;
 	}//*/
