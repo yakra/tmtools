@@ -9,15 +9,6 @@ inline void ProgBar5(unsigned int numerator, unsigned int denominator)
 
 class DBF;
 
-class LengthArray //TODO delete me
-{	public:
-	char *o, *n;
-	LengthArray(unsigned int NumFields)
-	{	o = new char[NumFields];
-		n = new char[NumFields];
-	}
-};//*/
-
 class field
 {	public:
 	char name[11];	// 11 B on disk; 10 B practical storage space. Final element is null terminator.
@@ -28,7 +19,7 @@ class field
 	char padding[6];
 	char *MaxVal; // only works with 64-bit memory addressing, E.G. x86-64
 	// No more variables! Must be able to write/read a whole array to/from disk.
-	char* FindMax(DBF*, DBF*, LengthArray&, unsigned int);
+	char* FindMax(DBF*, DBF*, unsigned int);
 }; //WARNING: functionality is predicated on sizeof(field) being 32 bytes. Meaning, 64-bit memory addressing; see comment for *MaxVal above
 
 class DBF
@@ -81,11 +72,9 @@ class DBF
 	}
 };
 
-char* field::FindMax(DBF *oDBF, DBF *tDBF, LengthArray &lenA, unsigned int index)
-{	lenA.o[index] = len;
-	if (type != 'C')
-	{	lenA.n[index] = len;
-		char *message = new char[30];
+char* field::FindMax(DBF *oDBF, DBF *tDBF, unsigned int index)
+{	if (type != 'C')
+	{	char *message = new char[30];
 		strcpy(message, "  <Type ? fields unsupported>");
 		message[8] = type;
 		return message;
@@ -111,7 +100,7 @@ char* field::FindMax(DBF *oDBF, DBF *tDBF, LengthArray &lenA, unsigned int index
 	}
 		cout << "                                                                                " << char(0x0D);
 	inDBF.close();
-	lenA.n[index] = max;
+	tDBF->fArr[index].len = max;
 	tDBF->RecLen -= (len-max);
 	return oMaxVal;
 }
@@ -129,16 +118,15 @@ int main(int argc, char *argv[])
 	bool OK;
 	DBF oDBF(argv[1], OK);	if (!OK) return 0;	// o is for original
 	DBF tDBF(oDBF);		tDBF.CopyFields(oDBF);	// t is for trimmed
-	LengthArray lenA(oDBF.NumFields); //TODO get rid of this variable
 
 	// field info display
 	cout << "FieldName\tType\tLength\tMax\tData\n";
 	for (unsigned int i = 0; i < oDBF.NumFields; i++)
-	{	char *MaxVal = oDBF.fArr[i].FindMax(&oDBF, &tDBF, lenA, i);
+	{	char *MaxVal = oDBF.fArr[i].FindMax(&oDBF, &tDBF, i);
 		// FindMax called before MaxVal printed because FindMax needs to change lenA.n by reference
 		cout << oDBF.fArr[i].name;	if (strlen(oDBF.fArr[i].name) < 8) cout << '\t'; // tab stop
 		cout << '\t' << oDBF.fArr[i].type << '\t' << int(oDBF.fArr[i].len);
-		cout << '\t' << int(lenA.n[i]) << '\t' << MaxVal << endl;
+		cout << '\t' << int(tDBF.fArr[i].len) << '\t' << MaxVal << endl;
 	}//*/
 
 	// write output file
@@ -147,16 +135,14 @@ int main(int argc, char *argv[])
 	inDBF.seekg(oDBF.HeaLen-1); // minus 1 in order to get 0Dh stored as the field terminator.
 	// write header
 	outDBF.write((char*)&tDBF, 32);
-	for (unsigned int fNum = 0; fNum < oDBF.NumFields; fNum++) // replace FieldArray length with NewLen
-		oDBF.fArr[fNum].len = lenA.n[fNum];		//TODO will bo gye-bye when second DBF is implemented
-	outDBF.write((char*)oDBF.fArr, 32*oDBF.NumFields);	// write field descriptor array //TODO use tDBF.fArr instead
+	outDBF.write((char*)tDBF.fArr, 32*tDBF.NumFields);	// write field descriptor array
 	outDBF.put(inDBF.get());				// 0Dh stored as the field terminator.
 	// write records
 	for (unsigned int rNum = 0; rNum < oDBF.NumRec && inDBF.tellg() < oDBF.size; rNum++)
 	{	outDBF.put(inDBF.get()); // ' ' or '*' precedes record contents
 		for (unsigned int fNum = 0; fNum < oDBF.NumFields; fNum++)
-		{	for (char c = 0; c < lenA.n[fNum]; c++) outDBF.put(inDBF.get());
-			inDBF.seekg(lenA.o[fNum]-lenA.n[fNum], ios::cur);
+		{	for (char c = 0; c < tDBF.fArr[fNum].len; c++) outDBF.put(inDBF.get());
+			inDBF.seekg(oDBF.fArr[fNum].len-tDBF.fArr[fNum].len, ios::cur);
 		}
 	}//*/
 	if (!tDBF.borderline) outDBF.put(0x1A); // EOF marker
