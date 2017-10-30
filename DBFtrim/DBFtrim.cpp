@@ -28,7 +28,7 @@ class field
 	char padding[6];
 	char *MaxVal; // only works with 64-bit memory addressing, E.G. x86-64
 	// No more variables! Must be able to write/read a whole array to/from disk.
-	char* FindMax(DBF*, field*, LengthArray&, unsigned int, unsigned short&);
+	char* FindMax(DBF*, LengthArray&, unsigned int, unsigned short&);
 }; //WARNING: functionality is predicated on sizeof(field) being 32 bytes. Meaning, 64-bit memory addressing; see comment for *MaxVal above
 
 class DBF
@@ -81,7 +81,7 @@ class DBF
 	}
 };
 
-char* field::FindMax(DBF *dbf, field *FieldArray, LengthArray &lenA, unsigned int index, unsigned short &rLen)
+char* field::FindMax(DBF *dbf, LengthArray &lenA, unsigned int index, unsigned short &rLen)
 {	lenA.o[index] = len;
 	if (type != 'C')
 	{	lenA.n[index] = len;
@@ -97,7 +97,7 @@ char* field::FindMax(DBF *dbf, field *FieldArray, LengthArray &lenA, unsigned in
 
 	ifstream inDBF(dbf->name, ios::in);
 	inDBF.seekg(dbf->HeaLen+1);								// seek to first record
-	for (unsigned int i = 0; i < index; i++) inDBF.seekg(FieldArray[i].len, ios::cur);	// seek to first record's Key Field
+	for (unsigned int i = 0; i < index; i++) inDBF.seekg(dbf->fArr[i].len, ios::cur);	// seek to first record's Key Field
 	for (unsigned int rNum = 0; rNum < dbf->NumRec && inDBF.tellg() < dbf->size; rNum++)
 	{	//unsigned char LastPct = 255; //TEST
 		inDBF.read(value, len);							// read in value from file
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 	// field info display
 	cout << "FieldName\tType\tLength\tMax\tData\n";
 	for (unsigned int i = 0; i < oDBF.NumFields; i++)
-	{	char *MaxVal = oDBF.fArr[i].FindMax(&oDBF, oDBF.fArr, lenA, i, tDBF.RecLen);
+	{	char *MaxVal = oDBF.fArr[i].FindMax(&oDBF, lenA, i, tDBF.RecLen);
 		// FindMax called before MaxVal printed because FindMax needs to change lenA.n by reference
 		cout << oDBF.fArr[i].name;	if (strlen(oDBF.fArr[i].name) < 8) cout << '\t'; // tab stop
 		cout << '\t' << oDBF.fArr[i].type << '\t' << int(oDBF.fArr[i].len);
