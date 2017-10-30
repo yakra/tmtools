@@ -19,7 +19,7 @@ class field
 	char padding[6];
 	char *MaxVal; // only works with 64-bit memory addressing, E.G. x86-64
 	// No more variables! Must be able to write/read a whole array to/from disk.
-	char* FindMax(DBF*, DBF*, unsigned int);
+	void FindMax(DBF*, DBF*, unsigned int);
 }; //WARNING: functionality is predicated on sizeof(field) being 32 bytes. Meaning, 64-bit memory addressing; see comment for *MaxVal above
 
 class DBF
@@ -69,40 +69,47 @@ class DBF
 	{	fArr = new field[NumFields];
 		for (unsigned int byte = 0; byte < 32*NumFields; byte++)
 			*((char*)fArr+byte) = *((char*)oDBF.fArr+byte);
+		for (unsigned int i = 0; i < NumFields; i++)
+		  if (fArr[i].MaxVal)
+		  {	fArr[i].MaxVal = 0;
+			cout << "Warning: overwriting reserved nonzero bytes in field #" << i << ", " << fArr[i].name << endl;
+		  }
 	}
 };
 
-char* field::FindMax(DBF *oDBF, DBF *tDBF, unsigned int index)
+void field::FindMax(DBF *oDBF, DBF *tDBF, unsigned int index)
 {	if (type != 'C')
-	{	char *message = new char[30];
-		strcpy(message, "  <Type ? fields unsupported>");
-		message[8] = type;
-		return message;
-	}//*/
+	{	if (!MaxVal) // ELSE case should only ever be "  <Type ? fields unsupported>", where '?' is field type
+		{	MaxVal = new char[30];
+			strcpy(MaxVal, "  <Type ? fields unsupported>");
+			MaxVal[8] = type;
+		}
+		return;
+	}
 
-	char *value = new char[len+1]; value[len] = 0;
 	char max = 0;
-	char *oMaxVal = new char[len+1];
-
 	ifstream inDBF(oDBF->name, ios::in);
-	inDBF.seekg(oDBF->HeaLen+1);								// seek to first record
+	inDBF.seekg(oDBF->HeaLen+1);								// seek to first record, and past ' ' or '*'
 	for (unsigned int i = 0; i < index; i++) inDBF.seekg(oDBF->fArr[i].len, ios::cur);	// seek to first record's Key Field
 	for (unsigned int rNum = 0; rNum < oDBF->NumRec && inDBF.tellg() < oDBF->size; rNum++)
-	{	//unsigned char LastPct = 255; //TEST
+	{	//unsigned char LastPct = 255; //TEST (for a deprecated ProgBar)
+		char *value = new char[len+1]; value[len] = 0;
 		inDBF.read(value, len);							// read in value from file
 		while (value[strlen(value)-1] == ' ') value[strlen(value)-1] = 0;	// trim whitespace
 		if (strlen(value) > max)
 		{	max = strlen(value);
-			strcpy(oMaxVal, value);
+			/*if (MaxVal)*/ delete[] MaxVal; // delete[]ing a null pointer appears to be OK
+			MaxVal = value;
+			
 		}
-		inDBF.seekg(oDBF->RecLen-len, ios::cur);
-		ProgBar5(rNum, oDBF->NumRec+1);	// zeroth vs first
+		inDBF.seekg(oDBF->RecLen-len, ios::cur);	// seek to same field, next record
+		ProgBar5(rNum, oDBF->NumRec+1);			// zeroth vs first
 	}
-		cout << "                                                                                " << char(0x0D);
+	cout << "                                                                                " << char(0x0D); // wipe out ProgBar
+		//FIXME this mungs the tab stops, but leaving it in for now. It will probably simply go away.
 	inDBF.close();
 	tDBF->fArr[index].len = max;
 	tDBF->RecLen -= (len-max);
-	return oMaxVal;
 }
 
 int main(int argc, char *argv[])
@@ -122,11 +129,11 @@ int main(int argc, char *argv[])
 	// field info display
 	cout << "FieldName\tType\tLength\tMax\tData\n";
 	for (unsigned int i = 0; i < oDBF.NumFields; i++)
-	{	char *MaxVal = oDBF.fArr[i].FindMax(&oDBF, &tDBF, i);
+	{	oDBF.fArr[i].FindMax(&oDBF, &tDBF, i);
 		// FindMax called before MaxVal printed because FindMax needs to change lenA.n by reference
 		cout << oDBF.fArr[i].name;	if (strlen(oDBF.fArr[i].name) < 8) cout << '\t'; // tab stop
 		cout << '\t' << oDBF.fArr[i].type << '\t' << int(oDBF.fArr[i].len);
-		cout << '\t' << int(tDBF.fArr[i].len) << '\t' << MaxVal << endl;
+		cout << '\t' << int(tDBF.fArr[i].len) << '\t' << oDBF.fArr[i].MaxVal << endl;
 	}//*/
 
 	// write output file
