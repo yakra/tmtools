@@ -73,6 +73,12 @@ class DBF
 			cout << NumFields << " fields:\n";
 		     }
 	}
+
+	void CopyFields(DBF& oDBF)
+	{	fArr = new field[NumFields];
+		for (unsigned int byte = 0; byte < 32*NumFields; byte++)
+			*((char*)fArr+byte) = *((char*)oDBF.fArr+byte);
+	}
 };
 
 char* field::FindMax(DBF *dbf, field *FieldArray, LengthArray &lenA, unsigned int index, unsigned short &rLen)
@@ -122,7 +128,7 @@ int main(int argc, char *argv[])
 
 	bool OK;
 	DBF oDBF(argv[1], OK);	if (!OK) return 0;	// o is for original
-	DBF tDBF(oDBF);					// t is for trimmed
+	DBF tDBF(oDBF);		tDBF.CopyFields(oDBF);	// t is for trimmed
 	LengthArray lenA(oDBF.NumFields); //TODO get rid of this variable
 
 	// field info display
