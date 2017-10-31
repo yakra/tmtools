@@ -86,7 +86,10 @@ class DBF
 void field::GetMax(DBF& tDBF, unsigned int fNum, char* value)
 {	switch (type)
 	{   case 'C':
-		if (!MaxVal) tDBF.fArr[fNum].len = 0;
+		if (!MaxVal)
+		{	tDBF.fArr[fNum].len = 0;
+			MaxVal = (char*)"\0";
+		}
 		if (strlen(value) > tDBF.fArr[fNum].len)
 		{	tDBF.fArr[fNum].len = strlen(value);
 			delete[] MaxVal; // delete[]ing a null pointer appears to be OK
@@ -125,7 +128,7 @@ int main(int argc, char *argv[])
 	{	inDBF.get(); // seek past leading ' ' or '*'
 		for (unsigned int fNum = 0; fNum < oDBF.NumFields; fNum++)
 		{	char *value = new char[oDBF.fArr[fNum].len+1]; value[oDBF.fArr[fNum].len] = 0;
-			inDBF.read(value, oDBF.fArr[fNum].len);							// read in value from file
+			inDBF.read(value, oDBF.fArr[fNum].len);					// read in value from file
 			while (value[strlen(value)-1] == ' ') value[strlen(value)-1] = 0;	// trim whitespace
 			oDBF.fArr[fNum].GetMax(tDBF, fNum, value);
 		}
