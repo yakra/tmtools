@@ -96,6 +96,7 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* value)
 			delete[] MaxVal; // delete[]ing a null pointer appears to be OK
 			MaxVal = value;
 		}
+		else delete[] value;
 		return;
 //	    case 'N':
 		//TODO: add numeric field support
