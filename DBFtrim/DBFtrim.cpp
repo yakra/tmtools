@@ -88,7 +88,7 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* value)
 	{   case 'C':
 		if (!MaxVal)
 		{	tDBF.fArr[fNum].len = 0;
-			MaxVal = (char*)"\0";
+			MaxVal = new char[1]; MaxVal[0] = '\0';
 		}
 		if (strlen(value) > tDBF.fArr[fNum].len)
 		{	tDBF.fArr[fNum].len = strlen(value);
