@@ -101,6 +101,7 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* value)
 //	    case 'N':
 		//TODO: add numeric field support
 	    default:
+		delete[] value;
 		if (!MaxVal) // ELSE case should only ever be "  <Type ? fields unsupported>", where '?' is field type
 		{	MaxVal = new char[30];
 			strcpy(MaxVal, "  <Type ? fields unsupported>");
