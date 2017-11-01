@@ -14,7 +14,7 @@ class field
 	char name[11];	// 11 B on disk; 10 B practical storage space. Final element is null terminator.
 	char type;	// Field type in ASCII (C, D, L, M, or N).
 	unsigned int DataAddx;
-	char len;
+	unsigned char len;
 	char DecCount;	// may be useful for numeric fields?
 	char padding[6];
 	char *MaxVal; // only works with 64-bit memory addressing, E.G. x86-64
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
 	for (unsigned int rNum = 0; rNum < oDBF.NumRec && inDBF.tellg() < oDBF.size; rNum++)
 	{	outDBF.put(inDBF.get()); // ' ' or '*' precedes record contents
 		for (unsigned int fNum = 0; fNum < oDBF.NumFields; fNum++)
-		{	for (char c = 0; c < tDBF.fArr[fNum].len; c++) outDBF.put(inDBF.get());
+		{	for (unsigned char c = 0; c < tDBF.fArr[fNum].len; c++) outDBF.put(inDBF.get());
 			inDBF.seekg(oDBF.fArr[fNum].len-tDBF.fArr[fNum].len, ios::cur);
 		}
 	}
