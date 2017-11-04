@@ -34,7 +34,7 @@ class DBF
 	// in-program use only; not to be read from / written to disk
 	field *fArr;		// field descriptor array
 	unsigned int size, NumFields;
-	char FirstChar, FinalChar;
+	char FinalChar;
 	bool borderline;	// flags cases where actual input filesize = 1 less than calculated filesize
 	char *name;
 
@@ -43,14 +43,12 @@ class DBF
 		if (!inDBF.is_open()) { OK = 0; cout << filename << " file not found!\n"; }
 		else {	OK = 1; cout << filename << " opened.\n";
 			name = filename;
-			inDBF.get(FirstChar);
-			inDBF.seekg(0, ios::end);	size = inDBF.tellg();
-			inDBF.seekg(-1, ios::cur);	inDBF.get(FinalChar);
-			inDBF.seekg(0);
 			inDBF.read((char*)this, 0x20);
 			NumFields = (HeaLen-0x21)/0x20;
 			fArr = new field[NumFields];
 			inDBF.read((char*)fArr, 0x20*NumFields);
+			inDBF.seekg(0, ios::end);	size = inDBF.tellg();
+			inDBF.seekg(-1, ios::cur);	inDBF.get(FinalChar);
 
 			cout << "DBF Filesize:\t" << size << " (sanity check ";
 			if	(size == NumRec*RecLen+HeaLen+1) { borderline = 0; cout << "pass)\n"; }
@@ -59,7 +57,7 @@ class DBF
 			cout << "Number Records:\t0x" << hex << NumRec << '\t' << dec << NumRec << endl;
 			cout << "Header Length:\t0x" << hex << HeaLen << '\t' << dec << HeaLen << endl;
 			cout << "Record Length:\t0x" << hex << RecLen << '\t' << dec << RecLen << endl;
-			cout << "First char:\t0x" << hex << int(FirstChar) << '\t' << dec << int(FirstChar) << endl;
+			cout << "First char:\t0x" << hex << int(ValidFile) << '\t' << dec << int(ValidFile) << endl;
 			cout << "Final char:\t0x" << hex << int(FinalChar) << '\t' << dec << int(FinalChar) << endl;
 			cout << NumFields << " fields:\n";
 		     }
@@ -83,25 +81,25 @@ class DBF
 	}
 };
 
-void field::GetMax(DBF& tDBF, unsigned int fNum, char* value)
+void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 {	switch (type)
 	{   case 'C':
-		while (value[strlen(value)-1] == ' ') value[strlen(value)-1] = 0; // trim whitespace
+		while (fVal[strlen(fVal)-1] == ' ') fVal[strlen(fVal)-1] = 0; // trim whitespace
 		if (!MaxVal)
 		{	tDBF.fArr[fNum].len = 0;
 			MaxVal = new char[1]; MaxVal[0] = '\0';
 		}
-		if (strlen(value) > tDBF.fArr[fNum].len)
-		{	tDBF.fArr[fNum].len = strlen(value);
+		if (strlen(fVal) > tDBF.fArr[fNum].len)
+		{	tDBF.fArr[fNum].len = strlen(fVal);
 			delete[] MaxVal; // delete[]ing a null pointer appears to be OK
-			MaxVal = value;
+			MaxVal = fVal;
 		}
-		else delete[] value;
+		else delete[] fVal;
 		return;
 //	    case 'N':
 		//TODO: add numeric field support
 	    default:
-		delete[] value;
+		delete[] fVal;
 		if (!MaxVal) // ELSE case should only ever be "  <Type ? fields unsupported>", where '?' is field type
 		{	MaxVal = new char[30];
 			strcpy(MaxVal, "  <Type ? fields unsupported>");
@@ -113,7 +111,7 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* value)
 int main(int argc, char *argv[])
 {	//ofstream timestamp("timestamp"); //TEST
 	cout << endl;
-	if (argc != 3)	{ cout << "usage: ./DBFtrim InputFile OutputFile\n\n"; return 0; }
+	if (argc != 3)	{ cout << "usage: DBFtrim InputFile OutputFile\n\n"; return 0; }
 	if (!strcmp(argv[1], argv[2]))
 	{	cout << "FATAL ERROR: input and output file paths match!\n";
 		cout << "If you wanna be clever, try /home/dave/foo.dbf & /home/dave/./foo.dbf or something\n\n";
@@ -130,9 +128,9 @@ int main(int argc, char *argv[])
 	for (unsigned int rNum = 0; rNum < oDBF.NumRec && inDBF.tellg() < oDBF.size; rNum++)
 	{	inDBF.get(); // seek past leading ' ' or '*'
 		for (unsigned int fNum = 0; fNum < oDBF.NumFields; fNum++)
-		{	char *value = new char[oDBF.fArr[fNum].len+1]; value[oDBF.fArr[fNum].len] = 0;
-			inDBF.read(value, oDBF.fArr[fNum].len);					// read in value from file
-			oDBF.fArr[fNum].GetMax(tDBF, fNum, value);
+		{	char *fVal = new char[oDBF.fArr[fNum].len+1]; fVal[oDBF.fArr[fNum].len] = 0;
+			inDBF.read(fVal, oDBF.fArr[fNum].len); // read in value from file
+			oDBF.fArr[fNum].GetMax(tDBF, fNum, fVal);
 		}
 	}//*/
 
