@@ -3,7 +3,7 @@ using namespace std;
 #include <iostream>
 #include <cstring>
 
-inline void ProgBar5(unsigned int numerator, unsigned int denominator)
+inline void ProgBar(unsigned int numerator, unsigned int denominator)
 {	cout << numerator << '/' << denominator << char(0x0D);
 }
 
@@ -59,7 +59,7 @@ class DBF
 			cout << "Record Length:\t0x" << hex << RecLen << '\t' << dec << RecLen << endl;
 			cout << "First char:\t0x" << hex << int(ValidFile) << '\t' << dec << int(ValidFile) << endl;
 			cout << "Final char:\t0x" << hex << int(FinalChar) << '\t' << dec << int(FinalChar) << endl;
-			cout << NumFields << " fields:\n";
+			cout << NumFields << " fields.\n";
 		     }
 	}
 
@@ -125,6 +125,7 @@ int main(int argc, char *argv[])
 	// gather field info
 	ifstream inDBF(argv[1], ios::in);
 	inDBF.seekg(oDBF.HeaLen);
+	cout << "Scanning DBF file...\n";
 	for (unsigned int rNum = 0; rNum < oDBF.NumRec && inDBF.tellg() < oDBF.size; rNum++)
 	{	inDBF.get(); // seek past leading ' ' or '*'
 		for (unsigned int fNum = 0; fNum < oDBF.NumFields; fNum++)
@@ -132,10 +133,11 @@ int main(int argc, char *argv[])
 			inDBF.read(fVal, oDBF.fArr[fNum].len); // read in value from file
 			oDBF.fArr[fNum].GetMax(tDBF, fNum, fVal);
 		}
+		ProgBar(rNum+1, oDBF.NumRec);
 	}//*/
 
 	//field info display
-	cout << "FieldName\tType\tLength\tMax\tData\n";
+	cout << "\nFieldName\tType\tLength\tMax\tData\n";
 	for (unsigned int i = 0; i < oDBF.NumFields; i++)
 	{	cout << oDBF.fArr[i].name;	if (strlen(oDBF.fArr[i].name) < 8) cout << '\t'; // tab stop
 		cout << '\t' << oDBF.fArr[i].type;
@@ -148,6 +150,7 @@ int main(int argc, char *argv[])
 	tDBF.SetRecLen();
 	ofstream outDBF(argv[2]);
 	inDBF.seekg(oDBF.HeaLen-1); // minus 1 in order to get 0Dh stored as the field terminator.
+	cout << "Saving trimmed file...\n";
 	// write header
 	outDBF.write((char*)&tDBF, 32);
 	outDBF.write((char*)tDBF.fArr, 32*tDBF.NumFields);	// write field descriptor array
@@ -159,6 +162,8 @@ int main(int argc, char *argv[])
 		{	for (unsigned char c = 0; c < tDBF.fArr[fNum].len; c++) outDBF.put(inDBF.get());
 			inDBF.seekg(oDBF.fArr[fNum].len-tDBF.fArr[fNum].len, ios::cur);
 		}
+		ProgBar(rNum+1, oDBF.NumRec);
 	}
 	if (!tDBF.borderline) outDBF.put(0x1A); // EOF marker */
+	cout << endl;
 }
