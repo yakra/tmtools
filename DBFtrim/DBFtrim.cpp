@@ -82,22 +82,46 @@ class DBF
 };
 
 void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
-{	switch (type)
+{	unsigned char WhSp = 0;
+	char* NewVal;
+	switch (type)
 	{   case 'C':
-		while (fVal[strlen(fVal)-1] == ' ') fVal[strlen(fVal)-1] = 0; // trim whitespace
+		// init MaxVal and len
 		if (!MaxVal)
 		{	tDBF.fArr[fNum].len = 0;
 			MaxVal = new char[1]; MaxVal[0] = '\0';
 		}
+		// trim whitespace
+		while (fVal[strlen(fVal)-1] == ' ') fVal[strlen(fVal)-1] = 0;
+		// compare
 		if (strlen(fVal) > tDBF.fArr[fNum].len)
 		{	tDBF.fArr[fNum].len = strlen(fVal);
-			delete[] MaxVal; // delete[]ing a null pointer appears to be OK
+			delete[] MaxVal;
 			MaxVal = fVal;
 		}
 		else delete[] fVal;
 		return;
-//	    case 'N':
-		//TODO: add numeric field support
+	    case 'F':
+	    case 'N':
+		// init MaxVal and len
+		if (!MaxVal)
+		{	tDBF.fArr[fNum].len = 0;
+			MaxVal = new char[1]; MaxVal[0] = '\0';
+		}
+		// trim whitespace
+		while ((fVal[WhSp] == ' ' || fVal[WhSp] == 0) && WhSp < len) WhSp++;
+		NewVal = new char[strlen(fVal+WhSp)+1];
+		strcpy(NewVal, fVal+WhSp);
+		delete[] fVal;
+		fVal = NewVal;
+		// compare
+		if (strlen(fVal) > tDBF.fArr[fNum].len)
+		{	tDBF.fArr[fNum].len = strlen(fVal);
+			delete[] MaxVal;
+			MaxVal = fVal;
+		}
+		else delete[] fVal;
+		return; //*/
 	    default:
 		delete[] fVal;
 		if (!MaxVal) // ELSE case should only ever be "  <Type ? fields unsupported>", where '?' is field type
@@ -159,8 +183,9 @@ int main(int argc, char *argv[])
 	for (unsigned int rNum = 0; rNum < oDBF.NumRec && inDBF.tellg() < oDBF.size; rNum++)
 	{	outDBF.put(inDBF.get()); // ' ' or '*' precedes record contents
 		for (unsigned int fNum = 0; fNum < oDBF.NumFields; fNum++)
-		{	for (unsigned char c = 0; c < tDBF.fArr[fNum].len; c++) outDBF.put(inDBF.get());
-			inDBF.seekg(oDBF.fArr[fNum].len-tDBF.fArr[fNum].len, ios::cur);
+		{	if (oDBF.fArr[fNum].type != 'C')	inDBF.seekg(oDBF.fArr[fNum].len-tDBF.fArr[fNum].len, ios::cur);
+			for (unsigned char c = 0; c < tDBF.fArr[fNum].len; c++) outDBF.put(inDBF.get());
+			if (oDBF.fArr[fNum].type == 'C')	inDBF.seekg(oDBF.fArr[fNum].len-tDBF.fArr[fNum].len, ios::cur);
 		}
 		ProgBar(rNum+1, oDBF.NumRec);
 	}
