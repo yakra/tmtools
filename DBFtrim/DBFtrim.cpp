@@ -15,8 +15,9 @@ class field
 	char type;	// Field type in ASCII (C, D, L, M, or N).
 	unsigned int DataAddx;
 	unsigned char len;
-	char DecCount;	// may be useful for numeric fields?
-	char padding[6];
+	unsigned char DecCount;
+	char padding[5];
+	unsigned char MinEx0;
 	char *MaxVal; // only works with 64-bit memory addressing, E.G. x86-64
 	// No more variables! Must be able to write/read a whole array to/from disk.
 	void GetMax(DBF&, unsigned int, char*);
@@ -63,13 +64,13 @@ class DBF
 		     }
 	}
 
-	void CopyFields(DBF& oDBF)
+	void InitCopy(DBF& oDBF)
 	{	fArr = new field[NumFields];
 		for (unsigned int byte = 0; byte < 32*NumFields; byte++)
 			*((char*)fArr+byte) = *((char*)oDBF.fArr+byte);
 		for (unsigned int i = 0; i < NumFields; i++)
-		  if (fArr[i].MaxVal)
-		  {	fArr[i].MaxVal = 0;
+		  if (fArr[i].MaxVal || fArr[i].MinEx0)
+		  {	fArr[i].MaxVal = 0; fArr[i].MinEx0 = 0;
 			cout << "Warning: overwriting reserved nonzero bytes in field #" << i << ", " << fArr[i].name << endl;
 		  }
 	}
@@ -82,14 +83,14 @@ class DBF
 };
 
 void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
-{	unsigned char WhSp = 0;
+{	unsigned char pad;
 	char* NewVal;
 	switch (type)
 	{   case 'C':
-		// init MaxVal and len
+		// init
 		if (!MaxVal)
 		{	tDBF.fArr[fNum].len = 0;
-			MaxVal = new char[1]; MaxVal[0] = '\0';
+			MaxVal = new char[1]; MaxVal[0] = 0;
 		}
 		// trim whitespace
 		while (fVal[strlen(fVal)-1] == ' ') fVal[strlen(fVal)-1] = 0;
@@ -101,17 +102,17 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 		}
 		else delete[] fVal;
 		return;
+
 	    case 'F':
-	    case 'N':
-		// init MaxVal and len
+		// init
 		if (!MaxVal)
 		{	tDBF.fArr[fNum].len = 0;
-			MaxVal = new char[1]; MaxVal[0] = '\0';
+			MaxVal = new char[1]; MaxVal[0] = 0;
 		}
 		// trim whitespace
-		while ((fVal[WhSp] == ' ' || fVal[WhSp] == 0) && WhSp < len) WhSp++;
-		NewVal = new char[strlen(fVal+WhSp)+1];
-		strcpy(NewVal, fVal+WhSp);
+		for (pad = 0; (fVal[pad] == ' ' || fVal[pad] == 0) && pad < len; pad++);
+		NewVal = new char[strlen(fVal+pad)+1];
+		strcpy(NewVal, fVal+pad);
 		delete[] fVal;
 		fVal = NewVal;
 		// compare
@@ -121,7 +122,41 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 			MaxVal = fVal;
 		}
 		else delete[] fVal;
-		return; //*/
+		return;
+
+	    case 'N':
+		// init
+		if (!MaxVal)
+		{	tDBF.fArr[fNum].len = 0;
+			MaxVal = new char[1]; MaxVal[0] = 0;
+			if (strchr(fVal, '.')) MinEx0 = 255;
+		}
+		// trim leading whitespace
+		for (pad = 0; (fVal[pad] == ' ' || fVal[pad] == 0) && pad < len; pad++);
+		NewVal = new char[strlen(fVal+pad)+1];
+		strcpy(NewVal, fVal+pad);
+		delete[] fVal;
+		fVal = NewVal;
+		// trim extraneous trailing zeros
+		if (strchr(fVal, '.'))
+		{	pad = 0;
+			for (unsigned char i = strlen(fVal)-1; fVal[i] == '0'; i--) pad++;
+			if (pad < MinEx0)
+			{	MinEx0 = pad;
+				tDBF.fArr[fNum].DecCount = DecCount-MinEx0;
+				if (MinEx0 == DecCount) MinEx0++; // decimal point itself is extraneous
+			}
+		}
+		// compare
+		if (strlen(fVal) > tDBF.fArr[fNum].len+MinEx0)
+		{	tDBF.fArr[fNum].len = strlen(fVal)-MinEx0;
+			delete[] MaxVal;
+			MaxVal = fVal;
+			MaxVal[tDBF.fArr[fNum].len] = 0;
+		}
+		else delete[] fVal;
+		return;
+
 	    default:
 		delete[] fVal;
 		if (!MaxVal) // ELSE case should only ever be "  <Type ? fields unsupported>", where '?' is field type
@@ -144,7 +179,7 @@ int main(int argc, char *argv[])
 
 	bool OK;
 	DBF oDBF(argv[1], OK);	if (!OK) return 0;	// o is for original
-	DBF tDBF(oDBF);		tDBF.CopyFields(oDBF);	// t is for trimmed
+	DBF tDBF(oDBF);		tDBF.InitCopy(oDBF);	// t is for trimmed
 
 	// gather field info
 	ifstream inDBF(argv[1], ios::in);
@@ -167,7 +202,13 @@ int main(int argc, char *argv[])
 		cout << '\t' << oDBF.fArr[i].type;
 		cout << '\t' << int(oDBF.fArr[i].len);
 		cout << '\t' << int(tDBF.fArr[i].len);
-		cout << '\t' << oDBF.fArr[i].MaxVal << endl;
+		cout << '\t' << oDBF.fArr[i].MaxVal;
+		    if (oDBF.fArr[i].MinEx0)
+		    {	if (strchr(oDBF.fArr[i].MaxVal, '.')) oDBF.fArr[i].MaxVal[tDBF.fArr[i].len] = '0';
+			else oDBF.fArr[i].MaxVal[tDBF.fArr[i].len] = '.';
+			cout << " <- " << oDBF.fArr[i].MaxVal;
+		    }
+		cout << endl;
 	}
 
 	// write output file
@@ -183,9 +224,14 @@ int main(int argc, char *argv[])
 	for (unsigned int rNum = 0; rNum < oDBF.NumRec && inDBF.tellg() < oDBF.size; rNum++)
 	{	outDBF.put(inDBF.get()); // ' ' or '*' precedes record contents
 		for (unsigned int fNum = 0; fNum < oDBF.NumFields; fNum++)
-		{	if (oDBF.fArr[fNum].type != 'C')	inDBF.seekg(oDBF.fArr[fNum].len-tDBF.fArr[fNum].len, ios::cur);
-			for (unsigned char c = 0; c < tDBF.fArr[fNum].len; c++) outDBF.put(inDBF.get());
-			if (oDBF.fArr[fNum].type == 'C')	inDBF.seekg(oDBF.fArr[fNum].len-tDBF.fArr[fNum].len, ios::cur);
+		{	if (oDBF.fArr[fNum].type != 'C')
+			{	inDBF.seekg(oDBF.fArr[fNum].len-tDBF.fArr[fNum].len-oDBF.fArr[fNum].MinEx0, ios::cur);
+				for (unsigned char c = 0; c < tDBF.fArr[fNum].len; c++) outDBF.put(inDBF.get());
+				inDBF.seekg(oDBF.fArr[fNum].MinEx0, ios::cur);
+			}
+			else {	for (unsigned char c = 0; c < tDBF.fArr[fNum].len; c++) outDBF.put(inDBF.get());
+				inDBF.seekg(oDBF.fArr[fNum].len-tDBF.fArr[fNum].len, ios::cur);
+			     }
 		}
 		ProgBar(rNum+1, oDBF.NumRec);
 	}
