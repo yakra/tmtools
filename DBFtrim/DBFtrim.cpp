@@ -3,168 +3,13 @@ using namespace std;
 #include <iostream>
 #include <cstring>
 
+class DBF;
+#include "../lib/field.h"
+#include "../lib/dbf.cpp"
+#include "../lib/field.cpp"
+
 inline void ProgBar(unsigned int numerator, unsigned int denominator)
 {	cout << numerator << '/' << denominator << char(0x0D);
-}
-
-class DBF;
-
-class field
-{	public:
-	char name[11];	// 11 B on disk; 10 B practical storage space. Final element is null terminator.
-	char type;	// Field type in ASCII (C, D, L, M, or N).
-	unsigned int DataAddx;
-	unsigned char len;
-	unsigned char DecCount;
-	char padding[5];
-	unsigned char MinEx0;
-	char *MaxVal; // only works with 64-bit memory addressing, E.G. x86-64
-	// No more variables! Must be able to write/read a whole array to/from disk.
-	void GetMax(DBF&, unsigned int, char*);
-}; //WARNING: functionality is predicated on sizeof(field) being 32 bytes. Meaning, 64-bit memory addressing; see comment for *MaxVal above
-
-class DBF
-{	public:
-	// first 32 bytes of header, as contained in file	
-	char ValidFile;
-	char LastUpdate[3];
-	unsigned int NumRec;	// NumRecords
-	unsigned short HeaLen;	// HeaderLength
-	unsigned short RecLen;	// RecordLength
-	char reserved[20];
-	// in-program use only; not to be read from / written to disk
-	field *fArr;		// field descriptor array
-	unsigned int size, NumFields;
-	char FinalChar;
-	bool borderline;	// flags cases where actual input filesize = 1 less than calculated filesize
-	char *name;
-
-	DBF(char *filename, bool &OK) // read in header from file
-	{	ifstream inDBF(filename, ios::in);
-		if (!inDBF.is_open()) { OK = 0; cout << filename << " file not found!\n"; }
-		else {	OK = 1; cout << filename << " opened.\n";
-			name = filename;
-			inDBF.read((char*)this, 0x20);
-			NumFields = (HeaLen-0x21)/0x20;
-			fArr = new field[NumFields];
-			inDBF.read((char*)fArr, 0x20*NumFields);
-			inDBF.seekg(0, ios::end);	size = inDBF.tellg();
-			inDBF.seekg(-1, ios::cur);	inDBF.get(FinalChar);
-
-			cout << "DBF Filesize:\t" << size << " (sanity check ";
-			if	(size == NumRec*RecLen+HeaLen+1) { borderline = 0; cout << "pass)\n"; }
-			else if	(size == NumRec*RecLen+HeaLen)	 { borderline = 1; cout << "borderline; may be missing terminal 0x1A)\n"; }
-			else	{ OK = 0; cout << "fail: " << NumRec*RecLen+HeaLen+1 << " expected)\n"; }
-			cout << "Number Records:\t0x" << hex << NumRec << '\t' << dec << NumRec << endl;
-			cout << "Header Length:\t0x" << hex << HeaLen << '\t' << dec << HeaLen << endl;
-			cout << "Record Length:\t0x" << hex << RecLen << '\t' << dec << RecLen << endl;
-			cout << "First char:\t0x" << hex << int(ValidFile) << '\t' << dec << int(ValidFile) << endl;
-			cout << "Final char:\t0x" << hex << int(FinalChar) << '\t' << dec << int(FinalChar) << endl;
-			cout << NumFields << " fields.\n";
-		     }
-	}
-
-	void InitCopy(DBF& oDBF)
-	{	fArr = new field[NumFields];
-		for (unsigned int byte = 0; byte < 32*NumFields; byte++)
-			*((char*)fArr+byte) = *((char*)oDBF.fArr+byte);
-		for (unsigned int i = 0; i < NumFields; i++)
-		  if (fArr[i].MaxVal || fArr[i].MinEx0)
-		  {	fArr[i].MaxVal = 0; fArr[i].MinEx0 = 0;
-			cout << "Warning: overwriting reserved nonzero bytes in field #" << i << ", " << fArr[i].name << endl;
-		  }
-	}
-
-	void SetRecLen()
-	{	RecLen = 1; // start at ' ' or '*'
-		for (unsigned int fNum = 0; fNum < NumFields; fNum++)
-			RecLen += fArr[fNum].len;
-	}
-};
-
-void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
-{	unsigned char pad;
-	char* NewVal;
-	switch (type)
-	{   case 'C':
-		// init
-		if (!MaxVal)
-		{	tDBF.fArr[fNum].len = 0;
-			MaxVal = new char[1]; MaxVal[0] = 0;
-		}
-		// trim whitespace
-		while (fVal[strlen(fVal)-1] == ' ') fVal[strlen(fVal)-1] = 0;
-		// compare
-		if (strlen(fVal) > tDBF.fArr[fNum].len)
-		{	tDBF.fArr[fNum].len = strlen(fVal);
-			delete[] MaxVal;
-			MaxVal = fVal;
-		}
-		else delete[] fVal;
-		return;
-
-	    case 'F':
-		// init
-		if (!MaxVal)
-		{	tDBF.fArr[fNum].len = 0;
-			MaxVal = new char[1]; MaxVal[0] = 0;
-		}
-		// trim whitespace
-		for (pad = 0; (fVal[pad] == ' ' || fVal[pad] == 0) && pad < len; pad++);
-		NewVal = new char[strlen(fVal+pad)+1];
-		strcpy(NewVal, fVal+pad);
-		delete[] fVal;
-		fVal = NewVal;
-		// compare
-		if (strlen(fVal) > tDBF.fArr[fNum].len)
-		{	tDBF.fArr[fNum].len = strlen(fVal);
-			delete[] MaxVal;
-			MaxVal = fVal;
-		}
-		else delete[] fVal;
-		return;
-
-	    case 'N':
-		// init
-		if (!MaxVal)
-		{	tDBF.fArr[fNum].len = 0;
-			MaxVal = new char[1]; MaxVal[0] = 0;
-			if (strchr(fVal, '.')) MinEx0 = 255;
-		}
-		// trim leading whitespace
-		for (pad = 0; (fVal[pad] == ' ' || fVal[pad] == 0) && pad < len; pad++);
-		NewVal = new char[strlen(fVal+pad)+1];
-		strcpy(NewVal, fVal+pad);
-		delete[] fVal;
-		fVal = NewVal;
-		// trim extraneous trailing zeros
-		if (strchr(fVal, '.'))
-		{	pad = 0;
-			for (unsigned char i = strlen(fVal)-1; fVal[i] == '0'; i--) pad++;
-			if (pad < MinEx0)
-			{	MinEx0 = pad;
-				tDBF.fArr[fNum].DecCount = DecCount-MinEx0;
-				if (MinEx0 == DecCount) MinEx0++; // decimal point itself is extraneous
-			}
-		}
-		// compare
-		if (strlen(fVal) > tDBF.fArr[fNum].len+MinEx0)
-		{	tDBF.fArr[fNum].len = strlen(fVal)-MinEx0;
-			delete[] MaxVal;
-			MaxVal = fVal;
-			MaxVal[tDBF.fArr[fNum].len] = 0;
-		}
-		else delete[] fVal;
-		return;
-
-	    default:
-		delete[] fVal;
-		if (!MaxVal) // ELSE case should only ever be "  <Type ? fields unsupported>", where '?' is field type
-		{	MaxVal = new char[30];
-			strcpy(MaxVal, "  <Type ? fields unsupported>");
-			MaxVal[8] = type;
-		}
-	}
 }
 
 int main(int argc, char *argv[])
@@ -224,7 +69,7 @@ int main(int argc, char *argv[])
 	for (unsigned int rNum = 0; rNum < oDBF.NumRec && inDBF.tellg() < oDBF.size; rNum++)
 	{	outDBF.put(inDBF.get()); // ' ' or '*' precedes record contents
 		for (unsigned int fNum = 0; fNum < oDBF.NumFields; fNum++)
-		{	if (oDBF.fArr[fNum].type != 'C')
+			if (oDBF.fArr[fNum].type != 'C')
 			{	inDBF.seekg(oDBF.fArr[fNum].len-tDBF.fArr[fNum].len-oDBF.fArr[fNum].MinEx0, ios::cur);
 				for (unsigned char c = 0; c < tDBF.fArr[fNum].len; c++) outDBF.put(inDBF.get());
 				inDBF.seekg(oDBF.fArr[fNum].MinEx0, ios::cur);
@@ -232,7 +77,6 @@ int main(int argc, char *argv[])
 			else {	for (unsigned char c = 0; c < tDBF.fArr[fNum].len; c++) outDBF.put(inDBF.get());
 				inDBF.seekg(oDBF.fArr[fNum].len-tDBF.fArr[fNum].len, ios::cur);
 			     }
-		}
 		ProgBar(rNum+1, oDBF.NumRec);
 	}
 	if (!tDBF.borderline) outDBF.put(0x1A); // EOF marker */
