@@ -15,8 +15,8 @@ class DBF
 	char *name;
 
 	DBF(char *filename, bool &OK) // read in header from file
-	{	ifstream inDBF(filename, ios::in);
-		if (!inDBF.is_open()) { OK = 0; cout << filename << " file not found!\n"; }
+	{	ifstream inDBF(filename);
+		if (!inDBF) { OK = 0; cout << filename << " file not found!\n"; }
 		else {	OK = 1; cout << filename << " opened.\n";
 			name = filename;
 			inDBF.read((char*)this, 0x20);
@@ -37,6 +37,7 @@ class DBF
 			cout << "Final char:\t0x" << hex << int(FinalChar) << '\t' << dec << int(FinalChar) << endl;
 			cout << NumFields << " fields.\n";
 		     }
+		inDBF.close();
 	}
 
 	void InitCopy(DBF& oDBF)
