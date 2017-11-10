@@ -9,7 +9,7 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 			MaxVal = new char[1]; MaxVal[0] = 0;
 		}
 		// trim whitespace
-		while (fVal[strlen(fVal)-1] == ' ') fVal[strlen(fVal)-1] = 0;
+		while (fVal[strlen(fVal)-1] <= ' ' && fVal[strlen(fVal)-1] > 0) fVal[strlen(fVal)-1] = 0;
 		// compare
 		if (strlen(fVal) > tDBF.fArr[fNum].len)
 		{	tDBF.fArr[fNum].len = strlen(fVal);
@@ -26,7 +26,7 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 			MaxVal = new char[1]; MaxVal[0] = 0;
 		}
 		// trim whitespace
-		for (pad = 0; (fVal[pad] == ' ' || fVal[pad] == 0) && pad < len; pad++);
+		for (pad = 0; (fVal[pad] <= ' ') && pad < len; pad++);
 		NewVal = new char[strlen(fVal+pad)+1];
 		strcpy(NewVal, fVal+pad);
 		delete[] fVal;
@@ -48,7 +48,7 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 			if (strchr(fVal, '.')) MinEx0 = 255;
 		}
 		// trim leading whitespace
-		for (pad = 0; (fVal[pad] == ' ' || fVal[pad] == 0) && pad < len; pad++);
+		for (pad = 0; (fVal[pad] <= ' ') && pad < len; pad++);
 		NewVal = new char[strlen(fVal+pad)+1];
 		strcpy(NewVal, fVal+pad);
 		delete[] fVal;
