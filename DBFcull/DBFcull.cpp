@@ -22,11 +22,11 @@ bool match(int argc, char *argv[], DBF& DBFh, bool *keep, unsigned int index)
 int main(int argc, char *argv[])
 {	cout << endl;
 	if (argc < 4)	{ cout << "usage: ./DBFcull InputFile OutputFile Field1 (Field2) (...)\n\n"; return 0; }
-	if (!strcmp(argv[1], argv[2]))
-	{	cout << "FATAL ERROR: input and output file paths match!\n";
-		cout << "If you wanna be clever, try /home/dave/foo.dbf & /home/dave/./foo.dbf or something\n\n";
+	ifstream filetest(argv[2]);
+	if (filetest)
+	{	cout << "OutputFile " << argv[2] << " already exists; overwriting not permitted. Aborting.\n\n";
 		return 0;
-	}
+	} filetest.close();
 
 	bool OK;
 	DBF DBFh(argv[1], OK);	if (!OK) return 0;
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 	cout << "New Record Length:\t0x" << hex << DBFh.RecLen << '\t' << dec << DBFh.RecLen << endl;
 
 	// write output file
-	ifstream inDBF(argv[1], ios::in);
+	ifstream inDBF(argv[1]);
 	inDBF.seekg(0x20);
 	ofstream outDBF(argv[2]);
 	// write header
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 		for (unsigned int n = 0; n < DBFh.NumFields; n++)
 			if (keep[n])
 				for (unsigned char c = 0; c < DBFh.fArr[n].len; c++) outDBF.put(inDBF.get());	// keep & copy field
-			else	inDBF.seekg(DBFh.fArr[n].len, ios::cur);						// cull & skip field
+			else	inDBF.seekg(DBFh.fArr[n].len, ios::cur);					// cull & skip field
 	}
 	// EOF marker
 	if (!DBFh.borderline) outDBF.put(char(0x1A));
