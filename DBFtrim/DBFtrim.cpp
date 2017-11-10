@@ -16,18 +16,18 @@ int main(int argc, char *argv[])
 {	//ofstream timestamp("timestamp"); //TEST
 	cout << endl;
 	if (argc != 3)	{ cout << "usage: DBFtrim InputFile OutputFile\n\n"; return 0; }
-	if (!strcmp(argv[1], argv[2]))
-	{	cout << "FATAL ERROR: input and output file paths match!\n";
-		cout << "If you wanna be clever, try /home/dave/foo.dbf & /home/dave/./foo.dbf or something\n\n";
+	ifstream filetest(argv[2]);
+	if (filetest)
+	{	cout << "OutputFile " << argv[2] << " already exists; overwriting not permitted. Aborting.\n\n";
 		return 0;
-	}
+	} filetest.close();
 
 	bool OK;
 	DBF oDBF(argv[1], OK);	if (!OK) return 0;	// o is for original
 	DBF tDBF(oDBF);		tDBF.InitCopy(oDBF);	// t is for trimmed
 
 	// gather field info
-	ifstream inDBF(argv[1], ios::in);
+	ifstream inDBF(argv[1]);
 	inDBF.seekg(oDBF.HeaLen);
 	cout << "Scanning DBF file...\n";
 	for (unsigned int rNum = 0; rNum < oDBF.NumRec && inDBF.tellg() < oDBF.size; rNum++)
