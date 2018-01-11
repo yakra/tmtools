@@ -67,10 +67,9 @@ void mine(DBF& rDBF)
 }
 
 int main(int argc, char *argv[])
-{	bool OK;
+{	if (argc < 3) {cout << "usage: ./DBFmine DBFname KeyField" << endl; return 0;}
+	bool OK;
 	DBF rDBF(argv[1], OK);	if (!OK) return 0;	
-
-	if (argc < 3) {cout << "usage: ./DBFmine DBFname KeyField" << endl; return 0;}
 	if (!rDBF.SetKey(argv[2])) return 0;
 
 	ofstream file("output.txt"); // write commandline
