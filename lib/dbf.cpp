@@ -9,7 +9,8 @@ class DBF
 	char reserved[20];
 	// in-program use only; not to be read from / written to disk
 	field *fArr;		// field descriptor array
-	unsigned int size, NumFields;
+	unsigned int size, NumFields, KeyOffset;
+	unsigned char KeyLen;
 	char FinalChar;
 	bool borderline;	// flags cases where actual input filesize = 1 less than calculated filesize
 	char *name;
@@ -56,4 +57,26 @@ class DBF
 		for (unsigned int fNum = 0; fNum < NumFields; fNum++)
 			RecLen += fArr[fNum].len;
 	}
+
+	bool SetKey(char *KeyField)
+	{	unsigned int fNum = 0;
+		KeyOffset = 0;
+		KeyLen = 0;
+
+		//find desired field descriptor
+		while (fNum < NumFields)
+		{	KeyLen = fArr[fNum].len;
+			if (!strcmp(KeyField, fArr[fNum].name)) break;
+			KeyOffset += KeyLen;
+			fNum++;
+		}//*/
+
+		//info display
+		if (strcmp(KeyField, fArr[fNum].name)) //if KeyField not found
+		{	cout << "Field " << KeyField << " not found!" << endl << endl;
+			return 0;
+		}
+		cout << KeyField << " is field # " << fNum+1 << ", Offset " << KeyOffset << " in-record, length = " << int(KeyLen) << endl << endl;
+		return 1;
+	}//*/
 };
