@@ -1,3 +1,8 @@
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include "field.h"
+
 class DBF
 {	public:
 	// first 32 bytes of header, as contained in file	
@@ -16,27 +21,27 @@ class DBF
 	char *name;
 
 	DBF(char *filename, bool &OK) // read in header from file
-	{	ifstream inDBF(filename);
-		if (!inDBF) { OK = 0; cout << filename << " file not found!\n"; }
-		else {	OK = 1; cout << filename << " opened.\n";
+	{	std::ifstream inDBF(filename);
+		if (!inDBF) { OK = 0; std::cout << filename << " file not found!\n"; }
+		else {	OK = 1; std::cout << filename << " opened.\n";
 			name = filename;
 			inDBF.read((char*)this, 0x20);
 			NumFields = (HeaLen-0x21)/0x20;
 			fArr = new field[NumFields];
 			inDBF.read((char*)fArr, 0x20*NumFields);
-			inDBF.seekg(0, ios::end);	size = inDBF.tellg();
-			inDBF.seekg(-1, ios::cur);	inDBF.get(FinalChar);
+			inDBF.seekg(0, std::ios::end);	size = inDBF.tellg();
+			inDBF.seekg(-1, std::ios::cur);	inDBF.get(FinalChar);
 
-			cout << "DBF Filesize:\t" << size << " (sanity check ";
-			if	(size == NumRec*RecLen+HeaLen+1) { borderline = 0; cout << "pass)\n"; }
-			else if	(size == NumRec*RecLen+HeaLen)	 { borderline = 1; cout << "borderline; may be missing terminal 0x1A)\n"; }
-			else	{ OK = 0; cout << "fail: " << NumRec*RecLen+HeaLen+1 << " expected)\n"; }
-			cout << "Number Records:\t0x" << hex << NumRec << '\t' << dec << NumRec << endl;
-			cout << "Header Length:\t0x" << hex << HeaLen << '\t' << dec << HeaLen << endl;
-			cout << "Record Length:\t0x" << hex << RecLen << '\t' << dec << RecLen << endl;
-			cout << "First char:\t0x" << hex << int(ValidFile) << '\t' << dec << int(ValidFile) << endl;
-			cout << "Final char:\t0x" << hex << int(FinalChar) << '\t' << dec << int(FinalChar) << endl;
-			cout << NumFields << " fields.\n";
+			std::cout << "DBF Filesize:\t" << size << " (sanity check ";
+			if	(size == NumRec*RecLen+HeaLen+1) { borderline = 0; std::cout << "pass)\n"; }
+			else if	(size == NumRec*RecLen+HeaLen)	 { borderline = 1; std::cout << "borderline; may be missing terminal 0x1A)\n"; }
+			else	{ OK = 0; std::cout << "fail: " << NumRec*RecLen+HeaLen+1 << " expected)\n"; }
+			std::cout << "Number Records:\t0x" << std::hex << NumRec << '\t' << std::dec << NumRec << '\n';
+			std::cout << "Header Length:\t0x" << std::hex << HeaLen << '\t' << std::dec << HeaLen << '\n';
+			std::cout << "Record Length:\t0x" << std::hex << RecLen << '\t' << std::dec << RecLen << '\n';
+			std::cout << "First char:\t0x" << std::hex << int(ValidFile) << '\t' << std::dec << int(ValidFile) << '\n';
+			std::cout << "Final char:\t0x" << std::hex << int(FinalChar) << '\t' << std::dec << int(FinalChar) << '\n';
+			std::cout << NumFields << " fields.\n";
 		     }
 		inDBF.close();
 	}
@@ -48,7 +53,7 @@ class DBF
 		for (unsigned int i = 0; i < NumFields; i++)
 		  if (fArr[i].MaxVal || fArr[i].MinEx0)
 		  {	fArr[i].MaxVal = 0; fArr[i].MinEx0 = 0;
-			cout << "Warning: overwriting reserved nonzero bytes in field #" << i << ", " << fArr[i].name << endl;
+			std::cout << "Warning: overwriting reserved nonzero bytes in field #" << i << ", " << fArr[i].name << '\n';
 		  }
 	}
 
@@ -73,10 +78,10 @@ class DBF
 
 		//info display
 		if (strcmp(KeyField, fArr[fNum].name)) //if KeyField not found
-		{	cout << "Field " << KeyField << " not found!" << endl << endl;
+		{	std::cout << "Field " << KeyField << " not found!\n\n";
 			return 0;
 		}
-		cout << KeyField << " is field # " << fNum+1 << ", Offset " << KeyOffset << " in-record, length = " << int(KeyLen) << endl << endl;
+		std::cout << KeyField << " is field # " << fNum+1 << ", Offset " << KeyOffset << " in-record, length = " << int(KeyLen) << "\n\n";
 		return 1;
 	}//*/
 };
