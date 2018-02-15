@@ -1,11 +1,9 @@
+#include "../lib/dbf.cpp"	// includes cstring, fstream, iostream
 using namespace std;
-#include <fstream>
-#include <iostream>
-#include <cstring>
 
-class DBF;
-#include "../lib/field.h"
-#include "../lib/dbf.cpp"
+inline void ProgBar(unsigned int numerator, unsigned int denominator)
+{	cout << numerator << '/' << denominator << char(0x0D);
+}
 
 bool match(int argc, char *argv[], DBF& DBFh, bool *keep, unsigned int index)
 {	for (int a = 3; a < argc; a++)
@@ -50,18 +48,21 @@ int main(int argc, char *argv[])
 	inDBF.seekg(0x20);
 	ofstream outDBF(argv[2]);
 	// write header
+	cout << "Writing header...\n";
 	outDBF.write((char*)&DBFh, 32);
 	for (unsigned int n = 0; n < DBFh.NumFields; n++)				// field descriptor array
 		if (keep[n]) for (char c = 0; c < 0x20; c++) outDBF.put(inDBF.get());	// keep & copy field descriptor
 		else inDBF.seekg(0x20, ios::cur);					// cull & skip field descriptor
 	outDBF.put(inDBF.get());							// 0Dh stored as the field terminator
 	// the actual records
+	cout << "Writing records...\n";
 	for (unsigned int r = 0; r < DBFh.NumRec; r++)
 	{	outDBF.put(inDBF.get()); // either ' ' or '*'
 		for (unsigned int n = 0; n < DBFh.NumFields; n++)
 			if (keep[n])
 				for (unsigned char c = 0; c < DBFh.fArr[n].len; c++) outDBF.put(inDBF.get());	// keep & copy field
 			else	inDBF.seekg(DBFh.fArr[n].len, ios::cur);					// cull & skip field
+		ProgBar(r+1, DBFh.NumRec);
 	}
 	// EOF marker
 	if (!DBFh.borderline) outDBF.put(char(0x1A));
