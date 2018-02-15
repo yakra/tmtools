@@ -1,11 +1,5 @@
+#include "../lib/dbf.cpp"	// includes cstring, fstream, iostream
 using namespace std;
-#include <fstream>
-#include <iostream>
-#include <cstring>
-
-class DBF;
-#include "../lib/field.h"
-#include "../lib/dbf.cpp"
 
 inline void ProgBar(unsigned int numerator, unsigned int denominator)
 {	cout << numerator << '/' << denominator << char(0x0D);
