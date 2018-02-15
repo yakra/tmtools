@@ -1,3 +1,5 @@
+#include "dbf.cpp"
+
 void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 {	unsigned char pad;
 	char* NewVal;
