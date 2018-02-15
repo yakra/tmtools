@@ -1,3 +1,5 @@
+class DBF;
+
 class field
 {	public:
 	char name[11];	// 11 B on disk; 10 B practical storage space. Final element is null terminator.
