@@ -47,8 +47,7 @@ void mine(DBF& rDBF)
 		fDBF.read(KFieldVal, rDBF.KeyLen);
 		fDBF.seekg(rDBF.RecLen-rDBF.KeyLen, ios::cur);
 		// scan thru asciibetical list
-		cursor = &alpha;
-		while (strcmp(KFieldVal, cursor->value) > 0) cursor = cursor->next;
+		for (cursor = &alpha; strcmp(KFieldVal, cursor->value) > 0; cursor = cursor->next);
 		if (strcmp(KFieldVal, cursor->value) < 0)
 			new entry(cursor, KFieldVal);	// insert new entry into list before cursor
 		else delete KFieldVal;			// strcmp == 0; value already on list
