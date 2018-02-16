@@ -25,11 +25,17 @@ void mine(DBF& rDBF)
 		fDBF.read(KFieldVal, rDBF.KeyLen);
 		fDBF.seekg(rDBF.RecLen-rDBF.KeyLen, ios::cur);
 		// scan thru asciibetical list
-		for (it = ValList.begin(); it != ValList.end(); it++) if (strcmp(KFieldVal, *it) <= 0) break;
+		for (it = ValList.begin(); it != ValList.end(); it++)
+		{	if (strcmp(KFieldVal, *it) < 0)
+			{	ValList.insert(it, KFieldVal);
+				break;
+			}
+			if (strcmp(KFieldVal, *it) == 0)
+			{	delete KFieldVal;
+				break;
+			}
+		}
 		if (it == ValList.end()) ValList.insert(it, KFieldVal);
-		else	if (strcmp(KFieldVal, *it) < 0)
-				ValList.insert(it, KFieldVal);
-			else delete KFieldVal;			// strcmp == 0; value already on list
 
 		ProgBar(RecNum+1, rDBF.NumRec); //zeroth vs first
 	}
