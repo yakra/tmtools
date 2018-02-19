@@ -18,9 +18,9 @@ class DBF
 	unsigned char KeyLen;
 	char FinalChar;
 	bool borderline;	// flags cases where actual input filesize = 1 less than calculated filesize
-	char *name;
+	const char *name;
 
-	DBF(char *filename, bool &OK) // read in header from file
+	DBF(const char *filename, bool &OK) // read in header from file
 	{	std::ifstream inDBF(filename);
 		if (!inDBF) { OK = 0; std::cout << filename << " file not found!\n"; }
 		else {	OK = 1; std::cout << filename << " opened.\n";
@@ -63,7 +63,7 @@ class DBF
 			RecLen += fArr[fNum].len;
 	}
 
-	bool SetKey(char *KeyField)
+	bool SetKey(const char *KeyField)
 	{	unsigned int fNum = 0;
 		KeyOffset = 0;
 		KeyLen = 0;
