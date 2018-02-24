@@ -11,6 +11,5 @@ If a listed field is not contained in the DBF file, it is ignored.<br>
 If no listed fields are contained in the DBF file, the output file will be identical to the input file.
 
 **Notes:**<br>
-Program requires 64-bit memory addressing and little-endian (Intel) byte order.<br>
-It will not work in other environments.<br>
-This could be fixed/improved, but is a low priority.
+Program requires little-endian (Intel) byte order.<br>
+Adapting it to big-endian (Motorola) is not a priority.
