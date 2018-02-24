@@ -8,6 +8,5 @@ This often results in substantial file size savings, which in turn can lead to f
 `DBFtrim InputFile OutputFile`
 
 **Notes:**<br>
-Program requires 64-bit memory addressing and little-endian (Intel) byte order.<br>
-It will not work in other environments.<br>
-This could be fixed/improved, but is a low priority.
+Program requires little-endian (Intel) byte order.<br>
+Adapting it to big-endian (Motorola) is not a priority.
