@@ -40,11 +40,11 @@ int main(int argc, char *argv[])
 		cout << '\t' << oDBF.fArr[i].type;
 		cout << '\t' << int(oDBF.fArr[i].len);
 		cout << '\t' << int(tDBF.fArr[i].len);
-		cout << '\t' << oDBF.fArr[i].MaxVal;
+		cout << '\t' << tDBF.MaxVal[i];
 		    if (oDBF.fArr[i].MinEx0)
-		    {	if (strchr(oDBF.fArr[i].MaxVal, '.')) oDBF.fArr[i].MaxVal[tDBF.fArr[i].len] = '0';
-			else oDBF.fArr[i].MaxVal[tDBF.fArr[i].len] = '.';
-			cout << " <- " << oDBF.fArr[i].MaxVal;
+		    {	if (strchr(tDBF.MaxVal[i], '.')) tDBF.MaxVal[i][tDBF.fArr[i].len] = '0';
+			else tDBF.MaxVal[i][tDBF.fArr[i].len] = '.';
+			cout << " <- " << tDBF.MaxVal[i];
 		    }
 		cout << endl;
 	}

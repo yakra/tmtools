@@ -17,6 +17,7 @@ class DBF
 	unsigned int size, NumFields, KeyOffset;
 	unsigned char KeyLen;
 	char FinalChar;
+	char **MaxVal;
 	bool borderline;	// flags cases where actual input filesize = 1 less than calculated filesize
 	const char *name;
 
@@ -35,7 +36,7 @@ class DBF
 			std::cout << "DBF Filesize:\t" << size << " (sanity check ";
 			if	(size == NumRec*RecLen+HeaLen+1) { borderline = 0; std::cout << "pass)\n"; }
 			else if	(size == NumRec*RecLen+HeaLen)	 { borderline = 1; std::cout << "borderline; may be missing terminal 0x1A)\n"; }
-			else	{ OK = 0; std::cout << "fail: " << NumRec*RecLen+HeaLen+1 << " expected)\n"; }
+			else	{ OK = 0; std::cout << "fail: filesize of " << NumRec*RecLen+HeaLen+1 << " or " << NumRec*RecLen+HeaLen << " expected)\n"; }
 			std::cout << "Number Records:\t0x" << std::hex << NumRec << '\t' << std::dec << NumRec << '\n';
 			std::cout << "Header Length:\t0x" << std::hex << HeaLen << '\t' << std::dec << HeaLen << '\n';
 			std::cout << "Record Length:\t0x" << std::hex << RecLen << '\t' << std::dec << RecLen << '\n';
@@ -48,13 +49,15 @@ class DBF
 
 	void InitCopy(DBF& oDBF)
 	{	fArr = new field[NumFields];
-		for (unsigned int byte = 0; byte < 32*NumFields; byte++)
-			*((char*)fArr+byte) = *((char*)oDBF.fArr+byte);
+		MaxVal = new char*[NumFields];
+		memcpy(fArr, oDBF.fArr, 32*NumFields);
 		for (unsigned int i = 0; i < NumFields; i++)
-		  if (fArr[i].MaxVal || fArr[i].MinEx0)
-		  {	fArr[i].MaxVal = 0; fArr[i].MinEx0 = 0;
-			std::cout << "Warning: overwriting reserved nonzero bytes in field #" << i << ", " << fArr[i].name << '\n';
-		  }
+		{	if (fArr[i].MinEx0)
+			{	fArr[i].MinEx0 = 0;
+				std::cout << "Warning: overwriting reserved nonzero bytes in field #" << i << ", " << fArr[i].name << '\n';
+			}
+			MaxVal[i] = 0;
+		}
 	}
 
 	void SetRecLen()
