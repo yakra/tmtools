@@ -6,26 +6,26 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 	switch (type)
 	{   case 'C':
 		// init
-		if (!MaxVal)
+		if (!tDBF.MaxVal[fNum])
 		{	tDBF.fArr[fNum].len = 0;
-			MaxVal = new char[1]; MaxVal[0] = 0;
+			tDBF.MaxVal[fNum] = new char[1]; tDBF.MaxVal[fNum][0] = 0;
 		}
 		// trim whitespace
 		while (fVal[strlen(fVal)-1] <= ' ' && fVal[strlen(fVal)-1] > 0) fVal[strlen(fVal)-1] = 0;
 		// compare
 		if (strlen(fVal) > tDBF.fArr[fNum].len)
 		{	tDBF.fArr[fNum].len = strlen(fVal);
-			delete[] MaxVal;
-			MaxVal = fVal;
+			delete[] tDBF.MaxVal[fNum];
+			tDBF.MaxVal[fNum] = fVal;
 		}
 		else delete[] fVal;
 		return;
 
 	    case 'F':
 		// init
-		if (!MaxVal)
+		if (!tDBF.MaxVal[fNum])
 		{	tDBF.fArr[fNum].len = 0;
-			MaxVal = new char[1]; MaxVal[0] = 0;
+			tDBF.MaxVal[fNum] = new char[1]; tDBF.MaxVal[fNum][0] = 0;
 		}
 		// trim whitespace
 		for (pad = 0; (fVal[pad] <= ' ') && pad < len; pad++);
@@ -36,17 +36,17 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 		// compare
 		if (strlen(fVal) > tDBF.fArr[fNum].len)
 		{	tDBF.fArr[fNum].len = strlen(fVal);
-			delete[] MaxVal;
-			MaxVal = fVal;
+			delete[] tDBF.MaxVal[fNum];
+			tDBF.MaxVal[fNum] = fVal;
 		}
 		else delete[] fVal;
 		return;
 
 	    case 'N':
 		// init
-		if (!MaxVal)
+		if (!tDBF.MaxVal[fNum])
 		{	tDBF.fArr[fNum].len = 0;
-			MaxVal = new char[1]; MaxVal[0] = 0;
+			tDBF.MaxVal[fNum] = new char[1]; tDBF.MaxVal[fNum][0] = 0;
 			if (strchr(fVal, '.')) MinEx0 = 255;
 		}
 		// trim leading whitespace
@@ -68,19 +68,19 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 		// compare
 		if (strlen(fVal) > tDBF.fArr[fNum].len+MinEx0)
 		{	tDBF.fArr[fNum].len = strlen(fVal)-MinEx0;
-			delete[] MaxVal;
-			MaxVal = fVal;
-			MaxVal[tDBF.fArr[fNum].len] = 0;
+			delete[] tDBF.MaxVal[fNum];
+			tDBF.MaxVal[fNum] = fVal;
+			tDBF.MaxVal[fNum][tDBF.fArr[fNum].len] = 0;
 		}
 		else delete[] fVal;
 		return;
 
 	    default:
 		delete[] fVal;
-		if (!MaxVal) // ELSE case should only ever be "  <Type ? fields unsupported>", where '?' is field type
-		{	MaxVal = new char[30];
-			strcpy(MaxVal, "  <Type ? fields unsupported>");
-			MaxVal[8] = type;
+		if (!tDBF.MaxVal[fNum]) // ELSE case should only ever be "  <Type ? fields unsupported>", where '?' is field type
+		{	tDBF.MaxVal[fNum] = new char[30];
+			strcpy(tDBF.MaxVal[fNum], "  <Type ? fields unsupported>");
+			tDBF.MaxVal[fNum][8] = type;
 		}
 	}
 }
