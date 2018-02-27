@@ -6,6 +6,10 @@
 * Why "gisplunge"? I needed something to name the INI file when first writing the program, and
 [splunge](https://www.youtube.com/watch?v=3v0I4OQi7CQ) was the first thing that popped into my head. I pronounce it "Ji-SPLUNGE".
 
+**Compiling:**
+* C++11 and thread support are required.<br>
+With GCC, I use the commandline `g++ gisplunge.cpp -std=c++11 -pthread -o gisplunge`
+
 **Compatibility:**
 * gisplunge only works with shapefiles that have their coordinates stored as double floating-point longitude and latitude values.
 Converting between different Coordinate Reference Systems is not and will not be supported. If you need to convert a shapefile
