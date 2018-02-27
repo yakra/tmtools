@@ -98,6 +98,7 @@ highway* BuildRte(const char *filename, std::string Sys, std::string Reg, std::s
 			point.label.push_back(label);	// get all tokens & put into label array
 		point.URL = point.label.back();		// last token is actually the URL...
 		point.label.pop_back();			// ...and not a label.
+		if (point.label.empty()) point.label.push_back("NULL");
 		point.InitCoords();
 		hwy->pt.push_back(point);		// add completed line to waypoint list
 	} //end while (step thru each WPT line)
