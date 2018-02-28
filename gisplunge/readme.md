@@ -88,6 +88,7 @@ ends where expected, resulting in output waypoints that are significantly out of
 with their counterparts from the OFF-flavored files (All gisplunge output should be manually checked, regardless). `OFF` and `ON`
 each write files to their respective `output` directories; `BOTH` writes both sets of files. The `NONE` option is useful if you
 only want to *SegDump* individual shapefile records, and don't care about having the *gisplunged* route files themselves.<br>
+This feature ignores hidden shaping points, unless their primary label ends with 'X'  or 'x', *E.G.* "+X123456X". The idea is for this type of label to denote shaping points located at an intersecting road with no known name to use for a visible label.<br>
 For beginners, I recommend just leaving this option `OFF` until you become familiar with the mojo of the particular shapefile set
 you're working with, in your GIS application.
 * `SegDump` has allowable values of `OFF` or `ON`. SegDump extracts individual shapefile records where `KeyField` contains
