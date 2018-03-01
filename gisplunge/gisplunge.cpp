@@ -75,22 +75,18 @@ class envV
 				return 0;
 			}
 			INI >> SourceDir;
-		}
 
 		// set CharSkip
-		if (CSVflag)
-		{	INI.seekg(0); iniField.clear();
+			INI.seekg(0); iniField.clear();
 			while (iniField != "CharSkip" && !INI.eof())	INI >> iniField;
 			if (iniField != "CharSkip")
 			{	cout << "CSVmode: CharSkip field not found in .INI file!\n";
 				return 0;
 			}
 			INI >> CharSkip;
-		}
 
 		// set Threads
-		if (CSVflag)
-		{	INI.seekg(0); iniField.clear(); Threads = 1;
+			INI.seekg(0); iniField.clear(); Threads = 1;
 			while (iniField != "Threads" && !INI.eof())	INI >> iniField;
 			if (iniField == "Threads") INI >> Threads;
 		}
