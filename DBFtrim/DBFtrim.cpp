@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 	DBF tDBF(oDBF);		tDBF.InitCopy(oDBF);	// t is for trimmed
 
 	// gather field info
-	ifstream inDBF(argv[1]);
+	ifstream inDBF(oDBF.name);
 	inDBF.seekg(oDBF.HeaLen);
 	cout << "Scanning DBF file...\n";
 	for (unsigned int rNum = 0; rNum < oDBF.NumRec && inDBF.tellg() < oDBF.size; rNum++)
@@ -42,8 +42,9 @@ int main(int argc, char *argv[])
 		cout << '\t' << int(tDBF.fArr[i].len);
 		cout << '\t' << tDBF.MaxVal[i];
 		    if (oDBF.fArr[i].MinEx0)
-		    {	if (strchr(tDBF.MaxVal[i], '.')) tDBF.MaxVal[i][tDBF.fArr[i].len] = '0';
-			else tDBF.MaxVal[i][tDBF.fArr[i].len] = '.';
+		    {	if (strchr(tDBF.MaxVal[i], '.'))
+				tDBF.MaxVal[i][tDBF.fArr[i].len] = '0';
+			else	tDBF.MaxVal[i][tDBF.fArr[i].len] = '.';
 			cout << " <- " << tDBF.MaxVal[i];
 		    }
 		cout << endl;

@@ -5,11 +5,6 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 	char* NewVal;
 	switch (type)
 	{   case 'C':
-		// init
-		if (!tDBF.MaxVal[fNum])
-		{	tDBF.fArr[fNum].len = 0;
-			tDBF.MaxVal[fNum] = new char[1]; tDBF.MaxVal[fNum][0] = 0;
-		}
 		// trim whitespace
 		while (fVal[strlen(fVal)-1] <= ' ' && fVal[strlen(fVal)-1] > 0) fVal[strlen(fVal)-1] = 0;
 		// compare
@@ -22,11 +17,6 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 		return;
 
 	    case 'F':
-		// init
-		if (!tDBF.MaxVal[fNum])
-		{	tDBF.fArr[fNum].len = 0;
-			tDBF.MaxVal[fNum] = new char[1]; tDBF.MaxVal[fNum][0] = 0;
-		}
 		// trim whitespace
 		for (pad = 0; (fVal[pad] <= ' ') && pad < len; pad++);
 		NewVal = new char[strlen(fVal+pad)+1];
@@ -43,12 +33,6 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 		return;
 
 	    case 'N':
-		// init
-		if (!tDBF.MaxVal[fNum])
-		{	tDBF.fArr[fNum].len = 0;
-			tDBF.MaxVal[fNum] = new char[1]; tDBF.MaxVal[fNum][0] = 0;
-			if (strchr(fVal, '.')) MinEx0 = 255;
-		}
 		// trim leading whitespace
 		for (pad = 0; (fVal[pad] <= ' ') && pad < len; pad++);
 		NewVal = new char[strlen(fVal+pad)+1];
@@ -65,6 +49,7 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 				if (MinEx0 == DecCount) MinEx0++; // decimal point itself is extraneous
 			}
 		}
+		else MinEx0 = 0;
 		// compare
 		if (strlen(fVal) > tDBF.fArr[fNum].len+MinEx0)
 		{	tDBF.fArr[fNum].len = strlen(fVal)-MinEx0;
@@ -74,13 +59,5 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 		}
 		else delete[] fVal;
 		return;
-
-	    default:
-		delete[] fVal;
-		if (!tDBF.MaxVal[fNum]) // ELSE case should only ever be "  <Type ? fields unsupported>", where '?' is field type
-		{	tDBF.MaxVal[fNum] = new char[30];
-			strcpy(tDBF.MaxVal[fNum], "  <Type ? fields unsupported>");
-			tDBF.MaxVal[fNum][8] = type;
-		}
 	}
 }

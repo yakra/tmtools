@@ -52,12 +52,17 @@ class DBF
 		MaxVal = new char*[NumFields];
 		memcpy(fArr, oDBF.fArr, 32*NumFields);
 		for (unsigned int i = 0; i < NumFields; i++)
-		{	if (fArr[i].MinEx0)
-			{	fArr[i].MinEx0 = 0;
-				std::cout << "Warning: overwriting reserved nonzero bytes in field #" << i << ", " << fArr[i].name << '\n';
-			}
-			MaxVal[i] = 0;
-		}
+		  switch (fArr[i].type)
+		  { case 'N':	oDBF.fArr[i].MinEx0 = 255;
+		    case 'C':	case 'F':
+			MaxVal[i] = new char[1]; MaxVal[i][0] = 0;
+			fArr[i].len = 0;
+			break;
+		    default:
+			MaxVal[i] = new char[30];
+			strcpy(MaxVal[i], "  <Type ? fields unsupported>");
+			MaxVal[i][8] = fArr[i].type;
+		  }
 	}
 
 	void SetRecLen()
