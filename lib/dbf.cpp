@@ -52,17 +52,19 @@ class DBF
 		MaxVal = new char*[NumFields];
 		memcpy(fArr, oDBF.fArr, 32*NumFields);
 		for (unsigned int i = 0; i < NumFields; i++)
-		  switch (fArr[i].type)
-		  { case 'N':	oDBF.fArr[i].MinEx0 = 255;
-		    case 'C':	case 'F':
-			MaxVal[i] = new char[1]; MaxVal[i][0] = 0;
-			fArr[i].len = 0;
-			break;
-		    default:
-			MaxVal[i] = new char[30];
-			strcpy(MaxVal[i], "  <Type ? fields unsupported>");
-			MaxVal[i][8] = fArr[i].type;
-		  }
+		{	oDBF.fArr[i].MinEx0 = 0; // Just in case. Can potentially read in a nonzero byte from file.
+			switch (fArr[i].type)
+			{   case 'N':	oDBF.fArr[i].MinEx0 = 255;
+			    case 'C':	case 'F':
+				MaxVal[i] = new char[1]; MaxVal[i][0] = 0;
+				fArr[i].len = 0;
+				break;
+			    default:
+				MaxVal[i] = new char[30];
+				strcpy(MaxVal[i], "  <Type ? fields unsupported>");
+				MaxVal[i][8] = fArr[i].type;
+			}
+		}
 	}
 
 	void SetRecLen()
