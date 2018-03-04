@@ -26,10 +26,12 @@ int main(int argc, char *argv[])
 	for (unsigned int rNum = 0; rNum < oDBF.NumRec && inDBF.tellg() < oDBF.size; rNum++)
 	{	inDBF.get(); // seek past leading ' ' or '*'
 		for (unsigned int fNum = 0; fNum < oDBF.NumFields; fNum++)
-		{	char *fVal = new char[oDBF.fArr[fNum].len+1]; fVal[oDBF.fArr[fNum].len] = 0;
+		  if (oDBF.fArr[fNum].type == 'C' || oDBF.fArr[fNum].type == 'F' || oDBF.fArr[fNum].type == 'N')
+		  {	char *fVal = new char[oDBF.fArr[fNum].len+1]; fVal[oDBF.fArr[fNum].len] = 0;
 			inDBF.read(fVal, oDBF.fArr[fNum].len); // read in value from file
 			oDBF.fArr[fNum].GetMax(tDBF, fNum, fVal);
-		}
+		  }
+		  else	inDBF.seekg(oDBF.fArr[fNum].len, ios::cur);
 		ProgBar(rNum+1, oDBF.NumRec);
 	}//*/
 
