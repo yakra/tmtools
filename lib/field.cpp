@@ -3,6 +3,7 @@
 void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 {	unsigned char pad;
 	char* NewVal;
+	char* PtLoc = 0;
 	switch (type)
 	{   case 'C':
 		// trim whitespace RIGHT
@@ -10,39 +11,42 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 		break;
 
 	    case 'F':
-		// trim whitespace LEFT
-		for (pad = 0; (fVal[pad] <= ' ') && pad < len; pad++);
-		NewVal = new char[strlen(fVal+pad)+1];
-		strcpy(NewVal, fVal+pad);
-		delete[] fVal;
-		fVal = NewVal;
-		break;
-
 	    case 'N':
 		// trim whitespace LEFT
-		for (pad = 0; (fVal[pad] <= ' ') && pad < len; pad++);
+		for (pad = 0; fVal[pad] <= ' ' && pad < len; pad++);
 		NewVal = new char[strlen(fVal+pad)+1];
 		strcpy(NewVal, fVal+pad);
 		delete[] fVal;
 		fVal = NewVal;
 		// trim extraneous trailing zeros
-		if (strchr(fVal, '.'))
+		if (strchr(fVal, '.') && !strchr(fVal, 'E') && !strchr(fVal, 'e'))
 		{	pad = 0;
+			PtLoc = strchr(fVal, '.');
+			if (PtLoc-fVal > MaxIntD) MaxIntD = PtLoc-fVal;
 			for (unsigned char i = strlen(fVal)-1; fVal[i] == '0'; i--) pad++;
 			if (pad < MinEx0)
 			{	MinEx0 = pad;
-				tDBF.fArr[fNum].DecCount = DecCount-MinEx0;
-				if (MinEx0 == DecCount) MinEx0++; // decimal point itself is extraneous
+				if (MinEx0 >= DecCount)
+				{	MinEx0++; // decimal point itself is extraneous
+					tDBF.fArr[fNum].DecCount = 0; // prevent wraparound when E.G. "0.0000000000" has a DecCount of 0
+				}
+				else	tDBF.fArr[fNum].DecCount = DecCount-MinEx0;
 			}
 		}
-		else MinEx0 = 0;
+		else if (strlen(fVal))
+		{	MinEx0 = 0;
+			tDBF.fArr[fNum].DecCount = DecCount;
+		}
 	}
 	// compare
-	if (strlen(fVal) > tDBF.fArr[fNum].len+MinEx0)
-	{	tDBF.fArr[fNum].len = strlen(fVal)-MinEx0;
+	if (!PtLoc) PtLoc = fVal;
+	if (strlen(PtLoc)+MaxIntD > tDBF.fArr[fNum].len+MinEx0)
+	{	tDBF.fArr[fNum].len = strlen(PtLoc)-MinEx0+MaxIntD;
+		/*FIXME*/ if (tDBF.fArr[fNum].len > len) tDBF.fArr[fNum].len = len;	// temporary fix to keep left-justified numbers, a la TX, working.
+											// eventual implementation of trimming both left AND right should remove need for this.
 		delete[] tDBF.MaxVal[fNum];
 		tDBF.MaxVal[fNum] = fVal;
-		tDBF.MaxVal[fNum][tDBF.fArr[fNum].len] = 0; // new terminator for when MinEx0
+		tDBF.MaxVal[fNum][strlen(fVal)-MinEx0] = 0; // new terminator for when MinEx0
 	}
 	else delete[] fVal;
 }
