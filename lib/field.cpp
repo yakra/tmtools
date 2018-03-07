@@ -2,19 +2,21 @@
 
 void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 {	unsigned char pad;
+	unsigned char vlen = strlen(fVal);
 	char* NewVal;
 	char* PtLoc = 0;
 	switch (type)
 	{   case 'C':
 		// trim whitespace RIGHT
-		while (fVal[strlen(fVal)-1] <= ' ' && fVal[strlen(fVal)-1] > 0) fVal[strlen(fVal)-1] = 0;
+		for (unsigned char i = vlen-1; fVal[i] <= ' ' && fVal[i] > 0; i--) { fVal[i] = 0; vlen--; }
 		break;
 
 	    case 'F':
 	    case 'N':
 		// trim whitespace LEFT
 		for (pad = 0; fVal[pad] <= ' ' && pad < len; pad++);
-		NewVal = new char[strlen(fVal+pad)+1];
+		vlen -= pad;
+		NewVal = new char[vlen+1];
 		strcpy(NewVal, fVal+pad);
 		delete[] fVal;
 		fVal = NewVal;
@@ -23,7 +25,7 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 		{	pad = 0;
 			PtLoc = strchr(fVal, '.');
 			if (PtLoc-fVal > MaxIntD) MaxIntD = PtLoc-fVal;
-			for (unsigned char i = strlen(fVal)-1; fVal[i] == '0'; i--) pad++;
+			for (unsigned char i = vlen-1; fVal[i] == '0'; i--) pad++;
 			if (pad < MinEx0)
 			{	MinEx0 = pad;
 				if (MinEx0 >= DecCount)
@@ -33,7 +35,7 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 				else	tDBF.fArr[fNum].DecCount = DecCount-MinEx0;
 			}
 		}
-		else if (strlen(fVal))
+		else if (vlen)
 		{	MinEx0 = 0;
 			tDBF.fArr[fNum].DecCount = DecCount;
 		}
@@ -46,7 +48,7 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 											// eventual implementation of trimming both left AND right should remove need for this.
 		delete[] tDBF.MaxVal[fNum];
 		tDBF.MaxVal[fNum] = fVal;
-		tDBF.MaxVal[fNum][strlen(fVal)-MinEx0] = 0; // new terminator for when MinEx0
+		tDBF.MaxVal[fNum][vlen-MinEx0] = 0; // new terminator for when MinEx0
 	}
 	else delete[] fVal;
 }
