@@ -3,12 +3,12 @@
 void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 {	unsigned char pad;
 	unsigned char vlen = strlen(fVal);
+	unsigned char IntD = 0;
 	char* NewVal;
-	char* PtLoc = 0;
 	switch (type)
 	{   case 'C':
 		// trim whitespace RIGHT
-		for (unsigned char i = vlen-1; fVal[i] <= ' ' && fVal[i] > 0; i--) { fVal[i] = 0; vlen--; }
+		for (int i = vlen-1; fVal[i] <= ' ' && fVal[i] > 0 && i >= 0; i--) { fVal[i] = 0; vlen--; }
 		break;
 
 	    case 'F':
@@ -23,8 +23,8 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 		// trim extraneous trailing zeros
 		if (strchr(fVal, '.') && !strchr(fVal, 'E') && !strchr(fVal, 'e'))
 		{	pad = 0;
-			PtLoc = strchr(fVal, '.');
-			if (PtLoc-fVal > MaxIntD) MaxIntD = PtLoc-fVal;
+			IntD = strchr(fVal, '.') - fVal;
+			if (IntD > MaxIntD) MaxIntD = IntD;
 			for (unsigned char i = vlen-1; fVal[i] == '0'; i--) pad++;
 			if (pad < MinEx0)
 			{	MinEx0 = pad;
@@ -41,9 +41,8 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 		}
 	}
 	// compare
-	if (!PtLoc) PtLoc = fVal;
-	if (strlen(PtLoc)+MaxIntD > tDBF.fArr[fNum].len+MinEx0)
-	{	tDBF.fArr[fNum].len = strlen(PtLoc)-MinEx0+MaxIntD;
+	if (vlen-IntD+MaxIntD > tDBF.fArr[fNum].len+MinEx0)
+	{	tDBF.fArr[fNum].len = vlen-IntD-MinEx0+MaxIntD;
 		/*FIXME*/ if (tDBF.fArr[fNum].len > len) tDBF.fArr[fNum].len = len;	// temporary fix to keep left-justified numbers, a la TX, working.
 											// eventual implementation of trimming both left AND right should remove need for this.
 		delete[] tDBF.MaxVal[fNum];
