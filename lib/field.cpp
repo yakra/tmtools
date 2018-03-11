@@ -4,7 +4,6 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 {	unsigned char pad;
 	unsigned char vlen = strlen(fVal);
 	unsigned char IntD = 0;
-	char* NewVal;
 	switch (type)
 	{   case 'C':
 		// trim whitespace RIGHT
@@ -14,12 +13,10 @@ void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 	    case 'F':
 	    case 'N':
 		// trim whitespace LEFT
-		for (pad = 0; fVal[pad] <= ' ' && pad < len; pad++);
+		for (pad = 0; fVal[pad] <= ' ' && pad < vlen; pad++);
 		vlen -= pad;
-		NewVal = new char[vlen+1];
-		strcpy(NewVal, fVal+pad);
-		delete[] fVal;
-		fVal = NewVal;
+		for (unsigned char i = 0; i <= vlen; i++) fVal[i] = fVal[pad+i];
+
 		// trim extraneous trailing zeros
 		if (strchr(fVal, '.') && !strchr(fVal, 'E') && !strchr(fVal, 'e'))
 		{	pad = 0;
