@@ -68,15 +68,16 @@ int main(int argc, char *argv[])
 	//field info display
 	cout << "\nFieldName\tType\tLength\tMax\tData\n";
 	for (unsigned int i = 0; i < oDBF.NumFields; i++)
-	{	cout << oDBF.fArr[i].name;	if (strlen(oDBF.fArr[i].name) < 8) cout << '\t'; // tab stop
-		cout << '\t' << oDBF.fArr[i].type;
-		cout << '\t' << int(oDBF.fArr[i].len);
-		cout << '\t' << int(tDBF.fArr[i].len);
-		cout << '\t' << tDBF.MaxVal[i];
+	{	cout << oDBF.fArr[i].name << '\t';	if (strlen(oDBF.fArr[i].name) < 8) cout << '\t'; // tab stop
+		cout << oDBF.fArr[i].type << '\t';
+		cout << int(oDBF.fArr[i].len) << '\t';
+		cout << int(tDBF.fArr[i].len) << '\t';
+		for (unsigned char n = strlen(tDBF.MaxVal[i]); n < tDBF.fArr[i].len; n++) cout << '#';
+		cout << tDBF.MaxVal[i];
 		    if (oDBF.fArr[i].MinEx0)
 		    {	if (strchr(tDBF.MaxVal[i], '.'))
-				tDBF.MaxVal[i][tDBF.fArr[i].len] = '0';
-			else	tDBF.MaxVal[i][tDBF.fArr[i].len] = '.';
+				tDBF.MaxVal[i][strlen(tDBF.MaxVal[i])] = '0';
+			else	tDBF.MaxVal[i][strlen(tDBF.MaxVal[i])] = '.';
 			cout << " <- " << tDBF.MaxVal[i];
 		    }
 		cout << endl;
