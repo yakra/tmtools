@@ -6,14 +6,14 @@ inline void ProgBar(unsigned int numerator, unsigned int denominator)
 {	cout << numerator << '/' << denominator << char(0x0D);
 }
 
-void mine(DBF& rDBF)
+void mine(DBF& rDBF, const char *filename)
 {	cout << "Mining...\n";
 
 	char *KFieldVal;
 	list<char*> ValList(1, (char*)"\0");
 	list<char*>::iterator it;
 
-	ofstream file("output.txt", ios::app);
+	ofstream file(filename, ios::app);
 	ifstream fDBF(rDBF.name);
 	fDBF.seekg(rDBF.HeaLen+rDBF.KeyOffset+1); // seek to first record's Key Field
 	cout << "Seeking to " << rDBF.HeaLen+rDBF.KeyOffset+1 << endl;
@@ -51,11 +51,19 @@ int main(int argc, char *argv[])
 	DBF rDBF(argv[1], OK);	if (!OK) return 0;	
 	if (!rDBF.SetKey(argv[2])) return 0;
 
-	ofstream file("output.txt"); // write commandline
+	// prep filename
+	string filename(argv[1]);
+	filename = filename.substr(filename.find_last_of("/\\")+1);
+	if (!filename.compare(filename.size()-4, 4, ".dbf")) filename.erase(filename.size()-4, 4);
+	filename += "--";
+	filename += argv[2];
+	filename += ".txt";
+
+	ofstream file(filename.data()); // write commandline
 	  for (int i = 0; i < argc; i++) file << argv[i] << ' ';
 	  file << endl;
 	  file.close();
 
-	mine(rDBF);
+	mine(rDBF, filename.data());
 	return 0;
 }
