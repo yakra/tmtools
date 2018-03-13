@@ -16,14 +16,30 @@ void RecWrite(DBF oDBF, DBF tDBF, char* outFN, unsigned int ThreadNum, unsigned 
 	for (unsigned int rNum = ThreadNum; rNum < oDBF.NumRec && inDBF.tellg() < oDBF.size; rNum +=NumThreads)
 	{	outDBF.put(inDBF.get()); // ' ' or '*' precedes record contents
 		for (unsigned int fNum = 0; fNum < oDBF.NumFields; fNum++)
-			if (oDBF.fArr[fNum].type != 'C')
-			{	inDBF.seekg(oDBF.fArr[fNum].len-tDBF.fArr[fNum].len-oDBF.fArr[fNum].MinEx0, ios::cur);
-				for (unsigned char c = 0; c < tDBF.fArr[fNum].len; c++) outDBF.put(inDBF.get());
-				inDBF.seekg(oDBF.fArr[fNum].MinEx0, ios::cur);
+		{	char* fVal = new char[oDBF.fArr[fNum].len+1]; fVal[oDBF.fArr[fNum].len] = 0;
+			inDBF.read(fVal, oDBF.fArr[fNum].len);
+			unsigned char vlen = strlen(fVal);
+			unsigned char fI; // field value index
+			switch (oDBF.fArr[fNum].type)
+			{   case 'N':	case 'F':
+				fTrim(fVal, vlen);
+				if (vlen)
+				{	for (fI = vlen-oDBF.fArr[fNum].MinEx0; fI < tDBF.fArr[fNum].len; fI++) outDBF.put(' ');
+					outDBF.write(fVal, tDBF.fArr[fNum].len-fI+vlen-oDBF.fArr[fNum].MinEx0);
+				}
+				else	for (fI = 0; fI < tDBF.fArr[fNum].len; fI++) outDBF.put(' ');
+				break;
+			    case 'C':
+				fTrim(fVal, vlen);
+				outDBF << fVal;
+				for (fI = vlen; fI < tDBF.fArr[fNum].len; fI++) outDBF.put(' ');
+				break;
+			    default:
+				outDBF.write(fVal, tDBF.fArr[fNum].len);
 			}
-			else {	for (unsigned char c = 0; c < tDBF.fArr[fNum].len; c++) outDBF.put(inDBF.get());
-				inDBF.seekg(oDBF.fArr[fNum].len-tDBF.fArr[fNum].len, ios::cur);
-			     }
+			delete[] fVal;
+		}
+
 		if (ThreadNum == (oDBF.NumRec+NumThreads-1)%NumThreads)
 			ProgBar(rNum+1, oDBF.NumRec);
 		inDBF.seekg((NumThreads-1)*oDBF.RecLen, ios::cur);
