@@ -12,36 +12,56 @@ void fTrim(char* fVal, unsigned char &vlen)
 
 void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 {	unsigned char vlen = strlen(fVal);
-	unsigned char IntD = 0;
+	unsigned char IntD;
 	fTrim(fVal, vlen);
 	// trim extraneous trailing zeros
-	if (type == 'F' || type == 'N')
-	  if (strchr(fVal, '.') && !strchr(fVal, 'E') && !strchr(fVal, 'e'))
-	  {	unsigned char pad = 0;
+	switch (subtype(fVal))
+	{   case 1: // integer
+		if (MaxIntD < vlen) MaxIntD = vlen;
+		break;
+	    case 2: // decimal
 		IntD = strchr(fVal, '.') - fVal;
-		if (IntD > MaxIntD) MaxIntD = IntD;
-		for (unsigned char i = vlen-1; fVal[i] == '0'; i--) pad++;
-		if (pad < MinEx0)
-		{	MinEx0 = pad;
-			if (MinEx0 >= DecCount)
-			{	MinEx0++; // decimal point itself is extraneous
-				tDBF.fArr[fNum].DecCount = 0; // prevent wraparound when E.G. "0.0000000000" has a DecCount of 0
-			}
-			else	tDBF.fArr[fNum].DecCount = DecCount-MinEx0;
-		}
-	  }
-	  else	if (vlen)
-		{	MinEx0 = 0;
-			tDBF.fArr[fNum].DecCount = DecCount;
-		}
-	// compare
-	if (vlen-IntD+MaxIntD > tDBF.fArr[fNum].len+MinEx0)
-	{	tDBF.fArr[fNum].len = vlen-IntD-MinEx0+MaxIntD;
-		/*FIXME*/ if (tDBF.fArr[fNum].len > len) tDBF.fArr[fNum].len = len;	// temporary fix to keep left-justified numbers, a la TX, working.
-											// eventual implementation of trimming both left AND right should remove need for this.
-		delete[] tDBF.MaxVal[fNum];
-		tDBF.MaxVal[fNum] = fVal;
-		tDBF.MaxVal[fNum][vlen-MinEx0] = 0; // new terminator for when MinEx0
+		if (MaxIntD < IntD) MaxIntD = IntD;
+		unsigned char fI;
+		for (fI = vlen-1; fVal[fI] == '0'; fI--);
+		if (tDBF.fArr[fNum].DecCount < fI-IntD) tDBF.fArr[fNum].DecCount = fI-IntD;
+		break;
+	    case 3: // scientific notation float
+		tDBF.fArr[fNum].DecCount = DecCount;
 	}
-	else delete[] fVal;
+
+	// compare & set field length
+	switch (subtype(fVal))
+	{   case 2: // decimal
+		vlen = MaxIntD + (tDBF.fArr[fNum].DecCount > 0) + tDBF.fArr[fNum].DecCount; // reuse lame-duck variable rather than declare a new one
+		if (vlen > len) vlen = len;
+		if (tDBF.fArr[fNum].len < vlen)
+		{	tDBF.fArr[fNum].len = vlen;
+			delete[] tDBF.MaxVal[fNum];
+			tDBF.MaxVal[fNum] = fVal;
+			x0term = IntD + (tDBF.fArr[fNum].DecCount > 0) + tDBF.fArr[fNum].DecCount;
+			if (x0term == len) x0term = 0;
+		}
+		else delete[] fVal;
+		break;
+	    case 1: // integer
+	    case 3: // scientific notation float
+	    case 'C':
+		if (tDBF.fArr[fNum].len < vlen)
+		{	tDBF.fArr[fNum].len = vlen;
+			delete[] tDBF.MaxVal[fNum];
+			tDBF.MaxVal[fNum] = fVal;
+			x0term = 0;
+		}
+		else delete[] fVal;
+	}
+}
+
+unsigned char field::subtype(char* fVal)
+{	if (type == 'F' || type == 'N')
+	{	if (strchr(fVal, 'e') || strchr(fVal, 'E'))	return 3; // scientific notation float
+		else if (strchr(fVal, '.'))			return 2; // decimal
+		else						return 1; // integer
+	}
+	else return type;
 }
