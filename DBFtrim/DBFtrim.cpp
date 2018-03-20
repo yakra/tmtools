@@ -20,14 +20,16 @@ void RecWrite(DBF oDBF, DBF tDBF, char* outFN, unsigned int ThreadNum, unsigned 
 			inDBF.read(fVal, oDBF.fArr[fNum].len);
 			unsigned char vlen = strlen(fVal);
 			unsigned char fI; // field value index
-			switch (oDBF.fArr[fNum].type)
-			{   case 'N':	case 'F':
-				fTrim(fVal, vlen);
-				if (vlen)
-				{	for (fI = vlen-oDBF.fArr[fNum].MinEx0; fI < tDBF.fArr[fNum].len; fI++) outDBF.put(' ');
-					outDBF.write(fVal, tDBF.fArr[fNum].len-fI+vlen-oDBF.fArr[fNum].MinEx0);
-				}
-				else	for (fI = 0; fI < tDBF.fArr[fNum].len; fI++) outDBF.put(' ');
+			if (oDBF.fArr[fNum].type == 'N' || oDBF.fArr[fNum].type == 'F') fTrim(fVal, vlen);
+			switch (oDBF.fArr[fNum].subtype(fVal))
+			{   case 2: // decimal
+				if (vlen > strchr(fVal, '.') - fVal + 1 + tDBF.fArr[fNum].DecCount)
+					vlen = strchr(fVal, '.') - fVal + 1 + tDBF.fArr[fNum].DecCount;
+				if (!tDBF.fArr[fNum].DecCount) vlen--; // decimal point itself is extraneous
+			    case 1: // integer
+			    case 3: // scientific notation float
+				for (fI = vlen; fI < tDBF.fArr[fNum].len; fI++) outDBF.put(' ');
+				outDBF.write(fVal, vlen);
 				break;
 			    case 'C':
 				fTrim(fVal, vlen);
@@ -88,14 +90,11 @@ int main(int argc, char *argv[])
 		cout << oDBF.fArr[i].type << '\t';
 		cout << int(oDBF.fArr[i].len) << '\t';
 		cout << int(tDBF.fArr[i].len) << '\t';
-		for (unsigned char n = strlen(tDBF.MaxVal[i]); n < tDBF.fArr[i].len; n++) cout << '#';
-		cout << tDBF.MaxVal[i];
-		    if (oDBF.fArr[i].MinEx0)
-		    {	if (strchr(tDBF.MaxVal[i], '.'))
-				tDBF.MaxVal[i][strlen(tDBF.MaxVal[i])] = '0';
-			else	tDBF.MaxVal[i][strlen(tDBF.MaxVal[i])] = '.';
-			cout << " <- " << tDBF.MaxVal[i];
-		    }
+		unsigned mvSize = oDBF.fArr[i].x0term;
+		if (!mvSize) mvSize = strlen(tDBF.MaxVal[i]);
+		for (unsigned char n = mvSize; n < tDBF.fArr[i].len; n++) cout << '#';
+		cout.write(tDBF.MaxVal[i], mvSize);
+		    if (oDBF.fArr[i].x0term) cout << " <- " << tDBF.MaxVal[i];
 		cout << endl;
 	}
 
