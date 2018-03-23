@@ -1,11 +1,12 @@
 #include "dbf.cpp"
 
-void fTrim(char* fVal, unsigned char &vlen)
+void fTrim(char* fVal, unsigned char &vlen, char type)
 {	unsigned char pad;
 	// trim whitespace RIGHT
-	for (int i = vlen-1; fVal[i] <= ' ' && fVal[i] > 0 && i >= 0; i--) { fVal[i] = 0; vlen--; }
-	// trim whitespace LEFT
+	for (int i = vlen-1; fVal[i] <= ' ' && i >= 0; i--) { fVal[i] = 0; vlen--; }
+	// trim whitespace LEFT & extraneous leading zeros
 	for (pad = 0; fVal[pad] <= ' ' && pad < vlen; pad++);
+	if (type != 'C' && pad < vlen-1) while (fVal[pad] == '0' && fVal[pad+1] == '0') pad++;
 	vlen -= pad;
 	for (unsigned char i = 0; i <= vlen; i++) fVal[i] = fVal[pad+i];
 }
@@ -13,13 +14,10 @@ void fTrim(char* fVal, unsigned char &vlen)
 void field::GetMax(DBF& tDBF, unsigned int fNum, char* fVal)
 {	unsigned char vlen = strlen(fVal);
 	unsigned char IntD;
-	fTrim(fVal, vlen);
+	fTrim(fVal, vlen, type);
 	// trim extraneous trailing zeros
 	switch (subtype(fVal))
-	{   case 1: // integer
-		if (MaxIntD < vlen) MaxIntD = vlen;
-		break;
-	    case 2: // decimal
+	{   case 2: // decimal
 		IntD = strchr(fVal, '.') - fVal;
 		if (MaxIntD < IntD) MaxIntD = IntD;
 		unsigned char fI;

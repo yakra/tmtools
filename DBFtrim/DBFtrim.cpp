@@ -20,7 +20,7 @@ void RecWrite(DBF oDBF, DBF tDBF, char* outFN, unsigned int ThreadNum, unsigned 
 			inDBF.read(fVal, oDBF.fArr[fNum].len);
 			unsigned char vlen = strlen(fVal);
 			unsigned char fI; // field value index
-			if (oDBF.fArr[fNum].type == 'N' || oDBF.fArr[fNum].type == 'F') fTrim(fVal, vlen);
+			if (oDBF.fArr[fNum].type == 'N' || oDBF.fArr[fNum].type == 'F') fTrim(fVal, vlen, oDBF.fArr[fNum].type);
 			switch (oDBF.fArr[fNum].subtype(fVal))
 			{   case 2: // decimal
 				if (vlen > strchr(fVal, '.') - fVal + 1 + tDBF.fArr[fNum].DecCount)
@@ -32,7 +32,7 @@ void RecWrite(DBF oDBF, DBF tDBF, char* outFN, unsigned int ThreadNum, unsigned 
 				outDBF.write(fVal, vlen);
 				break;
 			    case 'C':
-				fTrim(fVal, vlen);
+				fTrim(fVal, vlen, oDBF.fArr[fNum].type);
 				outDBF << fVal;
 				for (fI = vlen; fI < tDBF.fArr[fNum].len; fI++) outDBF.put(' ');
 				break;
