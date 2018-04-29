@@ -599,6 +599,23 @@ void GetColors(char *System, char *UnColor, char *ClColor)
 		return;
 	}
 
+	// borders
+	if (!strcmp(System, "B_COUNTRY") || !strcmp(System, "b_country"))
+	{	strcpy (UnColor, "3c3c3c");
+		strcpy (ClColor, "3c3c3c");
+		return;
+	}
+	if (!strcmp(System, "B_SUBDIV") || !strcmp(System, "b_subdiv"))
+	{	strcpy (UnColor, "a0a0a0");
+		strcpy (ClColor, "a0a0a0");
+		return;
+	}
+	if (!strcmp(System, "B_WATER") || !strcmp(System, "b_water"))
+	{	strcpy (UnColor, "0000a0");
+		strcpy (ClColor, "0000a0");
+		return;
+	}
+
 	// default/unrecognized
 	strcpy (UnColor, "aaaaaa");
 	strcpy (ClColor, "555555");
@@ -705,10 +722,10 @@ void HTML(highway *hwy)
 		HwyNum++;
 	} //end for (route objects)
 
-	html << "var MinLat = rte[0].lat[0];\n";
-	html << "var MinLon = rte[0].lon[0];\n";
-	html << "var MaxLat = rte[0].lat[0];\n";
-	html << "var MaxLon = rte[0].lon[0];\n";
+	html << "var MinLat = rte[rte.length-1].lat[0];\n";
+	html << "var MinLon = rte[rte.length-1].lon[0];\n";
+	html << "var MaxLat = rte[rte.length-1].lat[0];\n";
+	html << "var MaxLon = rte[rte.length-1].lon[0];\n";
 	html << "var i, j, k;\n\n";
 
 	html << "function merc(lat)\n";
@@ -721,10 +738,10 @@ void HTML(highway *hwy)
 	html << "//EDB - get maximum and minimum latitude and longitude for a quick-n-dirty scale of the route trace to fill the canvas\n";
 	html << "for (j = 0; j < rte.length; j++)\n";
 	html << "{	for (i = 0; i < rte[j].lat.length; i++)\n";
-	html << "	{	if (rte[j].lat[i] < MinLat) MinLat = rte[j].lat[i];\n";
-	html << "		if (rte[j].lon[i] < MinLon) MinLon = rte[j].lon[i];\n";
-	html << "		if (rte[j].lat[i] > MaxLat) MaxLat = rte[j].lat[i];\n";
-	html << "		if (rte[j].lon[i] > MaxLon) MaxLon = rte[j].lon[i];\n";
+	html << "	{	if (rte[j].lat[i] < MinLat && rte[j].Region != \"B\" && rte[j].Region != \"b\") MinLat = rte[j].lat[i];\n";
+	html << "		if (rte[j].lon[i] < MinLon && rte[j].Region != \"B\" && rte[j].Region != \"b\") MinLon = rte[j].lon[i];\n";
+	html << "		if (rte[j].lat[i] > MaxLat && rte[j].Region != \"B\" && rte[j].Region != \"b\") MaxLat = rte[j].lat[i];\n";
+	html << "		if (rte[j].lon[i] > MaxLon && rte[j].Region != \"B\" && rte[j].Region != \"b\") MaxLon = rte[j].lon[i];\n";
 	html << "	}\n";
 	html << "}\n";
 	html << "var ScaleFac = Math.min((canvas.width-1)/(MaxLon-MinLon), (canvas.height-1)/(merc(MaxLat)-merc(MinLat)));\n";
@@ -821,7 +838,12 @@ bool CSVmode(char** CharVars, unsigned int CharSkip)
 				}
 			else CSV.get();
 		}
-		strcpy(InputFile, SourceDir); strcat(InputFile, Root); strcat(InputFile, ".wpt"); //construct input filename
+		//construct input filename
+		strcpy(InputFile, SourceDir);
+		strcat(InputFile, System);
+		strcat(InputFile, "/");
+		strcat(InputFile, Root);
+		strcat(InputFile, ".wpt");
 
 		if (!CSV.eof())
 			if (!FirstRte)
