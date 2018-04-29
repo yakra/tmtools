@@ -340,10 +340,15 @@ highway* BuildRte
 {	// The WPT actually exists, right?
 	ifstream WPT1 (filename, ifstream::in);
 	if (!WPT1.is_open())
-	{	cout << filename << " file not found!" << endl;
-		cout << "Skipping this file." << endl;
+	{	cout << filename << " file not found!\nSkipping this file." << endl;
 		return 0;
 	}
+	WPT1.seekg(0, ios::end);
+	if (!WPT1.tellg())
+	{	cout << filename << " filesize = 0!\nSkipping this file." << endl;
+		return 0;
+	}
+	WPT1.seekg(0);
 	ifstream WPT2 (filename, ifstream::in);
 
 	char str[4096];
@@ -591,7 +596,9 @@ void GetColors(char *System, char *UnColor, char *ClColor)
 	 || !strcmp(System, "USALA") || !strcmp(System, "usala") // USALA1 in development
 	 || !strcmp(System, "USAMS") || !strcmp(System, "usams")
 	 || !strcmp(System, "USATN") || !strcmp(System, "usatn")
-	 // Texas: multiple systems
+	 || !strcmp(System, "USATX") || !strcmp(System, "usatx") // SH State Highways
+	 || !strcmp(System, "USATXL") || !strcmp(System, "usatxl") // SL State Highway Loops
+	 || !strcmp(System, "USATXS") || !strcmp(System, "usatxs") // SS State Highway Spurs
 	 || !strcmp(System, "USAVA") || !strcmp(System, "usava")
 	 || !strcmp(System, "USAWY") || !strcmp(System, "usawy"))
 	{	strcpy (UnColor, "ffdcbe");
@@ -663,7 +670,7 @@ void HTML(highway *hwy)
 	html << "<body>\n";
 	html << "<canvas width=700 height=700>\n\n";
 
-	html << "(To see Canvas, upgrade browser.)\n\n";
+	html << "(To see Map, upgrade browser.)\n\n";
 
 	html << "</canvas>\n\n";
 
