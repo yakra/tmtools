@@ -56,20 +56,6 @@ void DblWrite(char *ofname, double number, double DecDig)
 	outfile.close();
 }
 
-double measure(double lat1, double lon1, double lat2, double lon2)
-{	lat1 *= (3.1415926535898/180); // deg -> rad
-	lon1 *= (3.1415926535898/180); // deg -> rad
-	lat2 *= (3.1415926535898/180); // deg -> rad
-	lon2 *= (3.1415926535898/180); // deg -> rad
-	double x1=cos(lon1)*cos(lat1);
-	double y1=sin(lon1)*cos(lat1);
-	double z1=sin(lat1);
-	double x2=cos(lon2)*cos(lat2);
-	double y2=sin(lon2)*cos(lat2);
-	double z2=sin(lat2);
-	return sqrt(pow(x2-x1,2)+pow(y2-y1,2)+pow(z2-z1,2));
-}
-
 class highway
 {	public:
 	char System[256], Region[256], Route[256], Banner[256], Abbrev[256], City[256], Root[256];
@@ -113,91 +99,6 @@ class highway
 	{	if (pt1)
 		{	while (pt1->next) delete pt1->next;
 			delete pt1;
-		}
-	}
-
-	void ListPts(bool AllLabels)
-	{	cout.precision(8);
-		for (waypoint *point = pt1; point; point = point->next)
-		{	if (AllLabels)
-				for (unsigned int l = 0; l < point->NumLabels; l++) cout << point->label[l] << '\t'; // print labels
-			else {	cout << point->label[0] << '\t';
-				if (strlen(point->label[0]) < 8) cout << '\t';
-			} // print coords
-			cout << point->OrigLat << '\t' << point->OrigLon << '\t';
-			cout << point->OffLat << '\t' << point->OffLon << '\t';
-			cout << point->OnLat << '\t' << point->OnLon << endl;
-		}
-	}
-
-	void write(bool DoOff, bool DoOn)
-	{	if (!KeyFound)
-		{	cout << "KeyValue " << KeyValue << " not found!" << endl;
-			cout << "Skipping " << Root << endl << endl;
-			return;
-		}
-		char OffName[1024] = "output/off/"; strcat(OffName, Root);
-		if (strcmp(&OffName[strlen(OffName)-4], ".wpt")) strcat(OffName, ".wpt");
-		char OnName[1024] = "output/on/"; strcat(OnName, Root);
-		if (strcmp(&OnName[strlen(OnName)-4], ".wpt")) strcat(OnName, ".wpt");
-		for (waypoint *point = pt1; point; point = point->next) // process each point
-		{	for (unsigned int l = 0; l < point->NumLabels; l++) // write labels
-			{	if (DoOff)
-				{	ofstream OffFile(OffName, ios::app);
-					OffFile << point->label[l] << ' ';
-					OffFile.close();
-				}
-				if (DoOn)
-				{	ofstream OnFile(OnName, ios::app);
-					OnFile << point->label[l] << ' ';
-					OnFile.close();
-				}
-			} //end for (write labels)
-			if (DoOff)
-			{	ofstream OffFile(OffName, ios::app);
-				OffFile << "http://www.openstreetmap.org/?lat=";
-				 OffFile.close();
-				DblWrite(OffName, point->OffLat, 6);
-				 OffFile.open(OffName, ios::app);
-				  OffFile << "&lon=";
-				   OffFile.close();
-				DblWrite(OffName, point->OffLon, 6);
-				 OffFile.open(OffName, ios::app);
-				  OffFile << endl;
-				   OffFile.close();
-			}
-			if (DoOn)
-			{	ofstream OnFile(OnName, ios::app);
-				OnFile << "http://www.openstreetmap.org/?lat=";
-				 OnFile.close();
-				DblWrite(OnName, point->OnLat, 6);
-				 OnFile.open(OnName, ios::app);
-				  OnFile << "&lon=";
-				   OnFile.close();
-				DblWrite(OnName, point->OnLon, 6);
-				 OnFile.open(OnName, ios::app);
-				  OnFile << endl;
-				   OnFile.close();
-			}
-		} //end for (process each point)
-	} //end write()
-
-	void TakePt(double shpLat, double shpLon, bool firstPt, bool lastPt) // Compare shapefile point coords against coords of each WPT point
-	{	double shpDist;
-		KeyFound = 1;
-		for (waypoint *point = pt1; point; point = point->next)
-		{	shpDist = measure(shpLat, shpLon, point->OrigLat, point->OrigLon);
-			if (shpDist < point->OffDist)
-			{	point->OffDist = shpDist;
-				point->OffLat = shpLat;
-				point->OffLon = shpLon;
-			}
-			if (shpDist < point->OnDist)
-				if (firstPt || lastPt || point->label[0][0] == '+')
-				{	point->OnDist = shpDist;
-					point->OnLat = shpLat;
-					point->OnLon = shpLon;
-				}
 		}
 	}
 
@@ -408,15 +309,6 @@ highway* BuildRte
 	} //cout << "while (!WPT1.eof()) finished\n";
 	//cout << "\n\nbookmark = " << bookmark << " | tellg() = " << WPT1.tellg() << "\n\n";
 	WPT1.close(); WPT2.close(); //cout << "input files closed\n";
-
-	for (point = hwy->pt1; point; point = point->next)
-	{	point->OffLat = point->OrigLat * -1;
-		point->OffLon = point->OrigLon + 180;
-		point->OffDist = measure(point->OffLat, point->OffLon, point->OrigLat, point->OrigLon);
-		point->OnLat = point->OrigLat * -1;
-		point->OnLon = point->OrigLon + 180;
-		point->OnDist = measure(point->OnLat, point->OnLon, point->OrigLat, point->OrigLon);
-	}
 
 	//cout << "BuildRte: " << filename << " | " << Root << " OK\n";
 	return hwy;
@@ -719,7 +611,7 @@ bool CSVmode(char** CharVars, unsigned int CharSkip, char *SysCSV)
 		/*for (hwy = FirstRte; hwy; hwy = hwy->next)
 			hwy->CSVline();//*/
 	}
-} //end CSVmode2
+} //end CSVmode
 
 int main(int argc, char *argv[])
 {	char InputFile[1024] = "routes.csv";
