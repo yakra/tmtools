@@ -35,27 +35,6 @@ class waypoint
 	}
 };
 
-void DblWrite(char *ofname, double number, double DecDig)
-{	ofstream outfile(ofname, ios::app);
-	int sign = 1;
-	if (number < 0) sign = -1;
-
-	number *= pow(10,DecDig);
-	if (abs(number-int(number)) >= 0.5) number +=sign;
-	number /= pow(10,DecDig);
-
-	outfile << int(number) << '.';
-	if (number < 0) number *= -1;
-
-	while (DecDig)
-	{	number -= int(number);
-		number *= 10;
-		outfile << int(number);
-		DecDig--;
-	}
-	outfile.close();
-}
-
 class highway
 {	public:
 	char System[256], Region[256], Route[256], Banner[256], Abbrev[256], City[256], Root[256];
@@ -439,9 +418,7 @@ void HTML(highway *hwy, char *SysCSV)
 		html << "//EDB - point latitudes\n";
 		html << "lat:[";
 		for (waypoint *point = hwy->pt1; point; point = point->next)
-		{	html.close();
-			DblWrite(filename, point->OrigLat, 6);
-			html.open(filename, ios::app);
+		{	html << to_string(point->OrigLat);
 			if (point->next) html << ", ";
 		}
 		html << "],\n";
@@ -449,9 +426,7 @@ void HTML(highway *hwy, char *SysCSV)
 		html << "//EDB - point longitudes\n";
 		html << "lon:[";
 		for (waypoint *point = hwy->pt1; point; point = point->next)
-		{	html.close();
-			DblWrite(filename, point->OrigLon, 6);
-			html.open(filename, ios::app);
+		{	html << to_string(point->OrigLon);
 			if (point->next) html << ", ";
 		}
 		html << "],\n";
