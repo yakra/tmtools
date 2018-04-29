@@ -71,14 +71,27 @@ double measure(double lat1, double lon1, double lat2, double lon2)
 
 class highway
 {	public:
-	char System[256], Region[256], Route[256], Banner[256], Abbrev[256], City[256], Root[256]; /*AltRouteNames*/
+	char System[256], Region[256], Route[256], Banner[256], Abbrev[256], City[256], Root[256];
+	unsigned int NumAltRtes; char **AltRouteNames;
 	char Name[768], KeyValue[256];
 	bool KeyFound;
 	unsigned int NumPts;
 	waypoint *pt1;
 	highway *next;
 
-	highway(char SysIn[256], char RegIn[256], char RteIn[256], char BanIn[256], char AbbIn[256], char CityIn[256], char RootIn[256], char KeyIn[256])
+	highway
+	(	char SysIn[256],
+		char RegIn[256],
+		char RteIn[256],
+		char BanIn[256],
+		char AbbIn[256],
+		char CityIn[256],
+		char RootIn[256],
+		unsigned int NAR,
+		char **ARN,
+		char KeyIn[256]
+	)
+
 	{	NumPts = 0;
 		strcpy(System, SysIn);
 		strcpy(Region, RegIn);
@@ -88,6 +101,8 @@ class highway
 		strcpy(City, CityIn);
 		strcpy(Root, RootIn);
 		strcpy(KeyValue, KeyIn);
+		NumAltRtes = NAR;
+		AltRouteNames = ARN;
 		KeyFound = 0;
 		next = 0;
 		strcpy(Name, Route); strcat(Name, Banner); strcat(Name, Abbrev);
@@ -184,6 +199,36 @@ class highway
 				}
 		}
 	}
+
+	unsigned int LblInd(char *lbl) // returning a value >= NumLabels = failure.
+	{	unsigned int p = 0;
+		for (waypoint *point = pt1; p < NumPts; p++)
+		{	for (unsigned int l = 0; l < point->NumLabels; l++)
+				if (!strcmp(point->label[l], lbl))
+				{	if (l) cout << Region << ' ' << Name << ' ' << point->label[l] << ": deprecated in favor of " << point->label[0] << endl;
+					return p;
+				}
+			point = point->next;
+		}
+		cout << Region << ' ' << Name << ' ' << lbl << ": point label not recognized\n";
+		return p;
+	}
+
+	void CSVline()
+	{	cout << System << ';' << Region << ';' << Route << ';' << Banner << ';' << Abbrev << ';' << City << ';' << Root << ';';
+		if (NumAltRtes)
+		{	cout << AltRouteNames[0];
+			for (unsigned short i = 1; i < NumAltRtes; i++) cout << ',' << AltRouteNames[i];
+		}
+		cout << endl;
+	}
+
+	bool NameMatch(const char *string)
+	{	if (!strcmp(string, Name)) return 1;
+		for (unsigned short i = 0; i < NumAltRtes; i++)
+			if (!strcmp(string, AltRouteNames[i])) return 1;
+		return 0;
+	}
 }; //end highway class
 
 // replace this idiotic function with calls to strstr, or something
@@ -278,7 +323,20 @@ bool parseURL(char *URL, double *wptLat, double *wptLon)
 	return 1;
 } //end parseURL
 
-highway* BuildRte(char *filename, char System[256], char Region[256], char Route[256], char Banner[256], char Abbrev[256], char City[256], char Root[256], char KeyValue[256])
+highway* BuildRte
+(	char *filename,
+	char System[256],
+	char Region[256],
+	char Route[256],
+	char Banner[256],
+	char Abbrev[256],
+	char City[256],
+	char Root[256],
+	unsigned int NumAltRtes,
+	char **AltRouteNames,
+	char KeyValue[256]
+)
+
 {	// The WPT actually exists, right?
 	ifstream WPT1 (filename, ifstream::in);
 	if (!WPT1.is_open())
@@ -290,7 +348,7 @@ highway* BuildRte(char *filename, char System[256], char Region[256], char Route
 
 	char str[4096];
 	int bookmark = 0;
-	highway *hwy = new highway(System, Region, Route, Banner, Abbrev, City, Root, KeyValue);
+	highway *hwy = new highway(System, Region, Route, Banner, Abbrev, City, Root, NumAltRtes, AltRouteNames, KeyValue);
 	hwy->pt1 = new waypoint(0);
 	waypoint *point = hwy->pt1;
 
@@ -359,17 +417,76 @@ highway* BuildRte(char *filename, char System[256], char Region[256], char Route
 } //end BuildRte
 
 void GetColors(char *System, char *UnColor, char *ClColor)
-{	if (!strcmp(System, "USAI") || !strcmp(System, "usai"))
+// Layers defined:
+// http://clinched.s2.bizhat.com/viewtopic.php?p=6942#6942
+// http://clinched.s2.bizhat.com/viewtopic.php?p=11333#11333
+
+{	// Layer 1: Freeway/motorway systems
+	if (!strcmp(System, "ALBA") || !strcmp(System, "alba")
+	 || !strcmp(System, "AUTA") || !strcmp(System, "auta")
+	 || !strcmp(System, "BELA") || !strcmp(System, "bela")
+	 || !strcmp(System, "BGRA") || !strcmp(System, "bgra")
+	 || !strcmp(System, "BIHA") || !strcmp(System, "biha")
+	 || !strcmp(System, "CANNSF") || !strcmp(System, "cannsf")
+	 || !strcmp(System, "CANONF") || !strcmp(System, "canonf")
+	 || !strcmp(System, "CANQCA") || !strcmp(System, "canqca")
+	 || !strcmp(System, "CHEA") || !strcmp(System, "chea")
+	 || !strcmp(System, "CYPA") || !strcmp(System, "cypa")
+	 || !strcmp(System, "CZED") || !strcmp(System, "czed")
+	 || !strcmp(System, "DEUA") || !strcmp(System, "deua")
+	 || !strcmp(System, "ESPA") || !strcmp(System, "espa")
+	 || !strcmp(System, "FRAA") || !strcmp(System, "fraa")
+	 || !strcmp(System, "GBNM") || !strcmp(System, "gbnm")
+	 || !strcmp(System, "GRCA") || !strcmp(System, "grca")
+	 || !strcmp(System, "HRVA") || !strcmp(System, "hrva")
+	 || !strcmp(System, "HUNM") || !strcmp(System, "hunm")
+	 || !strcmp(System, "IRLM") || !strcmp(System, "irlm")
+	 || !strcmp(System, "ITAA") || !strcmp(System, "itaa")
+	 || !strcmp(System, "JAMT") || !strcmp(System, "jamt")
+	 || !strcmp(System, "LUXA") || !strcmp(System, "luxa")
+	 || !strcmp(System, "MEXD") || !strcmp(System, "mexd")
+	 || !strcmp(System, "MTQA") || !strcmp(System, "mtqa")
+	 || !strcmp(System, "NIRM") || !strcmp(System, "nirm")
+	 || !strcmp(System, "NLDA") || !strcmp(System, "nlda")
+	 || !strcmp(System, "POLA") || !strcmp(System, "pola")
+	 || !strcmp(System, "PTRA") || !strcmp(System, "prta")
+	 || !strcmp(System, "RKSR") || !strcmp(System, "rksr") // Kosovo Motorways. Not activated. No thread on forum?! Tim's turf.
+	 || !strcmp(System, "ROUA") || !strcmp(System, "roua")
+	 || !strcmp(System, "SVKD") || !strcmp(System, "svkd")
+	 || !strcmp(System, "SVNA") || !strcmp(System, "svna")
+	 || !strcmp(System, "TURO") || !strcmp(System, "turo")
+	 || !strcmp(System, "USAI") || !strcmp(System, "usai"))
 	{	strcpy (UnColor, "32ffff");
 		strcpy (ClColor, "0000dc");
 		return;
 	}
-	if (!strcmp(System, "USAME") || !strcmp(System, "usame"))
-	{	strcpy (UnColor, "ffdcbe");
-		strcpy (ClColor, "643200");
+	if (!strcmp(System, "USAIF") || !strcmp(System, "usaif"))
+	{	strcpy (UnColor, "fff064");
+		strcpy (ClColor, "ff9600");
 		return;
 	}
-	if (!strcmp(System, "USAUS") || !strcmp(System, "usaus"))
+	// Layer 1: Expressway systems
+	if (!strcmp(System, "AUTS") || !strcmp(System, "auts")
+	 || !strcmp(System, "CANNF") || !strcmp(System, "cannf") // not activated
+	 || !strcmp(System, "ESPACA") || !strcmp(System, "espaca")
+	 || !strcmp(System, "GBNAM") || !strcmp(System, "gbnam") // no map views. oops?
+	 || !strcmp(System, "ITASM") || !strcmp(System, "itasm")
+	 || !strcmp(System, "LUXB") || !strcmp(System, "luxb")
+	 || !strcmp(System, "MEXED") || !strcmp(System, "mexed")
+	 || !strcmp(System, "NIRAM") || !strcmp(System, "niram") // no map views. oops?
+	 || !strcmp(System, "POLS") || !strcmp(System, "pols")
+	 || !strcmp(System, "SVKR") || !strcmp(System, "svkr")
+	 || !strcmp(System, "SVNH") || !strcmp(System, "svnh")
+	 || !strcmp(System, "USASF") || !strcmp(System, "usasf"))
+	{	strcpy (UnColor, "96fac8");
+		strcpy (ClColor, "009696");
+		return;
+	}
+
+	// Layer 2: Continental systems
+	if (!strcmp(System, "CANTCH") || !strcmp(System, "cantch")
+	 || !strcmp(System, "EURE") || !strcmp(System, "eure")
+	 || !strcmp(System, "USAUS") || !strcmp(System, "usaus"))
 	{	strcpy (UnColor, "ffb4b4");
 		strcpy (ClColor, "c80000");
 		return;
@@ -379,68 +496,137 @@ void GetColors(char *System, char *UnColor, char *ClColor)
 		strcpy (ClColor, "b400b4");
 		return;
 	}
+	if (!strcmp(System, "USAIB") || !strcmp(System, "usaib"))
+	{	strcpy (UnColor, "64c864");
+		strcpy (ClColor, "00b400");
+		return;
+	}
+
+	// Layer 3: State/prov. systems (big countries) and national systems (small countries)
+	if (!strcmp(System, "CANAB") || !strcmp(System, "canab") // in development but not yet in the HB
+	 || !strcmp(System, "CANABS") || !strcmp(System, "canabs") // in development but not yet in the HB
+	 || !strcmp(System, "CANMB") || !strcmp(System, "canmb") // in development but not yet in the HB
+	 || !strcmp(System, "CANNB") || !strcmp(System, "cannb")
+	 || !strcmp(System, "CANNSC") || !strcmp(System, "cannsc")
+	 || !strcmp(System, "CANNST") || !strcmp(System, "cannst")
+	 || !strcmp(System, "CANNT") || !strcmp(System, "cannt")
+	 || !strcmp(System, "CANON") || !strcmp(System, "canon")
+	 || !strcmp(System, "CANPE") || !strcmp(System, "canpe")
+	 || !strcmp(System, "CANSPH") || !strcmp(System, "cansph") // not activated. System will eventually be deleted.
+	 || !strcmp(System, "CANYT") || !strcmp(System, "canyt")
+	 || !strcmp(System, "GBNA") || !strcmp(System, "gbna")
+	 || !strcmp(System, "GBNA1") || !strcmp(System, "gbna1")
+	 || !strcmp(System, "GBNA2") || !strcmp(System, "gbna2")
+	 || !strcmp(System, "GBNA3") || !strcmp(System, "gbna3")
+	 || !strcmp(System, "GBNA4") || !strcmp(System, "gbna4")
+	 || !strcmp(System, "GBNA5") || !strcmp(System, "gbna5")
+	 || !strcmp(System, "GBNA6") || !strcmp(System, "gbna6")
+	 || !strcmp(System, "GBNA7") || !strcmp(System, "gbna7")
+	 || !strcmp(System, "GBNA8") || !strcmp(System, "gbna8")
+	 || !strcmp(System, "GBNA9") || !strcmp(System, "gbna9")
+	 || !strcmp(System, "IMNA") || !strcmp(System, "imna")
+	 || !strcmp(System, "IRLN") || !strcmp(System, "irln")
+	 || !strcmp(System, "JEYA") || !strcmp(System, "jeya")
+	 || !strcmp(System, "NIRA") || !strcmp(System, "nira")
+	 || !strcmp(System, "USAAK") || !strcmp(System, "usaak")
+	 || !strcmp(System, "USAAZ") || !strcmp(System, "usaaz")
+	 || !strcmp(System, "USACA") || !strcmp(System, "usaca")
+	 || !strcmp(System, "USACT") || !strcmp(System, "usact")
+	 || !strcmp(System, "USADC") || !strcmp(System, "usadc")
+	 || !strcmp(System, "USADE") || !strcmp(System, "usade")
+	 || !strcmp(System, "USAFL") || !strcmp(System, "usafl")
+	 || !strcmp(System, "USAHI") || !strcmp(System, "usahi")
+	 || !strcmp(System, "USAIA") || !strcmp(System, "usaia")
+	 || !strcmp(System, "USAID") || !strcmp(System, "usaid")
+	 || !strcmp(System, "USAIL") || !strcmp(System, "usail")
+	 || !strcmp(System, "USAKS") || !strcmp(System, "usaks")
+	 || !strcmp(System, "USAKY") || !strcmp(System, "usaky")
+	 || !strcmp(System, "USAKY1") || !strcmp(System, "usaky1")
+	 || !strcmp(System, "USAKY2") || !strcmp(System, "usaky2")
+	 || !strcmp(System, "USAKY3") || !strcmp(System, "usaky3")
+	 || !strcmp(System, "USAKY4") || !strcmp(System, "usaky4")
+	 || !strcmp(System, "USALA1") || !strcmp(System, "usala1")
+	 || !strcmp(System, "USAMA") || !strcmp(System, "usama")
+	 || !strcmp(System, "USAMD") || !strcmp(System, "usamd")
+	 || !strcmp(System, "USAME") || !strcmp(System, "usame")
+	 || !strcmp(System, "USAMI") || !strcmp(System, "usami")
+	 || !strcmp(System, "USAMN") || !strcmp(System, "usamn")
+	 || !strcmp(System, "USAMO") || !strcmp(System, "usamo")
+	 || !strcmp(System, "USAMT") || !strcmp(System, "usamt")
+	 || !strcmp(System, "USANC") || !strcmp(System, "usanc")
+	 || !strcmp(System, "USAND") || !strcmp(System, "usand")
+	 || !strcmp(System, "USANE") || !strcmp(System, "usane")
+	 || !strcmp(System, "USANH") || !strcmp(System, "usanh")
+	 || !strcmp(System, "USANJ") || !strcmp(System, "usanj")
+	 || !strcmp(System, "USANM") || !strcmp(System, "usanm")
+	 || !strcmp(System, "USANSF") || !strcmp(System, "usansf") // US select numbered freeways. System will eventually be deleted.
+	 || !strcmp(System, "USANV") || !strcmp(System, "usanv")
+	 || !strcmp(System, "USANY") || !strcmp(System, "usany")
+	 || !strcmp(System, "USAOH") || !strcmp(System, "usaoh")
+	 || !strcmp(System, "USAOK") || !strcmp(System, "usaok")
+	 || !strcmp(System, "USAOR") || !strcmp(System, "usaor")
+	 || !strcmp(System, "USAPA") || !strcmp(System, "usapa")
+	 || !strcmp(System, "USARI") || !strcmp(System, "usari")
+	 || !strcmp(System, "USASC") || !strcmp(System, "usasc")
+	 || !strcmp(System, "USASD") || !strcmp(System, "usasd")
+	 || !strcmp(System, "USAUT") || !strcmp(System, "usaut")
+	 || !strcmp(System, "USAVT") || !strcmp(System, "usavt")
+	 || !strcmp(System, "USAWA") || !strcmp(System, "usawa")
+	 || !strcmp(System, "USAWI") || !strcmp(System, "usawi")
+	 || !strcmp(System, "USAWV") || !strcmp(System, "usawv")
+	// Canadian prov. systems not yet in development:
+	 || !strcmp(System, "CANBC") || !strcmp(System, "canbc")
+	 || !strcmp(System, "CANMBS") || !strcmp(System, "canmbs")
+	 || !strcmp(System, "CANNL") || !strcmp(System, "cannl")
+	 || !strcmp(System, "CANONS") || !strcmp(System, "canons")
+	 || !strcmp(System, "CANQC") || !strcmp(System, "canqc")
+	 || !strcmp(System, "CANSK") || !strcmp(System, "cansk")
+	 || !strcmp(System, "CANSKS") || !strcmp(System, "cansks")
+	// US state systems not yet in development or not yet in the HB:
+	 || !strcmp(System, "USAAL") || !strcmp(System, "usaal")
+	 || !strcmp(System, "USAAR") || !strcmp(System, "usaar")
+	 || !strcmp(System, "USACO") || !strcmp(System, "usaco")
+	 || !strcmp(System, "USAGA") || !strcmp(System, "usaga")
+	 || !strcmp(System, "USAIN") || !strcmp(System, "usain")
+	 || !strcmp(System, "USALA") || !strcmp(System, "usala") // USALA1 in development
+	 || !strcmp(System, "USAMS") || !strcmp(System, "usams")
+	 || !strcmp(System, "USATN") || !strcmp(System, "usatn")
+	 // Texas: multiple systems
+	 || !strcmp(System, "USAVA") || !strcmp(System, "usava")
+	 || !strcmp(System, "USAWY") || !strcmp(System, "usawy"))
+	{	strcpy (UnColor, "ffdcbe");
+		strcpy (ClColor, "643200");
+		return;
+	}
+
+	// default/unrecognized
 	strcpy (UnColor, "aaaaaa");
 	strcpy (ClColor, "555555");
 }
 
-/*void readlist(char *htmlFile, highway *hwy)
-{	char Region[256], Name[256], pl1[256], pl2[256];
-	ofstream html(htmlFile, ios::app);
-	ifstream list("list.list");
-
-	struct ptPairT
-	{	char pl1[256], pl2[256];
-		ptPairT *next;
-	};
-
-	ptPairT *ptPair1 = 0;
-	ptPairT *ptPair = 0;
-
-	while (!list.eof())
-	{	list >> Region >> Name >> pl1 >> pl2; //FIXME: assumes perfectly formatted .list file with exactly four strings on every line
-		if (!strcmp(Region, hwy->Region) && !strcmp(Name, hwy->Name))
-		{	if (!ptPair1)
-			{	ptPair1 = new ptPairT;
-				ptPair = ptPair1;
-				ptPair->next = 0;
-				strcpy(ptPair->pl1, pl1);
-				strcpy(ptPair->pl2, pl2);
-			} else
-			{	ptPair->next = new ptPairT;
-				ptPair = ptPair->next;
-				ptPair->next = 0;
-				strcpy(ptPair->pl1, pl1);
-				strcpy(ptPair->pl2, pl2);
-			}
-			while (ptPair->pl1[0] == '+' || ptPair->pl1[0] == '*')
-				strcpy (ptPair->pl1, &ptPair->pl1[1]);
-			while (ptPair->pl2[0] == '+' || ptPair->pl2[0] == '*')
-				strcpy (ptPair->pl2, &ptPair->pl2[1]);
-		}
-	}
-	if (ptPair1)
-	{	for (ptPair = ptPair1; ptPair->next; ptPair = ptPair->next)
-			html << "[\"" << ptPair->pl1 << "\", \"" << ptPair->pl2 << "\"], ";
-		html << "[\"" << ptPair->pl1 << "\", \"" << ptPair->pl2 << "\"]"; // write the last one
-	}
-	html.close();
-	list.close();
-}//*/
-
 void readlist(char *htmlFile, highway *hwy)
 {	char Region[256], Name[256], pl1[256], pl2[256];
+	unsigned int pi1, pi2;
 	ofstream html(htmlFile, ios::app);
 	ifstream list("list.list");
 	bool comma = 0;
 
-	while (!list.eof())
-	{	list >> Region >> Name >> pl1 >> pl2; //FIXME: assumes perfectly formatted .list file with exactly four strings on every line
-		if (!strcmp(Region, hwy->Region) && !strcmp(Name, hwy->Name))
-		{	if (comma)	html << ", [\"" << pl1 << "\", \"" << pl2 << "\"]";
-			else		html << "[\"" << pl1 << "\", \"" << pl2 << "\"]"; // write the first one
-			comma = 1;
+	while (list >> Region >> Name >> pl1 >> pl2) //FIXME: assumes perfectly formatted .list file with exactly four strings on every line
+		if (!strcmp(Region, hwy->Region) && hwy->NameMatch(Name))
+		{	while (pl1[0] == '+' || pl1[0] == '*') strcpy (pl1, &pl1[1]);
+			while (pl2[0] == '+' || pl2[0] == '*') strcpy (pl2, &pl2[1]);
+			pi1 = hwy->LblInd(pl1);
+			pi2 = hwy->LblInd(pl2);
+			if (pi1 < hwy->NumPts && pi2 < hwy->NumPts)
+			{	if (comma)
+					if (pi1 < pi2)	html << ", " << pi1 << ", " << pi2;
+					else		html << ", " << pi2 << ", " << pi1;
+				else	// write the first one
+					if (pi1 < pi2)	html << pi1 << ", " << pi2;
+					else		html << pi2 << ", " << pi1;
+				comma = 1;
+			}
 		}
-	}
 	html.close();
 	list.close();
 }
@@ -502,16 +688,15 @@ void HTML(highway *hwy)
 		}
 		html << "],\n";
 
-		// FIXME: deprecated; will disappear soon
-		html << "//vdeane - labels from highway browser\n";
+		/*html << "//vdeane - labels from highway browser\n";
 		html << "labels:[";
 		for (waypoint *point = hwy->pt1; point; point = point->next)
 		{	html << '"' << point->label[0] << '"';
 			if (point->next) html << ", ";
 		}
-		html << "],\n";
+		html << "],\n";//*/
 
-		html << "//vdeane - data from .list file\ncliSegments:[";
+		html << "//vdeane & EDB - indices to .listfile endpoints\ncliSegments:[";
 		html.close();
 		readlist(filename, hwy);
 		html.open(filename, ios::app);
@@ -526,6 +711,13 @@ void HTML(highway *hwy)
 	html << "var MaxLon = rte[0].lon[0];\n";
 	html << "var i, j, k;\n\n";
 
+	html << "function merc(lat)\n";
+	html << "{	return Math.log(Math.tan(0.785398163+lat*3.1415926535898/360))*180/3.1415926535898;\n";
+	html << "}\n\n";
+
+	html << "//John Pound - initialize canvas\n";
+	html << "var canvas = document.getElementsByTagName(\"canvas\")[0];\n\n";
+
 	html << "//EDB - get maximum and minimum latitude and longitude for a quick-n-dirty scale of the route trace to fill the canvas\n";
 	html << "for (j = 0; j < rte.length; j++)\n";
 	html << "{	for (i = 0; i < rte[j].lat.length; i++)\n";
@@ -535,11 +727,8 @@ void HTML(highway *hwy)
 	html << "		if (rte[j].lon[i] > MaxLon) MaxLon = rte[j].lon[i];\n";
 	html << "	}\n";
 	html << "}\n";
-	html << "var width = MaxLon - MinLon;\n";
-	html << "var height = MaxLat - MinLat;\n\n";
-
-	html << "//John Pound - initialize canvas\n";
-	html << "var canvas = document.getElementsByTagName(\"canvas\")[0];\n\n";
+	html << "var ScaleFac = Math.min((canvas.width-1)/(MaxLon-MinLon), (canvas.height-1)/(merc(MaxLat)-merc(MinLat)));\n";
+	html << "var MinMerc = merc(MinLat);\n\n";
 
 	html << "//vdeane & EDB - base route line traces\n";
 	html << "for (k = 0; k < rte.length; k++)\n";
@@ -547,15 +736,15 @@ void HTML(highway *hwy)
 	html << "	c.save();\n";
 	html << "	c.beginPath();\n";
 	html << "	c.strokeStyle = rte[k].UnColor;\n";
-	html << "	c.moveTo((rte[k].lon[0] - MinLon) * 699 / width, 699 - (rte[k].lat[0] - MinLat) * 699 / height);\n";
-	html << "	for (i = 1; i < rte[k].lat.length; i++) c.lineTo((rte[k].lon[i] - MinLon) * 699 / width, 699 - (rte[k].lat[i] - MinLat) * 699 / height);\n";
+	html << "	c.moveTo((rte[k].lon[0]-MinLon)*ScaleFac, canvas.height-1-(merc(rte[k].lat[0])-MinMerc)*ScaleFac);\n";
+	html << "	for (i = 1; i < rte[k].lat.length; i++) c.lineTo((rte[k].lon[i]-MinLon)*ScaleFac, canvas.height-1-(merc(rte[k].lat[i])-MinMerc)*ScaleFac);\n";
 	html << "	c.stroke();\n";
 	html << "	c.restore();\n";
 	html << "}\n\n";
 
 	html << "//vdeane & EDB - begin drawing segments\n";
 	html << "for (k = 0; k < rte.length; k++)\n";
-	html << "{	for (i = 0; i < rte[k].cliSegments.length; i++)\n";
+	html << "{	for (i = 0; i < rte[k].cliSegments.length; i+=2)\n";
 	html << "	{	var CliPt = false; //vdeane - track if start or end of segment\n";
 	html << "		c = canvas.getContext(\"2d\");\n";
 	html << "		c.save();\n";
@@ -563,13 +752,13 @@ void HTML(highway *hwy)
 	html << "		c.strokeStyle = rte[k].ClColor;\n\n";
 
 	html << "		for (j = 0; j < rte[k].lat.length; j++)\n";
-	html << "		{	if (rte[k].cliSegments[i][0] === rte[k].labels[j])\n";
-	html << "			{	c.moveTo((rte[k].lon[j] - MinLon) * 699 / width, 699 - (rte[k].lat[j] - MinLat) * 699 / height);\n";
+	html << "		{	if (rte[k].cliSegments[i] === j)\n";
+	html << "			{	c.moveTo((rte[k].lon[j]-MinLon)*ScaleFac, canvas.height-1-(merc(rte[k].lat[j])-MinMerc)*ScaleFac);\n";
 	html << "				CliPt = true;\n";
 	html << "			}\n";
 	html << "			if (CliPt === true && j !== 0)\n";
-	html << "				c.lineTo((rte[k].lon[j] - MinLon) * 699 / width, 699 - (rte[k].lat[j] - MinLat) * 699 / height);\n";
-	html << "			if (rte[k].cliSegments[i][1] === rte[k].labels[j])\n";
+	html << "				c.lineTo((rte[k].lon[j]-MinLon)*ScaleFac, canvas.height-1-(merc(rte[k].lat[j])-MinMerc)*ScaleFac);\n";
+	html << "			if (rte[k].cliSegments[i+1] === j)\n";
 	html << "			{	c.stroke();\n";
 	html << "				c.restore();\n";
 	html << "				CliPt = false;\n";
@@ -592,7 +781,8 @@ bool CSVmode(char** CharVars, unsigned int CharSkip)
 	strcpy(CSVname, InputFile);
 	highway *FirstRte = 0;
 	highway *hwy = 0;
-	unsigned int i;
+	unsigned int i, bookmark, NumAltRtes;
+	char **AltRouteNames;
 
 	ifstream CSV(CSVname, ios::in);
 	if (!CSV.is_open())
@@ -610,21 +800,44 @@ bool CSVmode(char** CharVars, unsigned int CharSkip)
 		Abbrev[0] = CSV.get(); for (i = 0; i < 256 && Abbrev[i] != ';' && !CSV.eof(); Abbrev[i] = CSV.get()) i++; Abbrev[i] = 0;
 		City[0] = CSV.get(); for (i = 0; i < 256 && City[i] != ';' && !CSV.eof(); City[i] = CSV.get()) i++; City[i] = 0;
 		Root[0] = CSV.get(); for (i = 0; i < 256 && Root[i] != ';' && Root[i] != '\n' && !CSV.eof(); Root[i] = CSV.get()) i++;
-		char breaker = Root[i]; Root[i] = 0;
-		if (breaker == ';') while ((CSV.get() != '\n') && !CSV.eof()); //skip to row end
+		char charlie = Root[i]; Root[i] = 0; NumAltRtes = 0;
+		if (charlie == ';') // AltRouteNames column exists
+		{	bookmark = CSV.tellg();
+			CSV.get(charlie);
+			if (charlie != '\n') NumAltRtes = 1;
+			while ((charlie != '\n') && !CSV.eof()) //FIXME tellg() filesize yadda yadda
+			{	if (charlie == ',') NumAltRtes++;
+				CSV.get(charlie);
+			}
+			AltRouteNames = new char*[NumAltRtes];
+			CSV.seekg(bookmark);
+			if (NumAltRtes)
+				for (unsigned int a = 0; a < NumAltRtes; a++)
+				{	AltRouteNames[a] = new char[256];
+					AltRouteNames[a][0] = CSV.get();
+					for (i = 0; i < 256 && AltRouteNames[a][i] != ',' && AltRouteNames[a][i] != '\n' && !CSV.eof(); AltRouteNames[a][i] = CSV.get())
+						i++;
+					AltRouteNames[a][i] = 0;
+				}
+			else CSV.get();
+		}
 		strcpy(InputFile, SourceDir); strcat(InputFile, Root); strcat(InputFile, ".wpt"); //construct input filename
 
 		if (!CSV.eof())
 			if (!FirstRte)
-			{	FirstRte = BuildRte(InputFile, System, Region, Route, Banner, Abbrev, City, Root, KeyValue);
+			{	FirstRte = BuildRte(InputFile, System, Region, Route, Banner, Abbrev, City, Root, NumAltRtes, AltRouteNames, KeyValue);
 				hwy = FirstRte;
 			} else
-			{	hwy->next = BuildRte(InputFile, System, Region, Route, Banner, Abbrev, City, Root, KeyValue);
+			{	hwy->next = BuildRte(InputFile, System, Region, Route, Banner, Abbrev, City, Root, NumAltRtes, AltRouteNames, KeyValue);
 				if (hwy->next) hwy = hwy->next;
 			}
 	} //end while (step thru each line of CSV*/
 	cout << endl;
-	if (FirstRte) HTML(FirstRte);
+	if (FirstRte)
+	{	HTML(FirstRte);
+		/*for (hwy = FirstRte; hwy; hwy = hwy->next)
+			hwy->CSVline();//*/
+	}
 } //end CSVmode2
 
 int main()
