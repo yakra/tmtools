@@ -426,206 +426,146 @@ void GetColors(char *System, char *UnColor, char *ClColor)
 // http://clinched.s2.bizhat.com/viewtopic.php?p=6942#6942
 // http://clinched.s2.bizhat.com/viewtopic.php?p=11333#11333
 
-{	// Layer 1: Freeway/motorway systems
-	if (!strcmp(System, "ALBA") || !strcmp(System, "alba")
-	 || !strcmp(System, "AUTA") || !strcmp(System, "auta")
-	 || !strcmp(System, "BELA") || !strcmp(System, "bela")
-	 || !strcmp(System, "BGRA") || !strcmp(System, "bgra")
-	 || !strcmp(System, "BIHA") || !strcmp(System, "biha")
-	 || !strcmp(System, "CANNSF") || !strcmp(System, "cannsf")
-	 || !strcmp(System, "CANONF") || !strcmp(System, "canonf")
-	 || !strcmp(System, "CANQCA") || !strcmp(System, "canqca")
-	 || !strcmp(System, "CHEA") || !strcmp(System, "chea")
-	 || !strcmp(System, "CYPA") || !strcmp(System, "cypa")
-	 || !strcmp(System, "CZED") || !strcmp(System, "czed")
-	 || !strcmp(System, "DEUA") || !strcmp(System, "deua")
-	 || !strcmp(System, "ESPA") || !strcmp(System, "espa")
-	 || !strcmp(System, "FRAA") || !strcmp(System, "fraa")
-	 || !strcmp(System, "GBNM") || !strcmp(System, "gbnm")
-	 || !strcmp(System, "GRCA") || !strcmp(System, "grca")
-	 || !strcmp(System, "HRVA") || !strcmp(System, "hrva")
-	 || !strcmp(System, "HUNM") || !strcmp(System, "hunm")
-	 || !strcmp(System, "IRLM") || !strcmp(System, "irlm")
-	 || !strcmp(System, "ITAA") || !strcmp(System, "itaa")
-	 || !strcmp(System, "JAMT") || !strcmp(System, "jamt")
-	 || !strcmp(System, "LUXA") || !strcmp(System, "luxa")
-	 || !strcmp(System, "MEXD") || !strcmp(System, "mexd")
-	 || !strcmp(System, "MTQA") || !strcmp(System, "mtqa")
-	 || !strcmp(System, "NIRM") || !strcmp(System, "nirm")
-	 || !strcmp(System, "NLDA") || !strcmp(System, "nlda")
-	 || !strcmp(System, "POLA") || !strcmp(System, "pola")
-	 || !strcmp(System, "PTRA") || !strcmp(System, "prta")
-	 || !strcmp(System, "RKSR") || !strcmp(System, "rksr") // Kosovo Motorways. Not activated. No thread on forum?! Tim's turf.
-	 || !strcmp(System, "ROUA") || !strcmp(System, "roua")
-	 || !strcmp(System, "SVKD") || !strcmp(System, "svkd")
-	 || !strcmp(System, "SVNA") || !strcmp(System, "svna")
-	 || !strcmp(System, "TURO") || !strcmp(System, "turo")
-	 || !strcmp(System, "USAI") || !strcmp(System, "usai"))
-	{	strcpy (UnColor, "32ffff");
-		strcpy (ClColor, "0000dc");
-		return;
-	}
-	if (!strcmp(System, "USAIF") || !strcmp(System, "usaif"))
-	{	strcpy (UnColor, "fff064");
-		strcpy (ClColor, "ff9600");
-		return;
-	}
-	// Layer 1: Expressway systems
-	if (!strcmp(System, "AUTS") || !strcmp(System, "auts")
-	 || !strcmp(System, "CANNF") || !strcmp(System, "cannf") // not activated
-	 || !strcmp(System, "ESPACA") || !strcmp(System, "espaca")
-	 || !strcmp(System, "GBNAM") || !strcmp(System, "gbnam") // no map views. oops?
-	 || !strcmp(System, "ITASM") || !strcmp(System, "itasm")
-	 || !strcmp(System, "LUXB") || !strcmp(System, "luxb")
-	 || !strcmp(System, "MEXED") || !strcmp(System, "mexed")
-	 || !strcmp(System, "NIRAM") || !strcmp(System, "niram") // no map views. oops?
-	 || !strcmp(System, "POLS") || !strcmp(System, "pols")
-	 || !strcmp(System, "SVKR") || !strcmp(System, "svkr")
-	 || !strcmp(System, "SVNH") || !strcmp(System, "svnh")
-	 || !strcmp(System, "USASF") || !strcmp(System, "usasf"))
-	{	strcpy (UnColor, "96fac8");
-		strcpy (ClColor, "009696");
+{	// blue / Tier 1		Freeway/motorway systems
+	if (!strcmp(System, "alba")
+	 || !strcmp(System, "alba")	|| !strcmp(System, "auta")	|| !strcmp(System, "bela")	|| !strcmp(System, "biha")	|| !strcmp(System, "bgra")
+	 || !strcmp(System, "cannsf")	|| !strcmp(System, "canonf")	|| !strcmp(System, "canqca")	|| !strcmp(System, "chea")	|| !strcmp(System, "cypa")
+	 || !strcmp(System, "czed")	|| !strcmp(System, "deua")	|| !strcmp(System, "espa")	|| !strcmp(System, "fraa")	|| !strcmp(System, "mtqa")
+	 || !strcmp(System, "gbnm")	|| !strcmp(System, "gbnam")	|| !strcmp(System, "nirm")	|| !strcmp(System, "niram")	|| !strcmp(System, "gaba")
+	 || !strcmp(System, "grca")	|| !strcmp(System, "hrva")	|| !strcmp(System, "hunm")	|| !strcmp(System, "irlm")	|| !strcmp(System, "isrf")
+	 || !strcmp(System, "itaa")	|| !strcmp(System, "jamt")	|| !strcmp(System, "luxa")	|| !strcmp(System, "mara")	|| !strcmp(System, "mexd")
+	 || !strcmp(System, "nama")	|| !strcmp(System, "nlda")	|| !strcmp(System, "pola")	|| !strcmp(System, "prta")	|| !strcmp(System, "rksr")
+	 || !strcmp(System, "roua")	|| !strcmp(System, "sena")	|| !strcmp(System, "sgpex")	|| !strcmp(System, "srba")	|| !strcmp(System, "svkd")
+	 || !strcmp(System, "svna")	|| !strcmp(System, "turo")	|| !strcmp(System, "tuna")	|| !strcmp(System, "usai")	|| !strcmp(System, "chng")
+	 || !strcmp(System, "idnjt")	|| !strcmp(System, "index")	|| !strcmp(System, "irnf")	|| !strcmp(System, "korex")	|| !strcmp(System, "lkae")
+	 || !strcmp(System, "myse")	|| !strcmp(System, "nzlmot")	|| !strcmp(System, "pakm")	|| !strcmp(System, "phle")	|| !strcmp(System, "twnf")
+	 || !strcmp(System, "ngae"))
+	{	strcpy (UnColor, "6464ff"); // formerly 32ffff
+		strcpy (ClColor, "0000ff"); // formerly 0000dc
 		return;
 	}
 
-	// Layer 2: Continental systems
-	if (!strcmp(System, "CANTCH") || !strcmp(System, "cantch")
-	 || !strcmp(System, "EURE") || !strcmp(System, "eure")
-	 || !strcmp(System, "USAUS") || !strcmp(System, "usaus"))
-	{	strcpy (UnColor, "ffb4b4");
-		strcpy (ClColor, "c80000");
-		return;
-	}
-	if (!strcmp(System, "USAUSB") || !strcmp(System, "usausb"))
-	{	strcpy (UnColor, "ff96ff");
-		strcpy (ClColor, "b400b4");
-		return;
-	}
-	if (!strcmp(System, "USAIB") || !strcmp(System, "usaib"))
-	{	strcpy (UnColor, "64c864");
-		strcpy (ClColor, "00b400");
+	// teal / Tier 2		Expressway systems
+	if (!strcmp(System, "auts")
+	 || !strcmp(System, "belb")	|| !strcmp(System, "eursf")	|| !strcmp(System, "ncle")	|| !strcmp(System, "luxb")	|| !strcmp(System, "pols")
+	 || !strcmp(System, "prtip")	|| !strcmp(System, "prtve")	|| !strcmp(System, "svkr")	|| !strcmp(System, "svnh")	|| !strcmp(System, "usakyp")
+	 || !strcmp(System, "hkgrt")	|| !strcmp(System, "usanyp")
+		/* deprecated: */	|| !strcmp(System, "espaca")	|| !strcmp(System, "itasm")	// folded into eursf: "Allsorts", 2015-08-23
+	// teal / Tier 3		Expressway systems
+	 || !strcmp(System, "mexed")	|| !strcmp(System, "usaif")	|| !strcmp(System, "usansf")	|| !strcmp(System, "usasf")	|| !strcmp(System, "cannf"))
+	{	strcpy (UnColor, "64c8c8"); // formerly 96fac8
+		strcpy (ClColor, "00c8c8"); // formerly 009696
 		return;
 	}
 
-	// Layer 3: State/prov. systems (big countries) and national systems (small countries)
-	if (!strcmp(System, "CANAB") || !strcmp(System, "canab") // in development but not yet in the HB
-	 || !strcmp(System, "CANABS") || !strcmp(System, "canabs") // in development but not yet in the HB
-	 || !strcmp(System, "CANMB") || !strcmp(System, "canmb") // in development but not yet in the HB
-	 || !strcmp(System, "CANNB") || !strcmp(System, "cannb")
-	 || !strcmp(System, "CANNSC") || !strcmp(System, "cannsc")
-	 || !strcmp(System, "CANNST") || !strcmp(System, "cannst")
-	 || !strcmp(System, "CANNT") || !strcmp(System, "cannt")
-	 || !strcmp(System, "CANON") || !strcmp(System, "canon")
-	 || !strcmp(System, "CANPE") || !strcmp(System, "canpe")
-	 || !strcmp(System, "CANSPH") || !strcmp(System, "cansph") // not activated. System will eventually be deleted.
-	 || !strcmp(System, "CANYT") || !strcmp(System, "canyt")
-	 || !strcmp(System, "GBNA") || !strcmp(System, "gbna")
-	 || !strcmp(System, "GBNA1") || !strcmp(System, "gbna1")
-	 || !strcmp(System, "GBNA2") || !strcmp(System, "gbna2")
-	 || !strcmp(System, "GBNA3") || !strcmp(System, "gbna3")
-	 || !strcmp(System, "GBNA4") || !strcmp(System, "gbna4")
-	 || !strcmp(System, "GBNA5") || !strcmp(System, "gbna5")
-	 || !strcmp(System, "GBNA6") || !strcmp(System, "gbna6")
-	 || !strcmp(System, "GBNA7") || !strcmp(System, "gbna7")
-	 || !strcmp(System, "GBNA8") || !strcmp(System, "gbna8")
-	 || !strcmp(System, "GBNA9") || !strcmp(System, "gbna9")
-	 || !strcmp(System, "IMNA") || !strcmp(System, "imna")
-	 || !strcmp(System, "IRLN") || !strcmp(System, "irln")
-	 || !strcmp(System, "JEYA") || !strcmp(System, "jeya")
-	 || !strcmp(System, "NIRA") || !strcmp(System, "nira")
-	 || !strcmp(System, "USAAK") || !strcmp(System, "usaak")
-	 || !strcmp(System, "USAAZ") || !strcmp(System, "usaaz")
-	 || !strcmp(System, "USACA") || !strcmp(System, "usaca")
-	 || !strcmp(System, "USACT") || !strcmp(System, "usact")
-	 || !strcmp(System, "USADC") || !strcmp(System, "usadc")
-	 || !strcmp(System, "USADE") || !strcmp(System, "usade")
-	 || !strcmp(System, "USAFL") || !strcmp(System, "usafl")
-	 || !strcmp(System, "USAHI") || !strcmp(System, "usahi")
-	 || !strcmp(System, "USAIA") || !strcmp(System, "usaia")
-	 || !strcmp(System, "USAID") || !strcmp(System, "usaid")
-	 || !strcmp(System, "USAIL") || !strcmp(System, "usail")
-	 || !strcmp(System, "USAKS") || !strcmp(System, "usaks")
-	 || !strcmp(System, "USAKY") || !strcmp(System, "usaky")
-	 || !strcmp(System, "USAKY1") || !strcmp(System, "usaky1")
-	 || !strcmp(System, "USAKY2") || !strcmp(System, "usaky2")
-	 || !strcmp(System, "USAKY3") || !strcmp(System, "usaky3")
-	 || !strcmp(System, "USAKY4") || !strcmp(System, "usaky4")
-	 || !strcmp(System, "USALA1") || !strcmp(System, "usala1")
-	 || !strcmp(System, "USAMA") || !strcmp(System, "usama")
-	 || !strcmp(System, "USAMD") || !strcmp(System, "usamd")
-	 || !strcmp(System, "USAME") || !strcmp(System, "usame")
-	 || !strcmp(System, "USAMI") || !strcmp(System, "usami")
-	 || !strcmp(System, "USAMN") || !strcmp(System, "usamn")
-	 || !strcmp(System, "USAMO") || !strcmp(System, "usamo")
-	 || !strcmp(System, "USAMT") || !strcmp(System, "usamt")
-	 || !strcmp(System, "USANC") || !strcmp(System, "usanc")
-	 || !strcmp(System, "USAND") || !strcmp(System, "usand")
-	 || !strcmp(System, "USANE") || !strcmp(System, "usane")
-	 || !strcmp(System, "USANH") || !strcmp(System, "usanh")
-	 || !strcmp(System, "USANJ") || !strcmp(System, "usanj")
-	 || !strcmp(System, "USANM") || !strcmp(System, "usanm")
-	 || !strcmp(System, "USANSF") || !strcmp(System, "usansf") // US select numbered freeways. System will eventually be deleted.
-	 || !strcmp(System, "USANV") || !strcmp(System, "usanv")
-	 || !strcmp(System, "USANY") || !strcmp(System, "usany")
-	 || !strcmp(System, "USAOH") || !strcmp(System, "usaoh")
-	 || !strcmp(System, "USAOK") || !strcmp(System, "usaok")
-	 || !strcmp(System, "USAOR") || !strcmp(System, "usaor")
-	 || !strcmp(System, "USAPA") || !strcmp(System, "usapa")
-	 || !strcmp(System, "USARI") || !strcmp(System, "usari")
-	 || !strcmp(System, "USASC") || !strcmp(System, "usasc")
-	 || !strcmp(System, "USASD") || !strcmp(System, "usasd")
-	 || !strcmp(System, "USAUT") || !strcmp(System, "usaut")
-	 || !strcmp(System, "USAVT") || !strcmp(System, "usavt")
-	 || !strcmp(System, "USAWA") || !strcmp(System, "usawa")
-	 || !strcmp(System, "USAWI") || !strcmp(System, "usawi")
-	 || !strcmp(System, "USAWV") || !strcmp(System, "usawv")
-	// Canadian prov. systems not yet in development:
-	 || !strcmp(System, "CANBC") || !strcmp(System, "canbc")
-	 || !strcmp(System, "CANMBS") || !strcmp(System, "canmbs")
-	 || !strcmp(System, "CANNL") || !strcmp(System, "cannl")
-	 || !strcmp(System, "CANONS") || !strcmp(System, "canons")
-	 || !strcmp(System, "CANQC") || !strcmp(System, "canqc")
-	 || !strcmp(System, "CANSK") || !strcmp(System, "cansk")
-	 || !strcmp(System, "CANSKS") || !strcmp(System, "cansks")
-	// US state systems not yet in development or not yet in the HB:
-	 || !strcmp(System, "USAAL") || !strcmp(System, "usaal")
-	 || !strcmp(System, "USAAR") || !strcmp(System, "usaar")
-	 || !strcmp(System, "USACO") || !strcmp(System, "usaco")
-	 || !strcmp(System, "USAGA") || !strcmp(System, "usaga")
-	 || !strcmp(System, "USAIN") || !strcmp(System, "usain")
-	 || !strcmp(System, "USALA") || !strcmp(System, "usala") // USALA1 in development
-	 || !strcmp(System, "USAMS") || !strcmp(System, "usams")
-	 || !strcmp(System, "USATN") || !strcmp(System, "usatn")
-	 || !strcmp(System, "USATX") || !strcmp(System, "usatx") // SH State Highways
-	 || !strcmp(System, "USATXL") || !strcmp(System, "usatxl") // SL State Highway Loops
-	 || !strcmp(System, "USATXS") || !strcmp(System, "usatxs") // SS State Highway Spurs
-	 || !strcmp(System, "USAVA") || !strcmp(System, "usava")
-	 || !strcmp(System, "USAWY") || !strcmp(System, "usawy"))
-	{	strcpy (UnColor, "ffdcbe");
-		strcpy (ClColor, "643200");
+
+	// green / Tier 2		Continental systems
+	if (!strcmp(System, "usaib")
+	// green / Tier 3		Continental systems
+	 || !strcmp(System, "eure"))
+	{	strcpy (UnColor, "64ff64"); // formerly 64c864
+		strcpy (ClColor, "00ff00"); // formerly 00b400
+		return;
+	}
+
+	// red / Tier 2			Continental systems
+	if (!strcmp(System, "cantch")	|| !strcmp(System, "usaus")
+	// red / Tier 3			Continental systems
+	 || !strcmp(System, "eure"))
+	{	strcpy (UnColor, "ff6464"); // formerly ffb4b4
+		strcpy (ClColor, "ff0000"); // formerly c80000
+		return;
+	}
+
+	// magenta / Tier 3		Continental systems
+	if (!strcmp(System, "usausb"))
+	{	strcpy (UnColor, "ff64ff"); // formerly ff96ff
+		strcpy (ClColor, "ff00ff"); // formerly b400b4
+		return;
+	}
+
+	// lightsalmon / Tier 4
+	if (!strcmp(System, "abwrt")	|| !strcmp(System, "andcg")	|| !strcmp(System, "armm")	|| !strcmp(System, "autb")	|| !strcmp(System, "azem")
+	 || !strcmp(System, "belr")	|| !strcmp(System, "bgri")	|| !strcmp(System, "blrm")	|| !strcmp(System, "cheh")	|| !strcmp(System, "cism")
+	 || !strcmp(System, "cisa")	|| !strcmp(System, "cypb")	|| !strcmp(System, "czei")	|| !strcmp(System, "dnkpr")	|| !strcmp(System, "estp")
+	 || !strcmp(System, "finvt")	|| !strcmp(System, "alavt")	|| !strcmp(System, "fran")	|| !strcmp(System, "frht")	|| !strcmp(System, "gufn")
+	 || !strcmp(System, "pyft")	|| !strcmp(System, "glpn")	|| !strcmp(System, "hunf")	|| !strcmp(System, "mtqn")	|| !strcmp(System, "mytn")
+	 || !strcmp(System, "nclt")	|| !strcmp(System, "reun")	|| !strcmp(System, "spmn")	|| !strcmp(System, "wlft")	|| !strcmp(System, "gbna")
+	 || !strcmp(System, "nira")	|| !strcmp(System, "geos")	|| !strcmp(System, "hrvd")	|| !strcmp(System, "imna")	|| !strcmp(System, "irln")
+	 || !strcmp(System, "jeya")	|| !strcmp(System, "kaza")	|| !strcmp(System, "kgzem")	|| !strcmp(System, "ltua")	|| !strcmp(System, "luxn")
+	 || !strcmp(System, "lvaa")	|| !strcmp(System, "mdam")	|| !strcmp(System, "mltt")	|| !strcmp(System, "mkda")	|| !strcmp(System, "mnem")
+	 || !strcmp(System, "nldr")	|| !strcmp(System, "norrv")	|| !strcmp(System, "poldk")	|| !strcmp(System, "prtic")	|| !strcmp(System, "rksn")
+	 || !strcmp(System, "roudn")	|| !strcmp(System, "rusm")	|| !strcmp(System, "svki")	|| !strcmp(System, "svng")	|| !strcmp(System, "swer")
+	 || !strcmp(System, "ukrm")	|| !strcmp(System, "albsh")	|| !strcmp(System, "bihm")	|| !strcmp(System, "deub")	|| !strcmp(System, "espn")
+	 || !strcmp(System, "islth")	|| !strcmp(System, "isrh")	|| !strcmp(System, "lkaa")	|| !strcmp(System, "nplh")	|| !strcmp(System, "srbb")
+	 || !strcmp(System, "zafn")	|| !strcmp(System, "grceo")	|| !strcmp(System, "itass")	|| !strcmp(System, "namb")	|| !strcmp(System, "nzlsh")
+	 || !strcmp(System, "rusr")	|| !strcmp(System, "rusa"))
+	{	strcpy (UnColor, "ffc8c8");
+		strcpy (ClColor, "ffa07a");
+		return;
+	}
+
+	// brown / Tier 4		State/prov. systems (big countries) and national systems (small countries)
+	if (!strcmp(System, "brbh")	|| !strcmp(System, "brbh")	|| !strcmp(System, "canab")	|| !strcmp(System, "canbc")	|| !strcmp(System, "canmb")
+	 || !strcmp(System, "cannb")	|| !strcmp(System, "cannst")	|| !strcmp(System, "cannt")	|| !strcmp(System, "canon")	|| !strcmp(System, "canpe")
+	 || !strcmp(System, "canyt")	|| !strcmp(System, "usaaz")	|| !strcmp(System, "usaco")	|| !strcmp(System, "usact")	|| !strcmp(System, "usadc")
+	 || !strcmp(System, "usade")	|| !strcmp(System, "usagu")	|| !strcmp(System, "usahi")	|| !strcmp(System, "usaia")	|| !strcmp(System, "usaid")
+	 || !strcmp(System, "usail")	|| !strcmp(System, "usain")	|| !strcmp(System, "usaks")	|| !strcmp(System, "usaky")	|| !strcmp(System, "usame")
+	 || !strcmp(System, "usamd")	|| !strcmp(System, "usama")	|| !strcmp(System, "usami")	|| !strcmp(System, "usamn")	|| !strcmp(System, "usamo")
+	 || !strcmp(System, "usamt")	|| !strcmp(System, "usane")	|| !strcmp(System, "usanes")	|| !strcmp(System, "usanv")	|| !strcmp(System, "usanh")
+	 || !strcmp(System, "usanj")	|| !strcmp(System, "usanm")	|| !strcmp(System, "usany")	|| !strcmp(System, "usanc")	|| !strcmp(System, "usand")
+	 || !strcmp(System, "usamp")	|| !strcmp(System, "usaoh")	|| !strcmp(System, "usaok")	|| !strcmp(System, "usaor")	|| !strcmp(System, "usapa")
+	 || !strcmp(System, "usari")	|| !strcmp(System, "usasd")	|| !strcmp(System, "usatx")	|| !strcmp(System, "usatxl")	|| !strcmp(System, "usatxs")
+	 || !strcmp(System, "usaut")	|| !strcmp(System, "usava")	|| !strcmp(System, "usavt")	|| !strcmp(System, "usavi")	|| !strcmp(System, "usawa")
+	 || !strcmp(System, "usawv")	|| !strcmp(System, "usawi")	|| !strcmp(System, "usawy")	|| !strcmp(System, "cannl")	|| !strcmp(System, "canqc")
+	 || !strcmp(System, "jama")	|| !strcmp(System, "usaak")	|| !strcmp(System, "usaca")	|| !strcmp(System, "usaga")	|| !strcmp(System, "usapr")
+	 || !strcmp(System, "usasc")	|| !strcmp(System, "usatn")	|| !strcmp(System, "cansph")	|| !strcmp(System, "usaas")	|| !strcmp(System, "usafl")
+	 || !strcmp(System, "usala1")	|| !strcmp(System, "usanp")	|| !strcmp(System, "usaush")
+		/* future: */		|| !strcmp(System, "cansk")	|| !strcmp(System, "usaal")	|| !strcmp(System, "usaar")
+	// brown / Tier 5			UK Tourist and Scenic Routes
+	 || !strcmp(System, "gbrtr"))
+	{	strcpy (UnColor, "999866"); // formerly ffdcbe
+		strcpy (ClColor, "996600"); // formerly 643200
+		return;
+	}
+
+	// yellow / Tier 4
+	if (!strcmp(System, "beln")
+	// yellow / Tier 5
+	 || !strcmp(System, "cannsc")	|| !strcmp(System, "dnksr")	|| !strcmp(System, "finkt")	|| !strcmp(System, "alakt")	|| !strcmp(System, "nlds")
+	 || !strcmp(System, "czeii")	|| !strcmp(System, "deubyst")	|| !strcmp(System, "deuhel")	|| !strcmp(System, "estt")	|| !strcmp(System, "irlr")
+	 || !strcmp(System, "ltuk")	|| !strcmp(System, "nldp")	|| !strcmp(System, "norfv0")	|| !strcmp(System, "norfv1")	|| !strcmp(System, "poldw1")
+	 || !strcmp(System, "svkii")	|| !strcmp(System, "swel")	|| !strcmp(System, "usamts")	|| !strcmp(System, "canmbw")	|| !strcmp(System, "cannss")
+	 || !strcmp(System, "deubwl")	|| !strcmp(System, "deubbl")	|| !strcmp(System, "deumvl")	|| !strcmp(System, "deunil")	|| !strcmp(System, "deunwl")
+	 || !strcmp(System, "deurpl")	|| !strcmp(System, "deusll")	|| !strcmp(System, "deusns")	|| !strcmp(System, "deustl")	|| !strcmp(System, "deushl")
+	 || !strcmp(System, "deuthl")	|| !strcmp(System, "lvap")	|| !strcmp(System, "norfv2")	|| !strcmp(System, "norfv3")	|| !strcmp(System, "norfv4")
+	 || !strcmp(System, "norfv5")	|| !strcmp(System, "norfv6")	|| !strcmp(System, "norfv7")	|| !strcmp(System, "norfv8")	|| !strcmp(System, "poldw2")
+	 || !strcmp(System, "poldw3")	|| !strcmp(System, "poldw4")	|| !strcmp(System, "poldw5")	|| !strcmp(System, "poldw6")	|| !strcmp(System, "poldw7")
+	 || !strcmp(System, "poldw8")	|| !strcmp(System, "poldw9")	|| !strcmp(System, "svnr")
+		/* future: */		|| !strcmp(System, "canabs")	|| !strcmp(System, "canmbs")	|| !strcmp(System, "canons")	|| !strcmp(System, "cansks"))
+	{	strcpy (UnColor, "ffff80");
+		strcpy (ClColor, "ffff00");
 		return;
 	}
 
 	// borders
 	if (!strcmp(System, "B_COUNTRY") || !strcmp(System, "b_country"))
-	{	strcpy (UnColor, "3c3c3c");
-		strcpy (ClColor, "3c3c3c");
-		return;
-	}
+		{ strcpy (UnColor, "3c3c3c"); strcpy (ClColor, "3c3c3c"); return; }
 	if (!strcmp(System, "B_SUBDIV") || !strcmp(System, "b_subdiv"))
-	{	strcpy (UnColor, "a0a0a0");
-		strcpy (ClColor, "a0a0a0");
-		return;
-	}
+		{ strcpy (UnColor, "a0a0a0"); strcpy (ClColor, "a0a0a0"); return; }
 	if (!strcmp(System, "B_WATER") || !strcmp(System, "b_water"))
-	{	strcpy (UnColor, "0000a0");
-		strcpy (ClColor, "0000a0");
-		return;
-	}
+		{ strcpy (UnColor, "0000a0"); strcpy (ClColor, "0000a0"); return; }
+
+	// cannb split test
+	if (!strcmp(System, "cannba"))	{ strcpy (UnColor, "6464ff");	strcpy (ClColor, "0000ff");	return; }	// blue
+//	if (!strcmp(System, "cannba"))	{ strcpy (UnColor, "64c8c8");	strcpy (ClColor, "00c8c8");	return; }	// teal
+	if (!strcmp(System, "cannbc"))	{ strcpy (UnColor, "999866");	strcpy (ClColor, "996600");	return; }	// brown
+	if (!strcmp(System, "cannbl"))	{ strcpy (UnColor, "FFD864");	strcpy (ClColor, "E8B000");	return; }	// yellow
+//	if (!strcmp(System, "cannbl"))	{ strcpy (UnColor, "ffc8c8");	strcpy (ClColor, "ffa07a");	return; }	// lightsalmon
 
 	// default/unrecognized
-	strcpy (UnColor, "aaaaaa");
-	strcpy (ClColor, "555555");
+	strcpy (UnColor, "aaaaaa");	strcpy (ClColor, "555555");
+	cout << "Warning: unrecognized System code " << System << " will be colored gray.\n";
 }
 
 void readlist(char *htmlFile, highway *hwy)
