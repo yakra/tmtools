@@ -89,7 +89,8 @@ highway* BuildRte(const char *filename, std::string Sys, std::string Reg, std::s
 	while (WPT.tellg() < EoF) // step thru each WPT line
 	{	std::string WPTline; // read individual line
 		for (char charlie = 0; charlie != '\n' && WPT.tellg() < EoF; WPTline.push_back(charlie)) WPT.get(charlie);
-		if (WPTline[WPTline.size()-1] == '\n') WPTline[WPTline.size()-1] = 0; //account for missing terminal '\n'
+		while (WPTline.back() == 0x0A || WPTline.back() == 0x0D)	// either DOS or UNIX...
+			WPTline.erase(WPTline.end()-1);				// strip out terminal '\n'
 		// parse WPT line
 		waypoint point;
 		char *wlArr = new char[WPTline.size()+1];
