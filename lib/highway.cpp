@@ -96,11 +96,13 @@ highway* BuildRte(const char *filename, std::string Sys, std::string Reg, std::s
 		strcpy(wlArr, WPTline.data());
 		for (char *label = strtok(wlArr, " "); label; label = strtok(0, " "))
 			point.label.push_back(label);	// get all tokens & put into label array
-		point.URL = point.label.back();		// last token is actually the URL...
-		point.label.pop_back();			// ...and not a label.
-		if (point.label.empty()) point.label.push_back("NULL");
-		point.InitCoords();
-		hwy->pt.push_back(point);		// add completed line to waypoint list
+		if (!point.label.empty())
+		{	point.URL = point.label.back();		// last token is actually the URL...
+			point.label.pop_back();			// ...and not a label.
+			if (point.label.empty()) point.label.push_back("NULL");
+			point.InitCoords();
+			hwy->pt.push_back(point);		// add completed line to waypoint list
+		}
 	} //end while (step thru each WPT line)
 	return hwy;
 }
