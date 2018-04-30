@@ -351,10 +351,9 @@ void GetColors2(string SysCode, char *SysCSV, char *UnColor, char *ClColor)
 	cout << "Warning: unrecognized System code " << SysCode << " will be colored gray.\n";
 }
 
-void readlist(char *htmlFile, highway *hwy)
+void readlist(ofstream *html, highway *hwy)
 {	char Region[256], Name[256], pl1[256], pl2[256];
 	unsigned int pi1, pi2;
-	ofstream html(htmlFile, ios::app);
 	ifstream list("list.list");
 	bool comma = 0;
 
@@ -366,15 +365,14 @@ void readlist(char *htmlFile, highway *hwy)
 			pi2 = hwy->LblInd(pl2);
 			if (pi1 < hwy->NumPts && pi2 < hwy->NumPts)
 			{	if (comma)
-					if (pi1 < pi2)	html << ", " << pi1 << ", " << pi2;
-					else		html << ", " << pi2 << ", " << pi1;
+					if (pi1 < pi2)	*html << ", " << pi1 << ", " << pi2;
+					else		*html << ", " << pi2 << ", " << pi1;
 				else	// write the first one
-					if (pi1 < pi2)	html << pi1 << ", " << pi2;
-					else		html << pi2 << ", " << pi1;
+					if (pi1 < pi2)	*html << pi1 << ", " << pi2;
+					else		*html << pi2 << ", " << pi1;
 				comma = 1;
 			}
 		}
-	html.close();
 	list.close();
 }
 
@@ -440,9 +438,7 @@ void HTML(highway *hwy, char *SysCSV)
 		html << "],\n";//*/
 
 		html << "//vdeane & EDB - indices to .listfile endpoints\ncliSegments:[";
-		html.close();
-		readlist(filename, hwy);
-		html.open(filename, ios::app);
+		readlist(&html, hwy);
 		html << "]\n} //end object definition\n\n";
 
 		HwyNum++;
