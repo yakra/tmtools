@@ -279,7 +279,8 @@ bool CSVmode(envV &env, DBF &dbf)
 	{	string System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames;
 		string CSVline; // read individual line
 		for (char charlie = 0; charlie != '\n' && CSV.tellg() < EoF; CSVline.push_back(charlie)) CSV.get(charlie);
-		if (CSVline.back() == '\n') CSVline.erase(CSVline.end()-1); //account for missing terminal '\n'
+		while (CSVline.back() == 0x0A || CSVline.back() == 0x0D)	// either DOS or UNIX...
+			CSVline.erase(CSVline.end()-1);				// strip out terminal '\n'
 		// parse CSV line
 		unsigned int i = 0;
 		while (CSVline[i] != ';') { System.push_back(CSVline[i]); i++; } i++;
