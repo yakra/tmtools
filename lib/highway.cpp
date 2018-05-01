@@ -31,11 +31,26 @@ class highway
 		pt.clear();
 	}
 
-	void showCSVline()
-	{	std::cout << System << ';' << Region << ';' << Route << ';' << Banner << ';' << Abbrev << ';' << City << ';' << Root << ';';
-		for (unsigned int i = 0; i+1 < AltRouteNames.size(); i++) std::cout << AltRouteNames[i] << ',';
-		if (AltRouteNames.size()) std::cout << AltRouteNames.back();
-		std::cout << '\n';
+	std::string CSVline()
+	{	std::string CSVline = System + ";" + Region + ";" + Route + ";" + Banner + ";" + Abbrev + ";" + City + ";" + Root + ";";
+		for (unsigned int i = 0; i+1 < AltRouteNames.size(); i++) CSVline += AltRouteNames[i] + ",";
+		if (AltRouteNames.size()) CSVline += AltRouteNames.back();
+		return CSVline;
+	}
+
+	unsigned int GetIndByLabel(std::string lbl) // returning a value >= pt.size() == fail.
+	{	unsigned int p = 0;
+		for (std::list<waypoint>::iterator point = pt.begin(); p < pt.size(); p++)
+		{	for (unsigned int l = 0; l < point->label.size(); l++)
+				if (lbl == point->NakedLabel(l))
+				{	if (l)	std::cout << Region << ' ' << Route+Banner+Abbrev << ' ' << point->label[l] \
+						<< ": deprecated in favor of " << point->label[0] << '\n';
+					return p;
+				}
+			point++;
+		}
+		std::cout << Region << ' ' << Route+Banner+Abbrev << ' ' << lbl << ": point label not recognized\n";
+		return p;
 	}
 
 	void ListPts(bool AllLabels)
@@ -52,6 +67,13 @@ class highway
 			std::cout << ptI->OnLat << '\t' << ptI->OnLon << '\n';
 		}
 	}//*/
+
+	bool NameMatch(std::string ListName)
+	{	if (ListName == Route+Banner+Abbrev) return 1;
+		for (unsigned short i = 0; i < AltRouteNames.size(); i++)
+			if (ListName == AltRouteNames[i]) return 1;
+		return 0;
+	}
 
 	void write(unsigned char WriteMe, bool B)
 	{	std::string OrigName = "output/orig/" + Root + ".wpt";

@@ -44,4 +44,10 @@ class waypoint
 		OnLon = OrigLon + 180; OffLon = OnLon;
 		OnDist = measure(OnLat, OnLon, OrigLat, OrigLon); OffDist = OnDist;
 	}
+
+	inline char* NakedLabel (unsigned int l)
+	{	unsigned int i = 0;
+		while (label[l][i] == '+' || label[l][i] == '*') i++;
+		return &label[l][i];
+	}
 };
