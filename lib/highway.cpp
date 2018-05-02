@@ -43,7 +43,7 @@ class highway
 		for (std::list<waypoint>::iterator point = pt.begin(); p < pt.size(); p++)
 		{	for (unsigned int l = 0; l < point->label.size(); l++)
 				if (lbl == point->NakedLabel(l))
-				{	if (l)	std::cout << Region << ' ' << Route+Banner+Abbrev << ' ' << point->label[l] \
+				{	if (l)	std::cout << Region << ' ' << Route+Banner+Abbrev << ' ' << lbl \
 						<< ": deprecated in favor of " << point->label[0] << '\n';
 					return p;
 				}
