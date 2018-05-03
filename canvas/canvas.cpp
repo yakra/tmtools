@@ -4,7 +4,8 @@ using namespace std;
 
 class envV
 {	public:
-	string Input, List, Output, Repo, Width, Height, UnStroke, ClStroke;
+	string Input, List, Colors, Output, Repo, Width, Height, UnStroke, ClStroke;
+	vector<string> N_Colors, UnColors, ClColors;
 	bool MsgSeen;
 
 	bool set(int argc, char *argv[])
@@ -14,7 +15,7 @@ class envV
 		// INI file options:
 		string iniField;
 		ifstream INI("canvas.ini");
-		if (!INI) cout << "canvas.ini file not found. All required options must be specified by commandline.\n";
+		if (!INI) cout << "canvas.ini file not found. All required options must be specified by commandline\n";
 		else {	INI.clear(); INI.seekg(0); iniField.clear();
 			 while (iniField != "Output" && !INI.eof())	INI >> iniField;
 			  INI >> Output;
@@ -28,6 +29,9 @@ class envV
 			 while (iniField != "List" && !INI.eof())	INI >> iniField;
 			  INI >> List;
 			INI.clear(); INI.seekg(0); iniField.clear();
+			 while (iniField != "Colors" && !INI.eof())	INI >> iniField;
+			  INI >> Colors;
+			INI.clear(); INI.seekg(0); iniField.clear();
 			 while (iniField != "Width" && !INI.eof())	INI >> iniField;
 			  INI >> Width;
 			INI.clear(); INI.seekg(0); iniField.clear();
@@ -40,67 +44,77 @@ class envV
 
 		// commandline options:
 		for (int a = 1; a < argc; a++)
-		{	if (!strcmp(argv[a], "-h") || !strcmp(argv[a], "--height"))
+		{	if (!strcmp(argv[a], "-C") || !strcmp(argv[a], "--Colors"))
+			{ if (a+1 < argc)
+			  {	Colors = argv[a+1];
+				a++;
+			} }
+			else if (!strcmp(argv[a], "-c") || !strcmp(argv[a], "--Color"))
+			{ if (a+3 < argc)
+			{	N_Colors.push_back(argv[a+1]);
+				UnColors.push_back(argv[a+2]);
+				ClColors.push_back(argv[a+3]);
+				a += 3;
+			} }
+			else if (!strcmp(argv[a], "-h") || !strcmp(argv[a], "--Height"))
 			{ if (a+1 < argc)
 			  {	Height = argv[a+1];
 				a++;
 			} }
-			else if (!strcmp(argv[a], "-i") || !strcmp(argv[a], "--input"))
+			else if (!strcmp(argv[a], "-i") || !strcmp(argv[a], "--Input"))
 			{ if (a+1 < argc)
 			  {	Input = argv[a+1];
 				a++;
 			} }
-			else if (!strcmp(argv[a], "-l") || !strcmp(argv[a], "--list"))
+			else if (!strcmp(argv[a], "-l") || !strcmp(argv[a], "--List"))
 			{ if (a+1 < argc)
 			  {	List = argv[a+1];
 				a++;
 			} }
-			else if (!strcmp(argv[a], "-o") || !strcmp(argv[a], "--output"))
+			else if (!strcmp(argv[a], "-o") || !strcmp(argv[a], "--Output"))
 			{ if (a+1 < argc)
 			  {	Output = argv[a+1];
 				a++;
 			} }
-			else if (!strcmp(argv[a], "-r") || !strcmp(argv[a], "--repo"))
+			else if (!strcmp(argv[a], "-r") || !strcmp(argv[a], "--Repo"))
 			{ if (a+1 < argc)
 			  {	Repo = argv[a+1];
 				a++;
 			} }
-			else if (!strcmp(argv[a], "-s") || !strcmp(argv[a], "--stroke"))
+			else if (!strcmp(argv[a], "-s") || !strcmp(argv[a], "--Stroke"))
 			{ if (a+2 < argc)
 			  {	UnStroke = argv[a+1];
 				ClStroke = argv[a+2];
 				a += 2;
 			} }
-			else if (!strcmp(argv[a], "-w") || !strcmp(argv[a], "--width"))
+			else if (!strcmp(argv[a], "-w") || !strcmp(argv[a], "--Width"))
 			{ if (a+1 < argc)
 			  {	Width = argv[a+1];
 				a++;
 			} }
-			else if (!strcmp(argv[a], "-?") || !strcmp(argv[a], "--help"))
+			else if (!strcmp(argv[a], "-?") || !strcmp(argv[a], "--help") || !strcmp(argv[a], "--Help"))
 			{	cout << "Options:\n";
 				cout << "Mandatory arguments to long options are mandatory for short options too.\n";
-				cout << "  -h, --height <Height>            Canvas height.\n";
-				cout << "  -i, --input <Input>              CSV file listing routes to be plotted.\n";
-				cout << "  -l, --list <List>                Filename of .list file to process.\n";
-				cout << "  -o, --output <Output>            Filename of output HTML file.\n";
-				cout << "  -r, --repo <Repo>                Path of HighwayData repository.\n";
+				cout << "  -C, --Colors <ColorFile>         Color definitions file.\n";
+				cout << "  -c, --Color <Name> <Base> <Clin> Color definitions file.\n";
+				cout << "  -h, --Height <Height>            Canvas height.\n";
+				cout << "  -i, --Input <InputFile>          CSV file listing routes to be plotted.\n";
+				cout << "  -l, --List <ListFile>            Filename of .list file to process.\n";
+				cout << "  -o, --Output <OutputFile>        Filename of output HTML file.\n";
+				cout << "  -r, --Repo <Repo>                Path of HighwayData repository.\n";
 				cout << "                                   Trailing slash required.\n";
-				cout << "  -s, --stroke <base> <clinched>   Stroke width of base & clinched segments.\n";
+				cout << "  -s, --Stroke <Base> <Clinched>   Stroke width of base & clinched segments.\n";
 				cout << "                                   Both arguments are required.\n";
-				cout << "  -w, --width <Width>              Canvas width.\n";
-				cout << "  -?, --help                       Display this help and exit.\n\n";
+				cout << "  -w, --Width <Width>              Canvas width.\n";
+				cout << "  -?, --help, --Help               Display this help and exit.\n\n";
 
 				cout << "INI file:\n";
 				cout << "Default options may also be specified in canvas.ini, and will be overridden by\n";
 				cout << "commandline switches. Format is one option per line, followed by arguments as\n";
-				cout << "listed above. Options are case sensitive.\n";
-				cout << "  Output <Output>\n";
-				cout << "  Repo <Repo>\n";
-				cout << "  Input <Input>\n";
-				cout << "  List <List>\n";
-				cout << "  Width <Width>\n";
-				cout << "  Height <Height>\n";
-				cout << "  Stroke <base> <clinched>\n";
+				cout << "listed above. Options are the same as the long options listed above, without the\n";
+				cout << "leading dashes, and are case sensitive.\n";
+				cout << "Only single color definitions (--Color) are unsupported in canvas.ini.\n";
+				cout << "These should be defined in their own separate colors INI file instead..\n";
 				return 0;
 			}
 		}
@@ -117,33 +131,37 @@ class envV
 		{	cout << "For more info, use --help commandline option.\n";
 			if (envInfo > 1) return 0;
 		}
+
+		// colors:
+		ifstream colINI(Colors);
+		if (!colINI) cout << Colors << " file not found. All colors not specified by commandline will be colored gray.\n";
+		string N_Color, UnColor, ClColor;
+		while (colINI >> N_Color >> UnColor >> ClColor)
+		{	N_Colors.push_back(N_Color);
+			UnColors.push_back(UnColor);
+			ClColors.push_back(ClColor);
+		}
+		if (N_Colors.size() != UnColors.size())
+		   { cout << "Oh dear. N_Colors.size() != UnColors.size() in envV::set(). Terminating.\n"; return 0; }
+		if (UnColors.size() != ClColors.size())
+		   { cout << "Oh dear. UnColors.size() != ClColors.size() in envV::set(). Terminating.\n"; return 0; }
+		if (ClColors.size() != N_Colors.size())
+		   { cout << "Oh dear. ClColors.size() != N_Colors.size() in envV::set(). Terminating.\n"; return 0; }
 		return 1;
 	}
 };
 
-inline void ColorCodes(string Color, char *UnColor, char *ClColor)
-//TODO input from INI file
-{	if (Color == "blue")		{ strcpy (UnColor, "6464FF");	strcpy (ClColor, "0000DC");	return; }
-	if (Color == "teal")		{ strcpy (UnColor, "64C8C8");	strcpy (ClColor, "008CA0");	return; }
-	if (Color == "green")		{ strcpy (UnColor, "64C864");	strcpy (ClColor, "00E000");	return; }
-	if (Color == "red")		{ strcpy (UnColor, "FF6464");	strcpy (ClColor, "E00000");	return; }
-	if (Color == "magenta")		{ strcpy (UnColor, "FF64FF");	strcpy (ClColor, "D000D0");	return; }
-	if (Color == "lightsalmon")	{ strcpy (UnColor, "E0A2A2");	strcpy (ClColor, "F09673");	return; }
-	if (Color == "brown")		{ strcpy (UnColor, "999866");	strcpy (ClColor, "996600");	return; }
-	if (Color == "yellow")		{ strcpy (UnColor, "FFD864");	strcpy (ClColor, "E8B000");	return; }
-	/* default/unrecognized */	  strcpy (UnColor, "aaaaaa");	strcpy (ClColor, "555555");
-	cout << "Warning: unrecognized Color code \"" << Color << "\" will be colored gray.\n";
-}
-
-void GetColors2(string &SysCode, string SysCSV, char *UnColor, char *ClColor)
+void GetColors2(string &SysCode, envV &env, char *UnColor, char *ClColor)
 // Yes, this function is a bit overbuilt. I may do something with it some day.
-{	//border colors
+{	string SysCSV = env.Repo+"systems.csv";
+
+	//border colors
 	if (SysCode == "B_COUNTRY" || SysCode == "b_country")
-					{ strcpy (UnColor, "3c3c3c");	strcpy (ClColor, "3c3c3c");	return; }
+		{ strcpy (UnColor, "3c3c3c");	strcpy (ClColor, "3c3c3c");	return; }
 	if (SysCode == "B_SUBDIV" || SysCode == "b_subdiv")
-					{ strcpy (UnColor, "a0a0a0");	strcpy (ClColor, "a0a0a0");	return; }
+		{ strcpy (UnColor, "a0a0a0");	strcpy (ClColor, "a0a0a0");	return; }
 	if (SysCode == "B_WATER" || SysCode == "b_water")
-					{ strcpy (UnColor, "0000a0");	strcpy (ClColor, "0000a0");	return; }
+		{ strcpy (UnColor, "0000a0");	strcpy (ClColor, "0000a0");	return; }
 
 	ifstream CSV(SysCSV);
 	if (!CSV)
@@ -170,14 +188,18 @@ void GetColors2(string &SysCode, string SysCSV, char *UnColor, char *ClColor)
 		while (CSVline[i] != ';' && i < CSVline.size()) { Level.push_back(CSVline[i]); i++; } i++;
 
 		if (System == SysCode)
-		{	ColorCodes(Color, UnColor, ClColor);
-			return;
+		{	for (unsigned int i = 0; i < env.N_Colors.size(); i++)
+			  if	(Color == env.N_Colors[i])
+			  {	strcpy(UnColor, env.UnColors[i].data());
+				strcpy(ClColor, env.ClColors[i].data());
+				return;
+			  }
+			cout << "Warning: unrecognized Color code \"" << Color << "\" will be colored gray. (System = " << SysCode << ")\n";
+			strcpy (UnColor, "aaaaaa");	strcpy (ClColor, "555555");
 		}
 	}
-
-	// default/unrecognized
+	cout << "Warning: unrecognized System code \"" << SysCode << "\" will be colored gray.\n";
 	strcpy (UnColor, "aaaaaa");	strcpy (ClColor, "555555");
-	cout << "Warning: unrecognized System code " << SysCode << " will be colored gray.\n";
 }
 
 void readlist(envV &env, ofstream &html, highway *hwy)
@@ -239,7 +261,7 @@ void HTML(vector<highway*> &hwy, envV &env)
 		html << "Abbrev:\"" << hwy[num]->Abbrev << "\", ";
 		html << "City:\"" << hwy[num]->City << "\",\n";
 
-		GetColors2(hwy[num]->System, env.Repo+"systems.csv", UnColor, ClColor);
+		GetColors2(hwy[num]->System, env, UnColor, ClColor);
 		html << "UnColor:'#" << UnColor << "', ClColor:'#" << ClColor << "',\n";
 
 		html << "//EDB - point latitudes\n";
