@@ -1,6 +1,125 @@
-using namespace std;
 #include <cmath>
 #include "../lib/highway.cpp"	// includes cstring, fstream, iostream, list, string, vector
+using namespace std;
+
+class envV
+{	public:
+	string Input, List, Output, Repo, Width, Height, UnStroke, ClStroke;
+	bool MsgSeen;
+
+	bool set(int argc, char *argv[])
+	{	MsgSeen = 0;
+		unsigned short envInfo = 0;
+
+		// INI file options:
+		string iniField;
+		ifstream INI("canvas.ini");
+		if (!INI) cout << "canvas.ini file not found. All required options must be specified by commandline.\n";
+		else {	INI.clear(); INI.seekg(0); iniField.clear();
+			 while (iniField != "Output" && !INI.eof())	INI >> iniField;
+			  INI >> Output;
+			INI.clear(); INI.seekg(0); iniField.clear();
+			 while (iniField != "Repo" && !INI.eof())	INI >> iniField;
+			  INI >> Repo;
+			INI.clear(); INI.seekg(0); iniField.clear();
+			 while (iniField != "Input" && !INI.eof())	INI >> iniField;
+			  INI >> Input;
+			INI.clear(); INI.seekg(0); iniField.clear();
+			 while (iniField != "List" && !INI.eof())	INI >> iniField;
+			  INI >> List;
+			INI.clear(); INI.seekg(0); iniField.clear();
+			 while (iniField != "Width" && !INI.eof())	INI >> iniField;
+			  INI >> Width;
+			INI.clear(); INI.seekg(0); iniField.clear();
+			 while (iniField != "Height" && !INI.eof())	INI >> iniField;
+			  INI >> Height;
+			INI.clear(); INI.seekg(0); iniField.clear();
+			 while (iniField != "Stroke" && !INI.eof())	INI >> iniField;
+			  INI >> UnStroke >> ClStroke;
+		     }
+
+		// commandline options:
+		for (int a = 1; a < argc; a++)
+		{	if (!strcmp(argv[a], "-h") || !strcmp(argv[a], "--height"))
+			{ if (a+1 < argc)
+			  {	Height = argv[a+1];
+				a++;
+			} }
+			else if (!strcmp(argv[a], "-i") || !strcmp(argv[a], "--input"))
+			{ if (a+1 < argc)
+			  {	Input = argv[a+1];
+				a++;
+			} }
+			else if (!strcmp(argv[a], "-l") || !strcmp(argv[a], "--list"))
+			{ if (a+1 < argc)
+			  {	List = argv[a+1];
+				a++;
+			} }
+			else if (!strcmp(argv[a], "-o") || !strcmp(argv[a], "--output"))
+			{ if (a+1 < argc)
+			  {	Output = argv[a+1];
+				a++;
+			} }
+			else if (!strcmp(argv[a], "-r") || !strcmp(argv[a], "--repo"))
+			{ if (a+1 < argc)
+			  {	Repo = argv[a+1];
+				a++;
+			} }
+			else if (!strcmp(argv[a], "-s") || !strcmp(argv[a], "--stroke"))
+			{ if (a+2 < argc)
+			  {	UnStroke = argv[a+1];
+				ClStroke = argv[a+2];
+				a += 2;
+			} }
+			else if (!strcmp(argv[a], "-w") || !strcmp(argv[a], "--width"))
+			{ if (a+1 < argc)
+			  {	Width = argv[a+1];
+				a++;
+			} }
+			else if (!strcmp(argv[a], "-?") || !strcmp(argv[a], "--help"))
+			{	cout << "Options:\n";
+				cout << "Mandatory arguments to long options are mandatory for short options too.\n";
+				cout << "  -h, --height <Height>            Canvas height.\n";
+				cout << "  -i, --input <Input>              CSV file listing routes to be plotted.\n";
+				cout << "  -l, --list <List>                Filename of .list file to process.\n";
+				cout << "  -o, --output <Output>            Filename of output HTML file.\n";
+				cout << "  -r, --repo <Repo>                Path of HighwayData repository.\n";
+				cout << "                                   Trailing slash required.\n";
+				cout << "  -s, --stroke <base> <clinched>   Stroke width of base & clinched segments.\n";
+				cout << "                                   Both arguments are required.\n";
+				cout << "  -w, --width <Width>              Canvas width.\n";
+				cout << "  -?, --help                       Display this help and exit.\n\n";
+
+				cout << "INI file:\n";
+				cout << "Default options may also be specified in canvas.ini, and will be overridden by\n";
+				cout << "commandline switches. Format is one option per line, followed by arguments as\n";
+				cout << "listed above. Options are case sensitive.\n";
+				cout << "  Output <Output>\n";
+				cout << "  Repo <Repo>\n";
+				cout << "  Input <Input>\n";
+				cout << "  List <List>\n";
+				cout << "  Width <Width>\n";
+				cout << "  Height <Height>\n";
+				cout << "  Stroke <base> <clinched>\n";
+				return 0;
+			}
+		}
+
+		if (UnStroke.empty())	{ envInfo = 1; cout << "Base stroke thickness unspecified; defaulting to 1.\n"; UnStroke = "1"; }
+		if (ClStroke.empty())	{ envInfo = 1; cout << "Clinched stroke thickness unspecified; defaulting to 2.5.\n"; ClStroke = "2.5"; }
+		if (Width.empty())	{ envInfo = 1; cout << "Width unspecified; defaulting to 700.\n"; Width = "700"; }
+		if (Height.empty())	{ envInfo = 1; cout << "Height unspecified; defaulting to 700.\n"; Height = "700"; }
+		if (Input.empty())	{ envInfo = 2; cout << "Input CSV unspecified.\n"; }
+		if (List.empty())	{ envInfo = 2; cout << ".list file unspecified.\n"; }
+		if (Repo.empty())	{ envInfo = 2; cout << "Repo location unspecified.\n"; }
+
+		if (envInfo)
+		{	cout << "For more info, use --help commandline option.\n";
+			if (envInfo > 1) return 0;
+		}
+		return 1;
+	}
+};
 
 inline void ColorCodes(string Color, char *UnColor, char *ClColor)
 //TODO input from INI file
@@ -13,10 +132,10 @@ inline void ColorCodes(string Color, char *UnColor, char *ClColor)
 	if (Color == "brown")		{ strcpy (UnColor, "999866");	strcpy (ClColor, "996600");	return; }
 	if (Color == "yellow")		{ strcpy (UnColor, "FFD864");	strcpy (ClColor, "E8B000");	return; }
 	/* default/unrecognized */	  strcpy (UnColor, "aaaaaa");	strcpy (ClColor, "555555");
-	cout << "Warning: unrecognized Color code " << Color << " will be colored gray.\n";
+	cout << "Warning: unrecognized Color code \"" << Color << "\" will be colored gray.\n";
 }
 
-void GetColors2(string SysCode, char *SysCSV, char *UnColor, char *ClColor)
+void GetColors2(string &SysCode, string SysCSV, char *UnColor, char *ClColor)
 // Yes, this function is a bit overbuilt. I may do something with it some day.
 {	//border colors
 	if (SysCode == "B_COUNTRY" || SysCode == "b_country")
@@ -26,7 +145,7 @@ void GetColors2(string SysCode, char *SysCSV, char *UnColor, char *ClColor)
 	if (SysCode == "B_WATER" || SysCode == "b_water")
 					{ strcpy (UnColor, "0000a0");	strcpy (ClColor, "0000a0");	return; }
 
-	ifstream CSV(SysCSV); //TODO input from INI file
+	ifstream CSV(SysCSV);
 	if (!CSV)
 	{	cout << SysCSV << " file not found!" << endl;
 		strcpy (UnColor, "aaaaaa");	strcpy (ClColor, "555555");
@@ -61,10 +180,11 @@ void GetColors2(string SysCode, char *SysCSV, char *UnColor, char *ClColor)
 	cout << "Warning: unrecognized System code " << SysCode << " will be colored gray.\n";
 }
 
-void readlist(ofstream *html, highway *hwy)
+void readlist(envV &env, ofstream &html, highway *hwy)
 {	string Region, Name, pl1, pl2;
 	unsigned int pi1, pi2;
-	ifstream list("list.list");
+	ifstream list(env.List.data());
+	if (!env.MsgSeen && !list) { cout << env.List << " not found. Plotting base route traces only.\n"; env.MsgSeen = 1; }
 	bool comma = 0;
 
 	while (list >> Region >> Name >> pl1 >> pl2) //FIXME: assumes perfectly formatted .list file with exactly four strings on every line
@@ -75,21 +195,20 @@ void readlist(ofstream *html, highway *hwy)
 			pi2 = hwy->GetIndByLabel(pl2);
 			if (pi1 < hwy->pt.size() && pi2 < hwy->pt.size())
 			{	if (comma)
-					if (pi1 < pi2)	*html << ", " << pi1 << ", " << pi2;
-					else		*html << ", " << pi2 << ", " << pi1;
+					if (pi1 < pi2)	html << ", " << pi1 << ", " << pi2;
+					else		html << ", " << pi2 << ", " << pi1;
 				else	// write the first one
-					if (pi1 < pi2)	*html << pi1 << ", " << pi2;
-					else		*html << pi2 << ", " << pi1;
+					if (pi1 < pi2)	html << pi1 << ", " << pi2;
+					else		html << pi2 << ", " << pi1;
 				comma = 1;
 			}
 		}
 	list.close();
 }
 
-void HTML(vector<highway*> hwy, char *SysCSV)
+void HTML(vector<highway*> &hwy, envV &env)
 {	char UnColor[6], ClColor[6];
-	char filename[] = "map.htm";
-	ofstream html(filename);
+	ofstream html(env.Output.data());
 
 	html << "<!doctype html>\n";
 	html << "<html>\n";
@@ -99,7 +218,7 @@ void HTML(vector<highway*> hwy, char *SysCSV)
 	html << "</head>\n\n";
 
 	html << "<body>\n";
-	html << "<canvas width=700 height=700>\n\n";
+	html << "<canvas width=" << env.Width << " height=" << env.Height << ">\n\n";
 
 	html << "(To see Map, upgrade browser.)\n\n";
 
@@ -120,7 +239,7 @@ void HTML(vector<highway*> hwy, char *SysCSV)
 		html << "Abbrev:\"" << hwy[num]->Abbrev << "\", ";
 		html << "City:\"" << hwy[num]->City << "\",\n";
 
-		GetColors2(hwy[num]->System, SysCSV, UnColor, ClColor);
+		GetColors2(hwy[num]->System, env.Repo+"systems.csv", UnColor, ClColor);
 		html << "UnColor:'#" << UnColor << "', ClColor:'#" << ClColor << "',\n";
 
 		html << "//EDB - point latitudes\n";
@@ -140,7 +259,7 @@ void HTML(vector<highway*> hwy, char *SysCSV)
 		html << "],\n";
 
 		html << "//vdeane & EDB - indices to .listfile endpoints\ncliSegments:[";
-		readlist(&html, hwy[num]);
+		readlist(env, html, hwy[num]);
 		html << "]\n} //end object definition\n\n";
 	} //end for (route objects)
 
@@ -160,10 +279,12 @@ void HTML(vector<highway*> hwy, char *SysCSV)
 	html << "//EDB - get maximum and minimum latitude and longitude for a quick-n-dirty scale of the route trace to fill the canvas\n";
 	html << "for (j = 0; j < rte.length; j++)\n";
 	html << "{	for (i = 0; i < rte[j].lat.length; i++)\n";
-	html << "	{	if (rte[j].lat[i] < MinLat && rte[j].Region != \"B\" && rte[j].Region != \"b\") MinLat = rte[j].lat[i];\n";
-	html << "		if (rte[j].lon[i] < MinLon && rte[j].Region != \"B\" && rte[j].Region != \"b\") MinLon = rte[j].lon[i];\n";
-	html << "		if (rte[j].lat[i] > MaxLat && rte[j].Region != \"B\" && rte[j].Region != \"b\") MaxLat = rte[j].lat[i];\n";
-	html << "		if (rte[j].lon[i] > MaxLon && rte[j].Region != \"B\" && rte[j].Region != \"b\") MaxLon = rte[j].lon[i];\n";
+	html << "	{	if (!(rte[j].Region == \"B\" || rte[j].Region == \"b\" || rte[j].Region == \"_boundaries\"))\n";
+	html << "		{	if (rte[j].lat[i] < MinLat) MinLat = rte[j].lat[i];\n";
+	html << "			if (rte[j].lon[i] < MinLon) MinLon = rte[j].lon[i];\n";
+	html << "			if (rte[j].lat[i] > MaxLat) MaxLat = rte[j].lat[i];\n";
+	html << "			if (rte[j].lon[i] > MaxLon) MaxLon = rte[j].lon[i];\n";
+	html << "		}\n";
 	html << "	}\n";
 	html << "}\n";
 	html << "var ScaleFac = Math.min((canvas.width-1)/(MaxLon-MinLon), (canvas.height-1)/(merc(MaxLat)-merc(MinLat)));\n";
@@ -175,6 +296,7 @@ void HTML(vector<highway*> hwy, char *SysCSV)
 	html << "	c.save();\n";
 	html << "	c.beginPath();\n";
 	html << "	c.strokeStyle = rte[k].UnColor;\n";
+	html << "	c.lineWidth=" << env.UnStroke << ";\n";
 	html << "	c.moveTo((rte[k].lon[0]-MinLon)*ScaleFac, canvas.height-1-(merc(rte[k].lat[0])-MinMerc)*ScaleFac);\n";
 	html << "	for (i = 1; i < rte[k].lat.length; i++) c.lineTo((rte[k].lon[i]-MinLon)*ScaleFac, canvas.height-1-(merc(rte[k].lat[i])-MinMerc)*ScaleFac);\n";
 	html << "	c.stroke();\n";
@@ -188,7 +310,8 @@ void HTML(vector<highway*> hwy, char *SysCSV)
 	html << "		c = canvas.getContext(\"2d\");\n";
 	html << "		c.save();\n";
 	html << "		c.beginPath();\n";
-	html << "		c.strokeStyle = rte[k].ClColor;\n\n";
+	html << "		c.strokeStyle = rte[k].ClColor;\n";
+	html << "		c.lineWidth=" << env.ClStroke << ";\n\n";
 
 	html << "		for (j = 0; j < rte[k].lat.length; j++)\n";
 	html << "		{	if (rte[k].cliSegments[i] === j)\n";
@@ -212,12 +335,12 @@ void HTML(vector<highway*> hwy, char *SysCSV)
 	html << "</html>\n";
 }
 
-bool CSVmode(string InputFile, string SourceDir, char* SysCSV)
+bool CSVmode(envV &env)
 {	vector<highway*> HwyList;
 
-	ifstream CSV(InputFile.data());
+	ifstream CSV(env.Input.data());
 	if (!CSV)
-	{	cout << InputFile << " file not found!" << endl;
+	{	cout << "InputFile \"" << env.Input << "\" not found!" << endl;
 		return 0;
 	}
 	CSV.seekg(0, ios::end); unsigned int EoF = CSV.tellg(); CSV.seekg(0);
@@ -240,24 +363,15 @@ bool CSVmode(string InputFile, string SourceDir, char* SysCSV)
 		while (CSVline[i] != ';' && i < CSVline.size()) { Root.push_back(CSVline[i]); i++; } i++;
 		while (CSVline[i] != ';' && i < CSVline.size()) { AltRouteNames.push_back(CSVline[i]); i++; } i++;
 
-		string wptFile = SourceDir+System+"/"+Root+".wpt";
+		string wptFile = env.Repo+"hwy_data/"+Region+"/"+System+"/"+Root+".wpt";
 		highway *hwy = BuildRte(wptFile.data(), System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames);
 		if (hwy) HwyList.push_back(hwy);
 	} // end while (build hwy list)
 
-	HTML(HwyList, SysCSV);
+	HTML(HwyList, env);
 }
 
 int main(int argc, char *argv[])
-{	string InputFile = "routes.csv";
-	string SourceDir = "data/";
-
-	if (argc != 2)
-	{	cout << "Usage: ./canvas SystemsCSVFile\n";
-		cout << "For example,\n";
-		cout << "./canvas /home/yakra/TravelMapping/HighwayData-master/systems.csv\n";
-		return 0;
-	}
-
-	CSVmode(InputFile, SourceDir, argv[1]);
+{	envV env; if (!env.set(argc, argv)) return 0;
+	CSVmode(env);
 }
