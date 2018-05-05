@@ -151,22 +151,22 @@ class envV
 	}
 };
 
-void GetColors2(string &SysCode, envV &env, char *UnColor, char *ClColor)
+void GetColors2(string &SysCode, envV &env, string &UnColor, string &ClColor)
 // Yes, this function is a bit overbuilt. I may do something with it some day.
 {	string SysCSV = env.Repo+"systems.csv";
 
 	//border colors
 	if (SysCode == "B_COUNTRY" || SysCode == "b_country")
-		{ strcpy (UnColor, "3c3c3c");	strcpy (ClColor, "3c3c3c");	return; }
+		{ UnColor = "3c3c3c";	ClColor = "3c3c3c";	return; }
 	if (SysCode == "B_SUBDIV" || SysCode == "b_subdiv")
-		{ strcpy (UnColor, "a0a0a0");	strcpy (ClColor, "a0a0a0");	return; }
+		{ UnColor = "a0a0a0";	ClColor = "a0a0a0";	return; }
 	if (SysCode == "B_WATER" || SysCode == "b_water")
-		{ strcpy (UnColor, "0000a0");	strcpy (ClColor, "0000a0");	return; }
+		{ UnColor = "0000a0";	ClColor = "0000a0";	return; }
 
 	ifstream CSV(SysCSV);
 	if (!CSV)
 	{	cout << SysCSV << " file not found!" << endl;
-		strcpy (UnColor, "aaaaaa");	strcpy (ClColor, "555555");
+		UnColor = "aaaaaa";	ClColor = "555555";
 		return;
 	}
 	CSV.seekg(0, ios::end); unsigned int EoF = CSV.tellg(); CSV.seekg(0);
@@ -190,16 +190,16 @@ void GetColors2(string &SysCode, envV &env, char *UnColor, char *ClColor)
 		if (System == SysCode)
 		{	for (unsigned int i = 0; i < env.N_Colors.size(); i++)
 			  if	(Color == env.N_Colors[i])
-			  {	strcpy(UnColor, env.UnColors[i].data());
-				strcpy(ClColor, env.ClColors[i].data());
+			  {	UnColor = env.UnColors[i];
+				ClColor = env.ClColors[i];
 				return;
 			  }
 			cout << "Warning: unrecognized Color code \"" << Color << "\" will be colored gray. (System = " << SysCode << ")\n";
-			strcpy (UnColor, "aaaaaa");	strcpy (ClColor, "555555");
+			UnColor = "aaaaaa";	ClColor = "555555";
 		}
 	}
 	cout << "Warning: unrecognized System code \"" << SysCode << "\" will be colored gray.\n";
-	strcpy (UnColor, "aaaaaa");	strcpy (ClColor, "555555");
+	UnColor = "aaaaaa";	ClColor = "555555";
 }
 
 void readlist(envV &env, ofstream &html, highway *hwy)
@@ -229,7 +229,7 @@ void readlist(envV &env, ofstream &html, highway *hwy)
 }
 
 void HTML(vector<highway*> &hwy, envV &env)
-{	char UnColor[6], ClColor[6];
+{	string UnColor, ClColor;
 	ofstream html(env.Output.data());
 
 	html << "<!doctype html>\n";
