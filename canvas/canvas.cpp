@@ -1,12 +1,14 @@
 #include <cmath>
-#include "../lib/highway.cpp"	// includes cstring, fstream, iostream, list, string, vector
+#include "../lib/highway.cpp"	// includes cstring, deque, fstream, iostream, list, string, vector
+#include "../lib/tmsystem.cpp"	// includes string, vector
 using namespace std;
 
 class envV
 {	public:
 	string Input, List, Colors, Output, Repo, Width, Height, UnStroke, ClStroke;
-	vector<string> N_Colors, UnColors, ClColors;
-	bool MsgSeen;
+	vector<string> N_Colors, UnColors, ClColors, GraySystems;
+	deque<tmsystem> SysList;
+	bool MsgSeen, ReadSysCSV();
 
 	bool set(int argc, char *argv[])
 	{	MsgSeen = 0;
@@ -147,27 +149,31 @@ class envV
 		   { cout << "Oh dear. UnColors.size() != ClColors.size() in envV::set(). Terminating.\n"; return 0; }
 		if (ClColors.size() != N_Colors.size())
 		   { cout << "Oh dear. ClColors.size() != N_Colors.size() in envV::set(). Terminating.\n"; return 0; }
+
+		ReadSysCSV();
+		// boundaries		   System,      CountryCode,  Name,        Color,       Tier, Level;
+		SysList.push_front(tmsystem("b_country", "boundaries", "b_country", "b_country", 6, "boundaries"));
+		SysList.front().SetColors(N_Colors, UnColors, ClColors);
+		SysList.push_front(tmsystem("b_subdiv", "boundaries", "b_subdiv", "b_subdiv", 6, "boundaries"));
+		SysList.front().SetColors(N_Colors, UnColors, ClColors);
+		SysList.push_front(tmsystem("b_water", "boundaries", "b_water", "b_water", 6, "boundaries"));
+		SysList.front().SetColors(N_Colors, UnColors, ClColors);
 		return 1;
+	}
+
+	bool IsGray(string SysCode)
+	{	for (unsigned int i = 0; i < GraySystems.size(); i++)
+		  if (SysCode == GraySystems[i]) return 1;
+		return 0;
 	}
 };
 
-void GetColors2(string &SysCode, envV &env, string &UnColor, string &ClColor)
-// Yes, this function is a bit overbuilt. I may do something with it some day.
-{	string SysCSV = env.Repo+"systems.csv";
-
-	//border colors
-	if (SysCode == "B_COUNTRY" || SysCode == "b_country")
-		{ UnColor = "3c3c3c";	ClColor = "3c3c3c";	return; }
-	if (SysCode == "B_SUBDIV" || SysCode == "b_subdiv")
-		{ UnColor = "a0a0a0";	ClColor = "a0a0a0";	return; }
-	if (SysCode == "B_WATER" || SysCode == "b_water")
-		{ UnColor = "0000a0";	ClColor = "0000a0";	return; }
-
+bool envV::ReadSysCSV()
+{	string SysCSV = Repo+"systems.csv";
 	ifstream CSV(SysCSV);
 	if (!CSV)
 	{	cout << SysCSV << " file not found!" << endl;
-		UnColor = "aaaaaa";	ClColor = "555555";
-		return;
+		return 0;
 	}
 	CSV.seekg(0, ios::end); unsigned int EoF = CSV.tellg(); CSV.seekg(0);
 	while (CSV.get() != '\n' && CSV.tellg() < EoF); //skip header row
@@ -176,7 +182,9 @@ void GetColors2(string &SysCode, envV &env, string &UnColor, string &ClColor)
 	{	string System, CountryCode, Name, Color, Tier, Level;
 		string CSVline; // read individual line
 		for (char charlie = 0; charlie != '\n' && CSV.tellg() < EoF; CSVline.push_back(charlie)) CSV.get(charlie);
-			while (CSVline.back() == 0x0A || CSVline.back() == 0x0D)	// either DOS or UNIX...
+
+		if (CSVline[0] != '#') // if not a comment
+		{	while (CSVline.back() == 0x0A || CSVline.back() == 0x0D)	// either DOS or UNIX...
 				CSVline.erase(CSVline.end()-1);				// strip out terminal '\n'
 			// parse CSV line
 			unsigned int i = 0;
@@ -186,19 +194,23 @@ void GetColors2(string &SysCode, envV &env, string &UnColor, string &ClColor)
 			while (CSVline[i] != ';') { Color.push_back(CSVline[i]); i++; } i++;
 			while (CSVline[i] != ';') { Tier.push_back(CSVline[i]); i++; } i++;
 			while (CSVline[i] != ';' && i < CSVline.size()) { Level.push_back(CSVline[i]); i++; } i++;
-
-		if (System == SysCode)
-		{	for (unsigned int i = 0; i < env.N_Colors.size(); i++)
-			  if	(Color == env.N_Colors[i])
-			  {	UnColor = env.UnColors[i];
-				ClColor = env.ClColors[i];
-				return;
-			  }
-			cout << "Warning: unrecognized Color code \"" << Color << "\" will be colored gray. (System = " << SysCode << ")\n";
-			UnColor = "aaaaaa";	ClColor = "555555";
+			SysList.push_back(tmsystem(System, CountryCode, Name, Color, stoi(Tier), Level));
+			SysList.back().SetColors(N_Colors, UnColors, ClColors);
 		}
 	}
-	cout << "Warning: unrecognized System code \"" << SysCode << "\" will be colored gray.\n";
+}
+
+void GetColors(string &SysCode, envV &env, string &UnColor, string &ClColor)
+{	for (unsigned int i = 0; i < env.SysList.size(); i++)
+	  if	(SysCode == env.SysList[i].System)
+	  {	UnColor = env.SysList[i].UnColor;
+		ClColor = env.SysList[i].ClColor;
+		return;
+	  }
+	if (!env.IsGray(SysCode))
+	{	cout << "Unrecognized System code \"" << SysCode << "\" will be colored gray.\n";
+		env.GraySystems.push_back(SysCode);
+	}
 	UnColor = "aaaaaa";	ClColor = "555555";
 }
 
@@ -261,7 +273,7 @@ void HTML(vector<highway*> &hwy, envV &env)
 		html << "Abbrev:\"" << hwy[num]->Abbrev << "\", ";
 		html << "City:\"" << hwy[num]->City << "\",\n";
 
-		GetColors2(hwy[num]->System, env, UnColor, ClColor);
+		GetColors(hwy[num]->System, env, UnColor, ClColor);
 		html << "UnColor:'#" << UnColor << "', ClColor:'#" << ClColor << "',\n";
 
 		html << "//EDB - point latitudes\n";
