@@ -3,7 +3,7 @@
 #include <iostream>
 #include <list>
 #include <vector>
-#include "waypoint.cpp"	// includes string
+#include "waypoint.cpp"	// includes deque, string
 #include "dbltext.cpp"	// includes string
 
 class highway
