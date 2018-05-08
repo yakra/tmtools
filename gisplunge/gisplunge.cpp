@@ -283,18 +283,20 @@ bool CSVmode(envV &env, DBF &dbf)
 			CSVline.erase(CSVline.end()-1);				// strip out terminal '\n'
 		// parse CSV line
 		unsigned int i = 0;
-		while (CSVline[i] != ';') { System.push_back(CSVline[i]); i++; } i++;
-		while (CSVline[i] != ';') { Region.push_back(CSVline[i]); i++; } i++;
-		while (CSVline[i] != ';') { Route.push_back(CSVline[i]); i++; } i++;
-		while (CSVline[i] != ';') { Banner.push_back(CSVline[i]); i++; } i++;
-		while (CSVline[i] != ';') { Abbrev.push_back(CSVline[i]); i++; } i++;
-		while (CSVline[i] != ';') { City.push_back(CSVline[i]); i++; } i++;
-		while (CSVline[i] != ';' && i < CSVline.size()) { Root.push_back(CSVline[i]); i++; } i++;
-		while (CSVline[i] != ';' && i < CSVline.size()) { AltRouteNames.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { System.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Region.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Route.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Banner.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Abbrev.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { City.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Root.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { AltRouteNames.push_back(CSVline[i]); i++; } i++;
 
-		string wptFile = env.SourceDir+Root+".wpt";
-		highway *hwy = BuildRte(wptFile.data(), System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames);
-		if (hwy) HwyList.push_back(hwy);
+		if (Root.empty()) cout << "Bad CSV line in " << env.InputFile << ": \"" << CSVline << "\"\n";
+		else {	string wptFile = env.SourceDir+Root+".wpt";
+			highway *hwy = BuildRte(wptFile.data(), System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames);
+			if (hwy) HwyList.push_back(hwy);
+		     }
 	} // end while (build hwy list)
 
 	if (env.Threads > HwyList.size() || !env.Threads) env.Threads = HwyList.size();
