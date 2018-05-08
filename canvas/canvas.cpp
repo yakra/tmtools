@@ -8,6 +8,7 @@ class envV
 	string Input, List, Colors, Output, Repo, Width, Height, UnStroke, ClStroke;
 	vector<string> N_Colors, UnColors, ClColors, GraySystems;
 	deque<tmsystem> SysList;
+	unsigned short MaxTier = 0;
 	bool MsgSeen, ReadSysCSV();
 
 	bool set(int argc, char *argv[])
@@ -151,12 +152,12 @@ class envV
 		   { cout << "Oh dear. ClColors.size() != N_Colors.size() in envV::set(). Terminating.\n"; return 0; }
 
 		ReadSysCSV();
-		// boundaries		   System,      CountryCode,  Name,        Color,       Tier, Level;
-		SysList.push_front(tmsystem("b_country", "boundaries", "b_country", "b_country", 6, "boundaries"));
+		// boundaries		    System,      CountryCode,  Name,        Color,       Tier,      Level;
+		SysList.push_front(tmsystem("b_country", "boundaries", "b_country", "b_country", MaxTier+1, "boundaries"));
 		SysList.front().SetColors(N_Colors, UnColors, ClColors);
-		SysList.push_front(tmsystem("b_subdiv", "boundaries", "b_subdiv", "b_subdiv", 6, "boundaries"));
+		SysList.push_front(tmsystem("b_subdiv", "boundaries", "b_subdiv", "b_subdiv", MaxTier+1, "boundaries"));
 		SysList.front().SetColors(N_Colors, UnColors, ClColors);
-		SysList.push_front(tmsystem("b_water", "boundaries", "b_water", "b_water", 6, "boundaries"));
+		SysList.push_front(tmsystem("b_water", "boundaries", "b_water", "b_water", MaxTier+1, "boundaries"));
 		SysList.front().SetColors(N_Colors, UnColors, ClColors);
 		return 1;
 	}
@@ -179,7 +180,7 @@ bool envV::ReadSysCSV()
 	while (CSV.get() != '\n' && CSV.tellg() < EoF); //skip header row
 
 	while (CSV.tellg() < EoF)
-	{	string System, CountryCode, Name, Color, Tier, Level;
+	{	string System, CountryCode, Name, Color, TierS, Level;
 		string CSVline; // read individual line
 		for (char charlie = 0; charlie != '\n' && CSV.tellg() < EoF; CSVline.push_back(charlie)) CSV.get(charlie);
 
@@ -192,9 +193,11 @@ bool envV::ReadSysCSV()
 			while (CSVline[i] != ';') { CountryCode.push_back(CSVline[i]); i++; } i++;
 			while (CSVline[i] != ';') { Name.push_back(CSVline[i]); i++; } i++;
 			while (CSVline[i] != ';') { Color.push_back(CSVline[i]); i++; } i++;
-			while (CSVline[i] != ';') { Tier.push_back(CSVline[i]); i++; } i++;
+			while (CSVline[i] != ';') { TierS.push_back(CSVline[i]); i++; } i++;
 			while (CSVline[i] != ';' && i < CSVline.size()) { Level.push_back(CSVline[i]); i++; } i++;
-			SysList.push_back(tmsystem(System, CountryCode, Name, Color, stoi(Tier), Level));
+			unsigned short Tier = stoi(TierS);
+			if (Tier > MaxTier) MaxTier = Tier;
+			SysList.push_back(tmsystem(System, CountryCode, Name, Color, Tier, Level));
 			SysList.back().SetColors(N_Colors, UnColors, ClColors);
 		}
 	}
