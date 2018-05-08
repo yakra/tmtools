@@ -189,16 +189,18 @@ bool envV::ReadSysCSV()
 				CSVline.erase(CSVline.end()-1);				// strip out terminal '\n'
 			// parse CSV line
 			unsigned int i = 0;
-			while (CSVline[i] != ';') { System.push_back(CSVline[i]); i++; } i++;
-			while (CSVline[i] != ';') { CountryCode.push_back(CSVline[i]); i++; } i++;
-			while (CSVline[i] != ';') { Name.push_back(CSVline[i]); i++; } i++;
-			while (CSVline[i] != ';') { Color.push_back(CSVline[i]); i++; } i++;
-			while (CSVline[i] != ';') { TierS.push_back(CSVline[i]); i++; } i++;
-			while (CSVline[i] != ';' && i < CSVline.size()) { Level.push_back(CSVline[i]); i++; } i++;
-			unsigned short Tier = stoi(TierS);
-			if (Tier > MaxTier) MaxTier = Tier;
-			SysList.push_back(tmsystem(System, CountryCode, Name, Color, Tier, Level));
-			SysList.back().SetColors(N_Colors, UnColors, ClColors);
+			while (i < CSVline.size() && CSVline[i] != ';') { System.push_back(CSVline[i]); i++; } i++;
+			while (i < CSVline.size() && CSVline[i] != ';') { CountryCode.push_back(CSVline[i]); i++; } i++;
+			while (i < CSVline.size() && CSVline[i] != ';') { Name.push_back(CSVline[i]); i++; } i++;
+			while (i < CSVline.size() && CSVline[i] != ';') { Color.push_back(CSVline[i]); i++; } i++;
+			while (i < CSVline.size() && CSVline[i] != ';') { TierS.push_back(CSVline[i]); i++; } i++;
+			while (i < CSVline.size() && CSVline[i] != ';') { Level.push_back(CSVline[i]); i++; } i++;
+			try {	unsigned short Tier = stoi(TierS);
+				if (Tier > MaxTier) MaxTier = Tier;
+				SysList.push_back(tmsystem(System, CountryCode, Name, Color, Tier, Level));
+				SysList.back().SetColors(N_Colors, UnColors, ClColors);
+			    }
+			catch (std::invalid_argument x) { cout << "Bad CSV line in " << SysCSV << ": \"" << CSVline << "\"\n"; }
 		}
 	}
 }
@@ -391,18 +393,20 @@ bool CSVmode(envV &env)
 			CSVline.erase(CSVline.end()-1);				// strip out terminal '\n'
 		// parse CSV line
 		unsigned int i = 0;
-		while (CSVline[i] != ';') { System.push_back(CSVline[i]); i++; } i++;
-		while (CSVline[i] != ';') { Region.push_back(CSVline[i]); i++; } i++;
-		while (CSVline[i] != ';') { Route.push_back(CSVline[i]); i++; } i++;
-		while (CSVline[i] != ';') { Banner.push_back(CSVline[i]); i++; } i++;
-		while (CSVline[i] != ';') { Abbrev.push_back(CSVline[i]); i++; } i++;
-		while (CSVline[i] != ';') { City.push_back(CSVline[i]); i++; } i++;
-		while (CSVline[i] != ';' && i < CSVline.size()) { Root.push_back(CSVline[i]); i++; } i++;
-		while (CSVline[i] != ';' && i < CSVline.size()) { AltRouteNames.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { System.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Region.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Route.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Banner.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Abbrev.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { City.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Root.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { AltRouteNames.push_back(CSVline[i]); i++; } i++;
 
-		string wptFile = env.Repo+"hwy_data/"+Region+"/"+System+"/"+Root+".wpt";
-		highway *hwy = BuildRte(wptFile.data(), System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames);
-		if (hwy) HwyList.push_back(hwy);
+		if (Root.empty()) cout << "Bad CSV line in " << env.Input << ": \"" << CSVline << "\"\n";
+		else {	string wptFile = env.Repo+"hwy_data/"+Region+"/"+System+"/"+Root+".wpt";
+			highway *hwy = BuildRte(wptFile.data(), System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames);
+			if (hwy) HwyList.push_back(hwy);
+		     }
 	} // end while (build hwy list)
 
 	HTML(HwyList, env);
