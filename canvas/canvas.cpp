@@ -374,45 +374,9 @@ void HTML(vector<highway*> &hwy, envV &env)
 	html << "</html>\n";
 }
 
-bool CSVmode(envV &env)
-{	vector<highway*> HwyList;
-
-	ifstream CSV(env.Input.data());
-	if (!CSV)
-	{	cout << "InputFile \"" << env.Input << "\" not found!" << endl;
-		return 0;
-	}
-	CSV.seekg(0, ios::end); unsigned int EoF = CSV.tellg(); CSV.seekg(0);
-	while (CSV.get() != '\n' && CSV.tellg() < EoF); //skip header row
-
-	while (CSV.tellg() < EoF) // build hwy list
-	{	string System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames;
-		string CSVline; // read individual line
-		for (char charlie = 0; charlie != '\n' && CSV.tellg() < EoF; CSVline.push_back(charlie)) CSV.get(charlie);
-		while (CSVline.back() == 0x0A || CSVline.back() == 0x0D)	// either DOS or UNIX...
-			CSVline.erase(CSVline.end()-1);				// strip out terminal '\n'
-		// parse CSV line
-		unsigned int i = 0;
-		while (i < CSVline.size() && CSVline[i] != ';') { System.push_back(CSVline[i]); i++; } i++;
-		while (i < CSVline.size() && CSVline[i] != ';') { Region.push_back(CSVline[i]); i++; } i++;
-		while (i < CSVline.size() && CSVline[i] != ';') { Route.push_back(CSVline[i]); i++; } i++;
-		while (i < CSVline.size() && CSVline[i] != ';') { Banner.push_back(CSVline[i]); i++; } i++;
-		while (i < CSVline.size() && CSVline[i] != ';') { Abbrev.push_back(CSVline[i]); i++; } i++;
-		while (i < CSVline.size() && CSVline[i] != ';') { City.push_back(CSVline[i]); i++; } i++;
-		while (i < CSVline.size() && CSVline[i] != ';') { Root.push_back(CSVline[i]); i++; } i++;
-		while (i < CSVline.size() && CSVline[i] != ';') { AltRouteNames.push_back(CSVline[i]); i++; } i++;
-
-		if (Root.empty()) cout << "Bad CSV line in " << env.Input << ": \"" << CSVline << "\"\n";
-		else {	string wptFile = env.Repo+"hwy_data/"+Region+"/"+System+"/"+Root+".wpt";
-			highway *hwy = BuildRte(wptFile.data(), System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames);
-			if (hwy) HwyList.push_back(hwy);
-		     }
-	} // end while (build hwy list)
-
-	HTML(HwyList, env);
-}
-
 int main(int argc, char *argv[])
 {	envV env; if (!env.set(argc, argv)) return 0;
-	CSVmode(env);
+	vector<highway*> HwyVec;
+	ChoppedRtesCSV(HwyVec, env.Input, env.Repo+"hwy_data/", 1);
+	HTML(HwyVec, env);
 }
