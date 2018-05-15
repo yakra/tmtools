@@ -7,6 +7,7 @@ class tmsystem
 	std::string System, CountryCode, Name, Color;	// CSV data
 	  std::string UnColor, ClColor;			// hex codes for canvas
 	unsigned short Tier;				// CSV data
+	unsigned short SubTier;				// color hierarchy for canvas
 	std::string Level;				// CSV data
 	  short LevNum;					// numeric level representation
 		// 0:	boundaries
@@ -23,6 +24,7 @@ class tmsystem
 		Name = N;
 		Color = Co;
 		Tier = T;
+		SetSubTier();
 		Level = L;
 		SetLevNum();
 	}
@@ -35,8 +37,23 @@ class tmsystem
 		UnColor = Un;
 		ClColor = Cl;
 		Tier = T;
+		SetSubTier();
 		Level = L;
 		SetLevNum();
+	}
+
+	bool operator < (tmsystem &cmp)
+	{	if (Tier < cmp.Tier) return 1;
+		if (Tier > cmp.Tier) return 0;
+		if (SubTier < cmp.SubTier) return 1;
+		return 0;
+	}
+
+	bool operator > (tmsystem &cmp)
+	{	if (Tier > cmp.Tier) return 1;
+		if (Tier < cmp.Tier) return 0;
+		if (SubTier > cmp.SubTier) return 1;
+		return 0;
 	}
 
 	std::string CSVline()
@@ -99,6 +116,21 @@ class tmsystem
 			std::cout << "Unrecognized Color code \"" << Color << "\" will be colored gray. (System = " << System << ")\n";
 				UnColor = "aaaaaa";	ClColor = "555555";
 		}
+	}
+
+	void SetSubTier()
+	{	if (Color == "b_water")		{ SubTier = 12; return; }
+		if (Color == "b_subdiv")	{ SubTier = 10; return; }
+		if (Color == "b_country")	{ SubTier = 11; return; }
+		if (Color == "yellow")		{ SubTier = 8; return; }
+		if (Color == "brown")		{ SubTier = 7; return; }
+		if (Color == "lightsalmon")	{ SubTier = 6; return; }
+		if (Color == "magenta")		{ SubTier = 5; return; }
+		if (Color == "red")		{ SubTier = 4; return; }
+		if (Color == "green")		{ SubTier = 3; return; }
+		if (Color == "teal")		{ SubTier = 2; return; }
+		if (Color == "blue")		{ SubTier = 1; return; }
+		/* default/unrecognized */	  SubTier = 9;
 	}
 
 	void SetLevNum()
