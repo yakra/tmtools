@@ -130,7 +130,7 @@ highway* BuildRte(std::string filename, std::string Sys, std::string Reg, std::s
 	return hwy;
 }
 
-bool ChoppedRtesCSV(std::vector<highway*> &HwyVec, std::string &input, std::string path, bool RepoDirs)
+bool ChoppedRtesCSV(std::vector<highway*> &HwyVec, std::string input, std::string path, bool RepoDirs)
 {	std::ifstream CSV(input.data());
 	if (!CSV)
 	{	std::cout << "InputFile \"" << input << "\" not found!" << '\n';
