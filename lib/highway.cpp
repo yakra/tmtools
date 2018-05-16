@@ -75,10 +75,24 @@ class highway
 		return 0;
 	}
 
-	void write(unsigned char WriteMe, bool B)
-	{	std::string OrigName = "output/orig/" + Root + ".wpt";
-		std::string OffName = "output/off/" + Root + ".wpt";
-		std::string OnName = "output/on/" + Root + ".wpt";
+	void write(std::string OrigName, unsigned char OrgBy)	{ write(OrigName, 1, OrgBy, 0); }		// general purpose usage
+	void write(unsigned char WriteMe, bool B)		{ write("output/orig/", WriteMe, 0, B); }	// gisplunge usage
+	void write(std::string OrigName, unsigned char WriteMe, unsigned char OrgBy, bool B)
+	{	std::string OffName = "output/off/";
+		std::string OnName = "output/on/";
+		if (OrgBy > 1) // organize by Region/System
+		{	OrigName += Region + "/";
+			OffName += Region + "/";
+			OnName += Region + "/";
+		}
+		if (OrgBy > 0) // organize by System
+		{	OrigName += System + "/";
+			OffName += System + "/";
+			OnName += System + "/";
+		}
+		OrigName += Root + ".wpt";
+		OffName += Root + ".wpt";
+		OnName += Root + ".wpt";
 		std::ofstream OrigFile, OffFile, OnFile;
 		if (WriteMe & 1) OrigFile.open(OrigName.data());
 		if (WriteMe & 2) OffFile.open(OffName.data());
