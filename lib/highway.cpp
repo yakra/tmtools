@@ -53,21 +53,6 @@ class highway
 		return p;
 	}
 
-	void ListPts(bool AllLabels)
-	{	std::cout.precision(9);
-		for (std::list<waypoint>::iterator ptI = pt.begin(); ptI != pt.end(); ptI++)
-		{	if (AllLabels)
-				for (unsigned int i = 0; i < ptI->label.size(); i++) std::cout << ptI->label[i] << '\t'; // print labels
-			else {	std::cout << ptI->label.front() << '\t';
-				if (ptI->label.front().size() < 8) std::cout << '\t';
-			     }
-			// print coords
-			std::cout << ptI->OrigLat << '\t' << ptI->OrigLon << '\t';
-			std::cout << ptI->OffLat << '\t' << ptI->OffLon << '\t';
-			std::cout << ptI->OnLat << '\t' << ptI->OnLon << '\n';
-		}
-	}//*/
-
 	bool NameMatch(std::string ListName)
 	{	if (ListName == Route+Banner+Abbrev) return 1;
 		for (unsigned short i = 0; i < AltRouteNames.size(); i++)
@@ -103,7 +88,7 @@ class highway
 				if (WriteMe & 2) OffFile << ptI->label[i] << ' ';
 				if (WriteMe & 4) OnFile << ptI->label[i] << ' ';
 			}
-			if (WriteMe & 1) OrigFile << "http://www.openstreetmap.org/?lat=" << DblText(ptI->OrigLat,6,B) << "&lon=" << DblText(ptI->OrigLon,6,B) << '\n';
+			if (WriteMe & 1) OrigFile << "http://www.openstreetmap.org/?lat=" << DblText(ptI->Lat,6,B) << "&lon=" << DblText(ptI->Lon,6,B) << '\n';
 			if (WriteMe & 2) OffFile << "http://www.openstreetmap.org/?lat=" << DblText(ptI->OffLat,6,B) << "&lon=" << DblText(ptI->OffLon,6,B) << '\n';
 			if (WriteMe & 4) OnFile << "http://www.openstreetmap.org/?lat=" << DblText(ptI->OnLat,6,B) << "&lon=" << DblText(ptI->OnLon,6,B) << '\n';
 		}
@@ -132,7 +117,7 @@ highway* BuildRte(std::string filename, std::string Sys, std::string Reg, std::s
 		char *wlArr = new char[WPTline.size()+1];
 		strcpy(wlArr, WPTline.data());
 		for (char *label = strtok(wlArr, " "); label; label = strtok(0, " "))
-			point.label.push_back(label);	// get all tokens & put into label array
+			point.label.push_back(label);		// get all tokens & put into label deque
 		if (!point.label.empty())
 		{	point.URL = point.label.back();		// last token is actually the URL...
 			point.label.pop_back();			// ...and not a label.

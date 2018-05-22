@@ -42,17 +42,17 @@ class tmsystem
 		SetLevNum();
 	}
 
-	bool operator < (tmsystem &cmp)
-	{	if (Tier < cmp.Tier) return 1;
-		if (Tier > cmp.Tier) return 0;
-		if (SubTier < cmp.SubTier) return 1;
+	bool operator < (tmsystem &other)
+	{	if (Tier < other.Tier) return 1;
+		if (Tier > other.Tier) return 0;
+		if (SubTier < other.SubTier) return 1;
 		return 0;
 	}
 
-	bool operator > (tmsystem &cmp)
-	{	if (Tier > cmp.Tier) return 1;
-		if (Tier < cmp.Tier) return 0;
-		if (SubTier > cmp.SubTier) return 1;
+	bool operator > (tmsystem &other)
+	{	if (Tier > other.Tier) return 1;
+		if (Tier < other.Tier) return 0;
+		if (SubTier > other.SubTier) return 1;
 		return 0;
 	}
 
