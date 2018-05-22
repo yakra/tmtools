@@ -75,10 +75,24 @@ class highway
 		return 0;
 	}
 
-	void write(unsigned char WriteMe, bool B)
-	{	std::string OrigName = "output/orig/" + Root + ".wpt";
-		std::string OffName = "output/off/" + Root + ".wpt";
-		std::string OnName = "output/on/" + Root + ".wpt";
+	void write(std::string OrigName, unsigned char OrgBy)	{ write(OrigName, 1, OrgBy, 0); }		// general purpose usage
+	void write(unsigned char WriteMe, bool B)		{ write("output/orig/", WriteMe, 0, B); }	// gisplunge usage
+	void write(std::string OrigName, unsigned char WriteMe, unsigned char OrgBy, bool B)
+	{	std::string OffName = "output/off/";
+		std::string OnName = "output/on/";
+		if (OrgBy > 1) // organize by Region/System
+		{	OrigName += Region + "/";
+			OffName += Region + "/";
+			OnName += Region + "/";
+		}
+		if (OrgBy > 0) // organize by System
+		{	OrigName += System + "/";
+			OffName += System + "/";
+			OnName += System + "/";
+		}
+		OrigName += Root + ".wpt";
+		OffName += Root + ".wpt";
+		OnName += Root + ".wpt";
 		std::ofstream OrigFile, OffFile, OnFile;
 		if (WriteMe & 1) OrigFile.open(OrigName.data());
 		if (WriteMe & 2) OffFile.open(OffName.data());
@@ -99,7 +113,7 @@ class highway
 	}
 };
 
-highway* BuildRte(const char *filename, std::string Sys, std::string Reg, std::string Rte, std::string Ban, std::string Abb, std::string City, std::string Root, std::string Alts)
+highway* BuildRte(std::string filename, std::string Sys, std::string Reg, std::string Rte, std::string Ban, std::string Abb, std::string City, std::string Root, std::string Alts)
 {	std::ifstream WPT (filename);
 	if (!WPT)
 	{	std::cout << filename << " file not found\n";
@@ -128,4 +142,41 @@ highway* BuildRte(const char *filename, std::string Sys, std::string Reg, std::s
 		}
 	} //end while (step thru each WPT line)
 	return hwy;
+}
+
+bool ChoppedRtesCSV(std::vector<highway*> &HwyVec, std::string input, std::string path, bool RepoDirs)
+{	std::ifstream CSV(input.data());
+	if (!CSV)
+	{	std::cout << "InputFile \"" << input << "\" not found!" << '\n';
+		return 0;
+	}
+	CSV.seekg(0, std::ios::end); unsigned int EoF = CSV.tellg(); CSV.seekg(0);
+	while (CSV.get() != '\n' && CSV.tellg() < EoF); //skip header row
+
+	while (CSV.tellg() < EoF) // build hwy list
+	{	std::string System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames;
+		std::string CSVline; // read individual line
+		for (char charlie = 0; charlie != '\n' && CSV.tellg() < EoF; CSVline.push_back(charlie)) CSV.get(charlie);
+		while (CSVline.back() == 0x0A || CSVline.back() == 0x0D)	// either DOS or UNIX...
+			CSVline.erase(CSVline.end()-1);				// strip out terminal '\n'
+		// parse CSV line
+		unsigned int i = 0;
+		while (i < CSVline.size() && CSVline[i] != ';') { System.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Region.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Route.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Banner.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Abbrev.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { City.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { Root.push_back(CSVline[i]); i++; } i++;
+		while (i < CSVline.size() && CSVline[i] != ';') { AltRouteNames.push_back(CSVline[i]); i++; } i++;
+
+		if (Root.empty()) std::cout << "Bad CSV line in " << input << ": \"" << CSVline << "\"\n";
+		else {	std::string wptFile = path;
+			if (RepoDirs) wptFile += Region+"/"+System+"/";
+			wptFile += Root+".wpt";
+			highway *hwy = BuildRte(wptFile, System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames);
+			if (hwy) HwyVec.push_back(hwy);
+		     }
+	} // end while (build hwy list)
+	return 1;
 }
