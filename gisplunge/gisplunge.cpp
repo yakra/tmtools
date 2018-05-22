@@ -229,7 +229,7 @@ int ProcRte(envV &env, DBF &dbf, highway *hwy)
 
 				// Compare shapefile point coords against coords of each WPT point
 				for (list<waypoint>::iterator ptI = hwy->pt.begin(); ptI != hwy->pt.end(); ptI++)
-				{	shpDist = measure(shpLat, shpLon, ptI->OrigLat, ptI->OrigLon);
+				{	shpDist = measure(shpLat, shpLon, ptI->Lat, ptI->Lon);
 					if (shpDist < ptI->OffDist)
 					{	ptI->OffDist = shpDist;
 						ptI->OffLat = shpLat;
@@ -254,24 +254,23 @@ int ProcRte(envV &env, DBF &dbf, highway *hwy)
 		cout << "Skipping this file." << endl << endl;
 		return 2;
 	}
-	//hwy->ListPts(0);
 	hwy->write(env.WriteMe, env.DoubleBug);
 	delete hwy;
 	return 1;
 }
 
-void ProcList(envV env, DBF dbf, vector<highway*> HwyList, unsigned int ThreadNum)
-{	for (unsigned int n = ThreadNum; n < HwyList.size(); n += env.Threads) ProcRte(env, dbf, HwyList[n]);
+void ProcList(envV env, DBF dbf, vector<highway*> HwyVec, unsigned int ThreadNum)
+{	for (unsigned int n = ThreadNum; n < HwyVec.size(); n += env.Threads) ProcRte(env, dbf, HwyVec[n]);
 }
 
 bool CSVmode(envV &env, DBF &dbf)
-{	vector<highway*> HwyList;
-	ChoppedRtesCSV(HwyList, env.InputFile, env.SourceDir, 0);
+{	vector<highway*> HwyVec;
+	ChoppedRtesCSV(HwyVec, env.InputFile, env.SourceDir, 0);
 
-	if (env.Threads > HwyList.size() || !env.Threads) env.Threads = HwyList.size();
+	if (env.Threads > HwyVec.size() || !env.Threads) env.Threads = HwyVec.size();
 	thread **thr = new thread*[env.Threads];
 	for (unsigned int t = 0; t < env.Threads; t++)
-	{	thr[t] = new thread(ProcList, env, dbf, HwyList, t);
+	{	thr[t] = new thread(ProcList, env, dbf, HwyVec, t);
 	}
 	for (unsigned int t = 0; t < env.Threads; t++)
 	{	thr[t]->join();
