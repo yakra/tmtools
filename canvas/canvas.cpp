@@ -7,7 +7,7 @@ class envV
 {	public:
 	string Input, List, Colors, Output, Repo, Width, Height, UnStroke, ClStroke;
 	vector<string> N_Colors, UnColors, ClColors, GraySystems;
-	deque<tmsystem> SysList;
+	deque<tmsystem> SysDeq;
 	unsigned short MaxTier = 0;
 	bool MsgSeen, ReadSysCSV();
 
@@ -153,12 +153,12 @@ class envV
 
 		ReadSysCSV();
 		// boundaries		    System,      CountryCode,  Name,        Color,       Tier,      Level;
-		SysList.push_front(tmsystem("b_country", "boundaries", "b_country", "b_country", MaxTier+1, "boundaries"));
-		SysList.front().SetColors(N_Colors, UnColors, ClColors);
-		SysList.push_front(tmsystem("b_subdiv", "boundaries", "b_subdiv", "b_subdiv", MaxTier+1, "boundaries"));
-		SysList.front().SetColors(N_Colors, UnColors, ClColors);
-		SysList.push_front(tmsystem("b_water", "boundaries", "b_water", "b_water", MaxTier+1, "boundaries"));
-		SysList.front().SetColors(N_Colors, UnColors, ClColors);
+		SysDeq.push_front(tmsystem("b_country", "boundaries", "b_country", "b_country", MaxTier+1, "boundaries"));
+		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
+		SysDeq.push_front(tmsystem("b_subdiv", "boundaries", "b_subdiv", "b_subdiv", MaxTier+1, "boundaries"));
+		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
+		SysDeq.push_front(tmsystem("b_water", "boundaries", "b_water", "b_water", MaxTier+1, "boundaries"));
+		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
 		return 1;
 	}
 
@@ -197,8 +197,8 @@ bool envV::ReadSysCSV()
 			while (i < CSVline.size() && CSVline[i] != ';') { Level.push_back(CSVline[i]); i++; } i++;
 			try {	unsigned short Tier = stoi(TierS);
 				if (Tier > MaxTier) MaxTier = Tier;
-				SysList.push_back(tmsystem(System, CountryCode, Name, Color, Tier, Level));
-				SysList.back().SetColors(N_Colors, UnColors, ClColors);
+				SysDeq.push_back(tmsystem(System, CountryCode, Name, Color, Tier, Level));
+				SysDeq.back().SetColors(N_Colors, UnColors, ClColors);
 			    }
 			catch (std::invalid_argument x) { cout << "Bad CSV line in " << SysCSV << ": \"" << CSVline << "\"\n"; }
 		}
@@ -206,10 +206,10 @@ bool envV::ReadSysCSV()
 }
 
 void GetColors(string &SysCode, envV &env, string &UnColor, string &ClColor)
-{	for (unsigned int i = 0; i < env.SysList.size(); i++)
-	  if	(SysCode == env.SysList[i].System)
-	  {	UnColor = env.SysList[i].UnColor;
-		ClColor = env.SysList[i].ClColor;
+{	for (unsigned int i = 0; i < env.SysDeq.size(); i++)
+	  if	(SysCode == env.SysDeq[i].System)
+	  {	UnColor = env.SysDeq[i].UnColor;
+		ClColor = env.SysDeq[i].ClColor;
 		return;
 	  }
 	if (!env.IsGray(SysCode))
@@ -284,17 +284,17 @@ void HTML(vector<highway*> &hwy, envV &env)
 		html << "//EDB - point latitudes\n";
 		html << "lat:[";
 		list<waypoint>::iterator point = hwy[num]->pt.begin();
-			html << to_string(point->OrigLat);
+			html << to_string(point->Lat);
 		for (point++; point != hwy[num]->pt.end(); point++)
-			html << ", " << to_string(point->OrigLat);
+			html << ", " << to_string(point->Lat);
 		html << "],\n";
 
 		html << "//EDB - point longitudes\n";
 		html << "lon:[";
 		point = hwy[num]->pt.begin();
-			html << to_string(point->OrigLon);
+			html << to_string(point->Lon);
 		for (point++; point != hwy[num]->pt.end(); point++)
-			html << ", " << to_string(point->OrigLon);
+			html << ", " << to_string(point->Lon);
 		html << "],\n";
 
 		html << "//vdeane & EDB - indices to .listfile endpoints\ncliSegments:[";

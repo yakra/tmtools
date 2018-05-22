@@ -21,7 +21,7 @@ class waypoint
 {	public:
 	std::deque<std::string> label;
 	std::string URL;
-	double OrigLat, OrigLon, OffLat, OffLon, OnLat, OnLon, OffDist, OnDist;
+	double Lat, Lon, OffLat, OffLon, OnLat, OnLon, OffDist, OnDist;
 
 	~waypoint()
 	{	label.clear();
@@ -37,12 +37,12 @@ class waypoint
 	{	// parse URL
 		size_t latBeg = URL.find("lat=")+4;	if (latBeg == 3) latBeg = URL.size();
 		size_t lonBeg = URL.find("lon=")+4;	if (lonBeg == 3) lonBeg = URL.size();
-		OrigLat = strtod(&URL[latBeg], 0);
-		OrigLon = strtod(&URL[lonBeg], 0);
+		Lat = strtod(&URL[latBeg], 0);
+		Lon = strtod(&URL[lonBeg], 0);
 		// "Worst First" for gisplunge coords, so everything after will be an improvement
-		OnLat = OrigLat * -1; OffLat = OnLat;
-		OnLon = OrigLon + 180; OffLon = OnLon;
-		OnDist = measure(OnLat, OnLon, OrigLat, OrigLon); OffDist = OnDist;
+		OnLat = Lat * -1; OffLat = OnLat;
+		OnLon = Lon + 180; OffLon = OnLon;
+		OnDist = measure(OnLat, OnLon, Lat, Lon); OffDist = OnDist;
 	}
 
 	inline char* NakedLabel (unsigned int l)
@@ -50,4 +50,11 @@ class waypoint
 		while (label[l][i] == '+' || label[l][i] == '*') i++;
 		return &label[l][i];
 	}
+
+	bool nearby(waypoint &other, double tolerance)
+	/* return if this waypoint's coordinates are within the given
+	tolerance (in degrees) of the other */
+	{	return abs(Lat - other.Lat) < tolerance && abs(Lon - other.Lon) < tolerance;
+	}
+
 };
