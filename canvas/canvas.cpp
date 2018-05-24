@@ -356,7 +356,11 @@ void HTML(vector<highway*> &hwy, envV &env)
 	html << "			if (rte[j].lon[i] > MaxLon) MaxLon = rte[j].lon[i];\n";
 	html << "		}\n";
 	html << "	}\n";
-	html << "}\n";
+	html << "}//*/\n";
+	html << "document.write(\"<br> MinLat: \"); document.write(MinLat);\n";
+	html << "document.write(\"<br> MinLon: \"); document.write(MinLon);\n";
+	html << "document.write(\"<br> MaxLat: \"); document.write(MaxLat);\n";
+	html << "document.write(\"<br> MaxLon: \"); document.write(MaxLon);\n";
 	html << "var ScaleFac = Math.min((canvas.width-1)/(MaxLon-MinLon), (canvas.height-1)/(merc(MaxLat)-merc(MinLat)));\n";
 	html << "var MinMerc = merc(MinLat);\n\n";
 
