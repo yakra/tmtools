@@ -3,7 +3,7 @@
 #include <iostream>
 #include <list>
 #include <vector>
-#include "waypoint.cpp"	// includes deque, string
+#include "waypoint.h"	// includes deque, string
 #include "dbltext.cpp"	// includes string
 
 class highway
@@ -113,7 +113,7 @@ highway* BuildRte(std::string filename, std::string Sys, std::string Reg, std::s
 		while (WPTline.back() == 0x0A || WPTline.back() == 0x0D)	// either DOS or UNIX...
 			WPTline.erase(WPTline.end()-1);				// strip out terminal '\n'
 		// parse WPT line
-		waypoint point;
+		waypoint point(hwy);
 		char *wlArr = new char[WPTline.size()+1];
 		strcpy(wlArr, WPTline.data());
 		for (char *label = strtok(wlArr, " "); label; label = strtok(0, " "))
