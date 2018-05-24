@@ -1,6 +1,6 @@
 #include <thread>		// requires -std=c++11 -pthread on compile.
 #include "../lib/dbf.cpp"	// includes cstring, fstream, iostream
-#include "../lib/highway.cpp"	// includes cstring, fstream, iostream, list, string, vector
+#include "../lib/waypoint.cpp"	// includes cstring, fstream, iostream, list, string, vector
 using namespace std;
 
 class envV
