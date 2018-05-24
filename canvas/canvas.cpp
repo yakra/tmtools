@@ -1,5 +1,4 @@
-#include <cmath>
-#include "../lib/highway.cpp"	// includes cstring, deque, fstream, iostream, list, string, vector
+#include "../lib/waypoint.cpp"	// includes cmath, cstring, deque, fstream, iostream, list, string, vector
 #include "../lib/tmsystem.cpp"	// includes string, vector
 using namespace std;
 
