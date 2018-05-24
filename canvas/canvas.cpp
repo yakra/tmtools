@@ -5,11 +5,12 @@ using namespace std;
 
 class envV
 {	public:
-	string Input, List, Colors, Output, Repo, Width, Height, UnStroke, ClStroke;
+	string List, Colors, Output, Repo, Width, Height, UnStroke, ClStroke;
 	vector<string> N_Colors, UnColors, ClColors, GraySystems;
+	vector<string> IncludeRg, IncludeSys;
 	deque<tmsystem> SysDeq;
 	unsigned short MaxTier = 0;
-	bool MsgSeen, ReadSysCSV();
+	bool MsgSeen, ReadSysCSV(bool);
 
 	bool set(int argc, char *argv[])
 	{	MsgSeen = 0;
@@ -26,9 +27,6 @@ class envV
 			 while (iniField != "Repo" && !INI.eof())	INI >> iniField;
 			  INI >> Repo;
 			INI.clear(); INI.seekg(0); iniField.clear();
-			 while (iniField != "Input" && !INI.eof())	INI >> iniField;
-			  INI >> Input;
-			INI.clear(); INI.seekg(0); iniField.clear();
 			 while (iniField != "List" && !INI.eof())	INI >> iniField;
 			  INI >> List;
 			INI.clear(); INI.seekg(0); iniField.clear();
@@ -43,6 +41,25 @@ class envV
 			INI.clear(); INI.seekg(0); iniField.clear();
 			 while (iniField != "Stroke" && !INI.eof())	INI >> iniField;
 			  INI >> UnStroke >> ClStroke;
+			INI.clear(); INI.seekg(0); iniField.clear();
+			 while (INI >> iniField)
+			 {	if (iniField == "Input")
+				{	INI >> iniField;
+					IncludeSys.push_back(iniField);
+				}
+			 }
+			INI.clear(); INI.seekg(0); iniField.clear();
+			 while (iniField != "Region" && !INI.eof())	INI >> iniField;
+			  string rStr; INI >> rStr;
+			   char *rArr = new char[rStr.size()+1];
+			    strcpy(rArr, rStr.data());
+			     for (char *rg = strtok(rArr, ","); rg; rg = strtok(0, ",")) IncludeRg.push_back(rg);
+			INI.clear(); INI.seekg(0); iniField.clear();
+			 while (iniField != "System" && !INI.eof())	INI >> iniField;
+			  string sStr; INI >> sStr;
+			   char *sArr = new char[sStr.size()+1];
+			    strcpy(sArr, sStr.data());
+			     for (char *sys = strtok(sArr, ","); sys; sys = strtok(0, ",")) IncludeSys.push_back(Repo+"hwy_data/_systems/"+sys+".csv");
 		     }
 
 		// commandline options:
@@ -66,7 +83,7 @@ class envV
 			} }
 			else if (!strcmp(argv[a], "-i") || !strcmp(argv[a], "--Input"))
 			{ if (a+1 < argc)
-			  {	Input = argv[a+1];
+			  {	IncludeSys.push_back(argv[a+1]);
 				a++;
 			} }
 			else if (!strcmp(argv[a], "-l") || !strcmp(argv[a], "--List"))
@@ -77,6 +94,11 @@ class envV
 			else if (!strcmp(argv[a], "-o") || !strcmp(argv[a], "--Output"))
 			{ if (a+1 < argc)
 			  {	Output = argv[a+1];
+				a++;
+			} }
+			else if (!strcmp(argv[a], "-rg") || !strcmp(argv[a], "--Region"))
+			{ if (a+1 < argc)
+			  {	for (char *rg = strtok(argv[a+1], ","); rg; rg = strtok(0, ",")) IncludeRg.push_back(rg);
 				a++;
 			} }
 			else if (!strcmp(argv[a], "-r") || !strcmp(argv[a], "--Repo"))
@@ -90,6 +112,11 @@ class envV
 				ClStroke = argv[a+2];
 				a += 2;
 			} }
+			else if (!strcmp(argv[a], "-sys") || !strcmp(argv[a], "--System"))
+			{ if (a+1 < argc)
+			  {	for (char *sys = strtok(argv[a+1], ","); sys; sys = strtok(0, ",")) IncludeSys.push_back(Repo+"hwy_data/_systems/"+sys+".csv");
+				a++;
+			} }
 			else if (!strcmp(argv[a], "-w") || !strcmp(argv[a], "--Width"))
 			{ if (a+1 < argc)
 			  {	Width = argv[a+1];
@@ -98,18 +125,20 @@ class envV
 			else if (!strcmp(argv[a], "-?") || !strcmp(argv[a], "--help") || !strcmp(argv[a], "--Help"))
 			{	cout << "Options:\n";
 				cout << "Mandatory arguments to long options are mandatory for short options too.\n";
-				cout << "  -C, --Colors <ColorFile>         Color definitions file.\n";
-				cout << "  -c, --Color <Name> <Base> <Clin> Color definitions file.\n";
-				cout << "  -h, --Height <Height>            Canvas height.\n";
-				cout << "  -i, --Input <InputFile>          CSV file listing routes to be plotted.\n";
-				cout << "  -l, --List <ListFile>            Filename of .list file to process.\n";
-				cout << "  -o, --Output <OutputFile>        Filename of output HTML file.\n";
-				cout << "  -r, --Repo <Repo>                Path of HighwayData repository.\n";
-				cout << "                                   Trailing slash required.\n";
-				cout << "  -s, --Stroke <Base> <Clinched>   Stroke width of base & clinched segments.\n";
-				cout << "                                   Both arguments are required.\n";
-				cout << "  -w, --Width <Width>              Canvas width.\n";
-				cout << "  -?, --help, --Help               Display this help and exit.\n\n";
+				cout << "  -C,   --Colors <ColorFile>         Color definitions file.\n";
+				cout << "  -c,   --Color <Name> <Base> <Clin> Single color definition.\n";
+				cout << "  -h,   --Height <Height>            Canvas height.\n";
+				cout << "  -i,   --Input <InputFile>          CSV file listing routes to be plotted.\n";
+				cout << "  -l,   --List <ListFile>            Filename of .list file to process.\n";
+				cout << "  -o,   --Output <OutputFile>        Filename of output HTML file.\n";
+				cout << "  -r,   --Repo <Repo>                Path of HighwayData repository.\n";
+				cout << "                                     Trailing slash required.\n";
+				cout << "  -rg,  --Region <Code,Code,Code>    Comma-separated regions to include.\n";
+				cout << "  -s,   --Stroke <Base> <Clinched>   Stroke width of base & clinched segments.\n";
+				cout << "                                     Both arguments are required.\n";
+				cout << "  -sys, --System <Code,Code,Code>    Comma-separated systems to include.\n";
+				cout << "  -w,   --Width <Width>              Canvas width.\n";
+				cout << "  -?,   --help, --Help               Display this help and exit.\n\n";
 
 				cout << "INI file:\n";
 				cout << "Default options may also be specified in canvas.ini, and will be overridden by\n";
@@ -117,22 +146,9 @@ class envV
 				cout << "listed above. Options are the same as the long options listed above, without the\n";
 				cout << "leading dashes, and are case sensitive.\n";
 				cout << "Only single color definitions (--Color) are unsupported in canvas.ini.\n";
-				cout << "These should be defined in their own separate colors INI file instead..\n";
+				cout << "These should be defined in their own separate colors INI file instead.\n";
 				return 0;
 			}
-		}
-
-		if (UnStroke.empty())	{ envInfo = 1; cout << "Base stroke thickness unspecified; defaulting to 1.\n"; UnStroke = "1"; }
-		if (ClStroke.empty())	{ envInfo = 1; cout << "Clinched stroke thickness unspecified; defaulting to 2.5.\n"; ClStroke = "2.5"; }
-		if (Width.empty())	{ envInfo = 1; cout << "Width unspecified; defaulting to 700.\n"; Width = "700"; }
-		if (Height.empty())	{ envInfo = 1; cout << "Height unspecified; defaulting to 700.\n"; Height = "700"; }
-		if (Input.empty())	{ envInfo = 2; cout << "Input CSV unspecified.\n"; }
-		if (List.empty())	{ envInfo = 2; cout << ".list file unspecified.\n"; }
-		if (Repo.empty())	{ envInfo = 2; cout << "Repo location unspecified.\n"; }
-
-		if (envInfo)
-		{	cout << "For more info, use --help commandline option.\n";
-			if (envInfo > 1) return 0;
 		}
 
 		// colors:
@@ -151,7 +167,7 @@ class envV
 		if (ClColors.size() != N_Colors.size())
 		   { cout << "Oh dear. ClColors.size() != N_Colors.size() in envV::set(). Terminating.\n"; return 0; }
 
-		ReadSysCSV();
+		ReadSysCSV(IncludeSys.empty());
 		// boundaries		    System,      CountryCode,  Name,        Color,       Tier,      Level;
 		SysDeq.push_front(tmsystem("b_country", "boundaries", "b_country", "b_country", MaxTier+1, "boundaries"));
 		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
@@ -159,6 +175,21 @@ class envV
 		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
 		SysDeq.push_front(tmsystem("b_water", "boundaries", "b_water", "b_water", MaxTier+1, "boundaries"));
 		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
+
+		if (UnStroke.empty())	{ envInfo = 1; cout << "Base stroke thickness unspecified; defaulting to 1.\n"; UnStroke = "1"; }
+		if (ClStroke.empty())	{ envInfo = 1; cout << "Clinched stroke thickness unspecified; defaulting to 2.5.\n"; ClStroke = "2.5"; }
+		if (Width.empty())	{ envInfo = 1; cout << "Width unspecified; defaulting to 700.\n"; Width = "700"; }
+		if (Height.empty())	{ envInfo = 1; cout << "Height unspecified; defaulting to 700.\n"; Height = "700"; }
+		if (List.empty())	{ envInfo = 1; cout << ".list file unspecified.\n"; MsgSeen = 1;}
+		if (IncludeSys.empty())	{ envInfo = 2; cout << "Input CSV(s) unspecified.\n"; }
+		if (Output.empty())	{ envInfo += 1+(envInfo==0); cout << "Output filename unspecified.\n"; }
+		if (Repo.empty())	{ envInfo += 1+(envInfo==0); cout << "Repository location unspecified.\n"; }
+
+		if (envInfo)
+		{	if (envInfo > 1) cout << envInfo-1 << " fatal error(s).\n";
+			cout << "For more info, use --help commandline option.\n";
+			if (envInfo > 1) return 0;
+		}
 		return 1;
 	}
 
@@ -169,7 +200,7 @@ class envV
 	}
 };
 
-bool envV::ReadSysCSV()
+bool envV::ReadSysCSV(bool PushToVector)
 {	string SysCSV = Repo+"systems.csv";
 	ifstream CSV(SysCSV);
 	if (!CSV)
@@ -199,6 +230,7 @@ bool envV::ReadSysCSV()
 				if (Tier > MaxTier) MaxTier = Tier;
 				SysDeq.push_back(tmsystem(System, CountryCode, Name, Color, Tier, Level));
 				SysDeq.back().SetColors(N_Colors, UnColors, ClColors);
+				if (PushToVector) IncludeSys.push_back(Repo+"hwy_data/_systems/"+System+".csv");
 			    }
 			catch (std::invalid_argument x) { cout << "Bad CSV line in " << SysCSV << ": \"" << CSVline << "\"\n"; }
 		}
@@ -223,7 +255,7 @@ void readlist(envV &env, ofstream &html, highway *hwy)
 {	string Region, Name, pl1, pl2;
 	unsigned int pi1, pi2;
 	ifstream list(env.List.data());
-	if (!env.MsgSeen && !list) { cout << env.List << " not found. Plotting base route traces only.\n"; env.MsgSeen = 1; }
+	if (!env.MsgSeen && !list) { cout << "List file \"" << env.List << "\" not found. Plotting base route traces only.\n"; env.MsgSeen = 1; }
 	bool comma = 0;
 
 	while (list >> Region >> Name >> pl1 >> pl2) //FIXME: assumes perfectly formatted .list file with exactly four strings on every line
@@ -377,6 +409,7 @@ void HTML(vector<highway*> &hwy, envV &env)
 int main(int argc, char *argv[])
 {	envV env; if (!env.set(argc, argv)) return 0;
 	vector<highway*> HwyVec;
-	ChoppedRtesCSV(HwyVec, env.Input, env.Repo+"hwy_data/", 1);
+	for (unsigned int i = 0; i < env.IncludeSys.size(); i++)
+		ChoppedRtesCSV(HwyVec, env.IncludeRg, env.IncludeSys[i], env.Repo+"hwy_data/", 1);
 	HTML(HwyVec, env);
 }
