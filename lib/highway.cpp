@@ -129,7 +129,13 @@ highway* BuildRte(std::string filename, std::string Sys, std::string Reg, std::s
 	return hwy;
 }
 
-bool ChoppedRtesCSV(std::vector<highway*> &HwyVec, std::string input, std::string path, bool RepoDirs)
+bool RgIsIncluded(std::vector<std::string> &IncludeRg, std::string &Region)
+{	for (unsigned int i = 0; i < IncludeRg.size(); i++)
+		if (Region == IncludeRg[i]) return 1;
+	return 0;
+}
+
+bool ChoppedRtesCSV(std::vector<highway*> &HwyVec, std::vector<std::string> &IncludeRg, std::string input, std::string path, bool RepoDirs)
 {	std::ifstream CSV(input.data());
 	if (!CSV)
 	{	std::cout << "InputFile \"" << input << "\" not found!" << '\n';
@@ -156,7 +162,8 @@ bool ChoppedRtesCSV(std::vector<highway*> &HwyVec, std::string input, std::strin
 		while (i < CSVline.size() && CSVline[i] != ';') { AltRouteNames.push_back(CSVline[i]); i++; } i++;
 
 		if (Root.empty()) std::cout << "Bad CSV line in " << input << ": \"" << CSVline << "\"\n";
-		else {	std::string wptFile = path;
+		else if (IncludeRg.empty() || RgIsIncluded(IncludeRg, Region))
+		     {	std::string wptFile = path;
 			if (RepoDirs) wptFile += Region+"/"+System+"/";
 			wptFile += Root+".wpt";
 			highway *hwy = BuildRte(wptFile, System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames);
@@ -164,4 +171,9 @@ bool ChoppedRtesCSV(std::vector<highway*> &HwyVec, std::string input, std::strin
 		     }
 	} // end while (build hwy list)
 	return 1;
+}
+
+bool ChoppedRtesCSV(std::vector<highway*> &HwyVec, std::string input, std::string path, bool RepoDirs)
+{	std::vector<std::string> dummy;
+	return ChoppedRtesCSV(HwyVec, dummy, input, path, RepoDirs);
 }
