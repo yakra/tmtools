@@ -16,8 +16,18 @@ double measure(double lat1, double lon1, double lat2, double lon2)
 	return pow(x2-x1,2)+pow(y2-y1,2)+pow(z2-z1,2);
 }
 
-waypoint::waypoint(highway *rte)
+waypoint::waypoint(highway *rte, std::string &WPTline)
 {	hwy = rte;
+	char *wlArr = new char[WPTline.size()+1];
+	strcpy(wlArr, WPTline.data());
+	for (char *token = strtok(wlArr, " "); token; token = strtok(0, " "))
+		label.push_back(token);	// get all tokens & put into label deque
+	if (!label.empty())
+	{	URL = label.back();	// last token is actually the URL...
+		label.pop_back();	// ...and not a label.
+		if (label.empty()) label.push_back("NULL");
+		InitCoords();
+	}
 }
 
 waypoint::~waypoint()
@@ -38,7 +48,7 @@ void waypoint::InitCoords()
 	Lon = strtod(&URL[lonBeg], 0);
 	// check for out-of-bounds coords
 	if (Lat > 90)
-	{	std::cout << "Warning: latitude > 90 in " << hwy->Root << " @ " << label[0] << "\n";
+	{	std::cout << "Warning: latitude > 90 in " << Root() << " @ " << label[0] << "\n";
 		std::cout << "         " << std::to_string(Lat) << " converted to ";
 		while (Lat > 360)	Lat -= 360;
 		if (Lat > 90)		Lat = 180-Lat;
@@ -46,7 +56,7 @@ void waypoint::InitCoords()
 		std::cout << std::to_string(Lat) << '\n';
 	}
 	if (Lat < -90)
-	{	std::cout << "Warning: latitude < -90 in " << hwy->Root << " @ " << label[0] << "\n";
+	{	std::cout << "Warning: latitude < -90 in " << Root() << " @ " << label[0] << "\n";
 		std::cout << "         " << std::to_string(Lat) << " converted to ";
 		while (Lat < -360)	Lat += 360;
 		if (Lat < -90)		Lat = -180-Lat;
@@ -54,13 +64,13 @@ void waypoint::InitCoords()
 		std::cout << std::to_string(Lat) << '\n';
 	}
 	if (Lon > 180)
-	{	std::cout << "Warning: longitude > 180 in " << hwy->Root << " @ " << label[0] << "\n";
+	{	std::cout << "Warning: longitude > 180 in " << Root() << " @ " << label[0] << "\n";
 		std::cout << "         " << std::to_string(Lon) << " converted to ";
 		while (Lon > 180)	Lon -= 360;
 		std::cout << std::to_string(Lon) << '\n';
 	}
 	if (Lon < -180)
-	{	std::cout << "Warning: longitude < -180 in " << hwy->Root << " @ " << label[0] << "\n";
+	{	std::cout << "Warning: longitude < -180 in " << Root() << " @ " << label[0] << "\n";
 		std::cout << "         " << std::to_string(Lon) << " converted to ";
 		while (Lon < -180)	Lon += 360;
 		std::cout << std::to_string(Lon) << '\n';
@@ -81,4 +91,9 @@ bool waypoint::nearby(waypoint &other, double tolerance)
 /* return if this waypoint's coordinates are within the given
 tolerance (in degrees) of the other */
 {	return abs(Lat - other.Lat) < tolerance && abs(Lon - other.Lon) < tolerance;
+}
+
+std::string waypoint::Root()
+{	if (hwy) return hwy->Root;
+	return "unknown highway (null pointer in waypoint::hwy); URL = " + URL;
 }
