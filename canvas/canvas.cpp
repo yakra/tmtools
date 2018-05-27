@@ -258,19 +258,19 @@ void readlist(envV &env, ofstream &html, highway *hwy)
 	bool comma = 0;
 
 	while (list >> Region >> Name >> pl1 >> pl2) //FIXME: assumes perfectly formatted .list file with exactly four strings on every line
-		if (Region == hwy->Region && hwy->NameMatch(Name))
-		{	while (pl1[0] == '+' || pl1[0] == '*') pl1 = &pl1[1];
-			while (pl2[0] == '+' || pl2[0] == '*') pl2 = &pl2[1];
-			pi1 = hwy->GetIndByLabel(pl1);
-			pi2 = hwy->GetIndByLabel(pl2);
-			if (pi1 < hwy->pt.size() && pi2 < hwy->pt.size())
-			{	if (comma)
-					if (pi1 < pi2)	html << ", " << pi1 << ", " << pi2;
-					else		html << ", " << pi2 << ", " << pi1;
-				else	// write the first one
-					if (pi1 < pi2)	html << pi1 << ", " << pi2;
-					else		html << pi2 << ", " << pi1;
-				comma = 1;
+			if (Region == hwy->Region && hwy->NameMatch(Name))
+			{	while (pl1[0] == '+' || pl1[0] == '*') pl1 = &pl1[1];
+				while (pl2[0] == '+' || pl2[0] == '*') pl2 = &pl2[1];
+				pi1 = hwy->GetIndByLabel(pl1);
+				pi2 = hwy->GetIndByLabel(pl2);
+				if (pi1 < hwy->pt.size() && pi2 < hwy->pt.size())
+				{	if (comma)
+						if (pi1 < pi2)	html << ", " << pi1 << ", " << pi2;
+						else		html << ", " << pi2 << ", " << pi1;
+					else	// write the first one
+						if (pi1 < pi2)	html << pi1 << ", " << pi2;
+						else		html << pi2 << ", " << pi1;
+					comma = 1;
 			}
 		}
 	list.close();
