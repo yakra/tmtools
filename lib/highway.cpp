@@ -113,18 +113,8 @@ highway* BuildRte(std::string filename, std::string Sys, std::string Reg, std::s
 		while (WPTline.back() == 0x0A || WPTline.back() == 0x0D)	// either DOS or UNIX...
 			WPTline.erase(WPTline.end()-1);				// strip out terminal '\n'
 		// parse WPT line
-		waypoint point(hwy);
-		char *wlArr = new char[WPTline.size()+1];
-		strcpy(wlArr, WPTline.data());
-		for (char *label = strtok(wlArr, " "); label; label = strtok(0, " "))
-			point.label.push_back(label);		// get all tokens & put into label deque
-		if (!point.label.empty())
-		{	point.URL = point.label.back();		// last token is actually the URL...
-			point.label.pop_back();			// ...and not a label.
-			if (point.label.empty()) point.label.push_back("NULL");
-			point.InitCoords();
-			hwy->pt.push_back(point);		// add completed line to waypoint list
-		}
+		waypoint point(hwy, WPTline);
+		if (!point.label.empty()) hwy->pt.push_back(point);
 	} //end while (step thru each WPT line)
 	return hwy;
 }
