@@ -1,3 +1,4 @@
+#include <ctime>
 #include "../lib/waypoint.cpp"	// includes cmath, cstring, deque, fstream, iostream, list, string, vector
 #include "../lib/tmsystem.cpp"	// includes string, vector
 using namespace std;
@@ -231,7 +232,7 @@ bool envV::ReadSysCSV(bool PushToVector)
 				SysDeq.back().SetColors(N_Colors, UnColors, ClColors);
 				if (PushToVector) IncludeSys.push_back(Repo+"hwy_data/_systems/"+System+".csv");
 			    }
-			catch (std::invalid_argument x) { cout << "Bad CSV line in " << SysCSV << ": \"" << CSVline << "\"\n"; }
+			catch (invalid_argument x) { cout << "Bad CSV line in " << SysCSV << ": \"" << CSVline << "\"\n"; }
 		}
 	}
 }
@@ -251,14 +252,23 @@ void GetColors(string &SysCode, envV &env, string &UnColor, string &ClColor)
 }
 
 void readlist(envV &env, ofstream &html, highway *hwy)
-{	string Region, Name, pl1, pl2;
-	unsigned int pi1, pi2;
+{	unsigned int pi1, pi2;
 	ifstream list(env.List.data());
 	if (!env.MsgSeen && !list) { cout << "List file \"" << env.List << "\" not found. Plotting base route traces only.\n"; env.MsgSeen = 1; }
 	bool comma = 0;
 
-	while (list >> Region >> Name >> pl1 >> pl2) //FIXME: assumes perfectly formatted .list file with exactly four strings on every line
-			if (Region == hwy->Region && hwy->NameMatch(Name))
+	string line;
+	while (getline(list, line))
+	{	if (line[0] != '#') try
+		{	char *LineArr = new char[line.size()+1];
+			strcpy(LineArr, line.data());
+			char *Region = strtok(LineArr, " \t");	if (!Region)	throw 'R';
+			char *Name = strtok(0, " \t");		if (!Name)	throw 'N';
+			char *pl1 = strtok(0, " \t");		if (!pl1)	throw '1';
+			char *pl2 = strtok(0, " \t");		if (!pl2)	throw '2';
+			if (strtok(0, " \t"))					throw '3';
+
+			if (caps(Region) == caps(hwy->Region) && hwy->NameMatch(Name))
 			{	while (pl1[0] == '+' || pl1[0] == '*') pl1 = &pl1[1];
 				while (pl2[0] == '+' || pl2[0] == '*') pl2 = &pl2[1];
 				pi1 = hwy->GetIndByLabel(pl1);
@@ -271,8 +281,11 @@ void readlist(envV &env, ofstream &html, highway *hwy)
 						if (pi1 < pi2)	html << pi1 << ", " << pi2;
 						else		html << pi2 << ", " << pi1;
 					comma = 1;
+				}
 			}
 		}
+		catch (char err) { if (err != 'R') cout << "Incorrect format .list line: " << line << '\n'; }
+	}
 	list.close();
 }
 
@@ -410,9 +423,12 @@ void HTML(vector<highway*> &hwy, envV &env)
 }
 
 int main(int argc, char *argv[])
-{	envV env; if (!env.set(argc, argv)) return 0;
+{	clock_t RunTime = clock();
+	envV env; if (!env.set(argc, argv)) return 0;
 	vector<highway*> HwyVec;
 	for (unsigned int i = 0; i < env.IncludeSys.size(); i++)
 		ChoppedRtesCSV(HwyVec, env.IncludeRg, env.IncludeSys[i], env.Repo+"hwy_data/", 1);
 	HTML(HwyVec, env);
+	RunTime = clock() - RunTime;
+	cout << "Total run time: " << float(RunTime)/CLOCKS_PER_SEC << '\n';
 }
