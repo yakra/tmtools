@@ -3,8 +3,9 @@
 #include <iostream>
 #include <list>
 #include <vector>
-#include "waypoint.h"	// includes deque, string
+#include "caps.cpp"	// includes string
 #include "dbltext.cpp"	// includes string
+#include "waypoint.h"	// includes deque, string
 
 class highway
 {	public:
@@ -42,7 +43,7 @@ class highway
 	{	unsigned int p = 0;
 		for (std::list<waypoint>::iterator point = pt.begin(); p < pt.size(); p++)
 		{	for (unsigned int l = 0; l < point->label.size(); l++)
-				if (lbl == point->NakedLabel(l))
+				if (caps(lbl) == caps(point->NakedLabel(l)))
 				{	if (l)	std::cout << Region << ' ' << Route+Banner+Abbrev << ' ' << lbl \
 						<< ": deprecated in favor of " << point->label[0] << '\n';
 					return p;
@@ -54,9 +55,10 @@ class highway
 	}
 
 	bool NameMatch(std::string ListName)
-	{	if (ListName == Route+Banner+Abbrev) return 1;
+	{	std::string CListName = caps(ListName);
+		if (CListName == caps(Route+Banner+Abbrev)) return 1;
 		for (unsigned short i = 0; i < AltRouteNames.size(); i++)
-			if (ListName == AltRouteNames[i]) return 1;
+			if (CListName == caps(AltRouteNames[i])) return 1;
 		return 0;
 	}
 
