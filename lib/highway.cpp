@@ -55,10 +55,9 @@ class highway
 	}
 
 	bool NameMatch(std::string ListName)
-	{	std::string CListName = caps(ListName);
-		if (CListName == caps(Route+Banner+Abbrev)) return 1;
+	{	if (ListName == caps(Route+Banner+Abbrev)) return 1;
 		for (unsigned short i = 0; i < AltRouteNames.size(); i++)
-			if (CListName == caps(AltRouteNames[i])) return 1;
+			if (ListName == caps(AltRouteNames[i])) return 1;
 		return 0;
 	}
 
