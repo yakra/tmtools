@@ -3,18 +3,30 @@
 #include "../lib/tmsystem.cpp"	// includes string, vector
 using namespace std;
 
+class ListEntry
+{	public:
+	string Region, Name, pl1, pl2;
+
+	ListEntry(string R, string N, string p1, string p2)
+	{	Region = R;
+		Name = N;
+		pl1 = p1;
+		pl2 = p2;
+	}
+};
+
 class envV
 {	public:
 	string List, Colors, Output, Repo, Width, Height, UnStroke, ClStroke;
 	vector<string> N_Colors, UnColors, ClColors, GraySystems;
 	vector<string> IncludeRg, IncludeSys;
 	deque<tmsystem> SysDeq;
+	list<ListEntry> TravList;
 	unsigned short MaxTier = 0;
-	bool MsgSeen, ReadSysCSV(bool);
+	bool ReadSysCSV(bool);
 
 	bool set(int argc, char *argv[])
-	{	MsgSeen = 0;
-		unsigned short envInfo = 0;
+	{	unsigned short envInfo = 0;
 
 		// INI file options:
 		string iniField;
@@ -180,7 +192,7 @@ class envV
 		if (ClStroke.empty())	{ envInfo = 1; cout << "Clinched stroke thickness unspecified; defaulting to 2.5.\n"; ClStroke = "2.5"; }
 		if (Width.empty())	{ envInfo = 1; cout << "Width unspecified; defaulting to 700.\n"; Width = "700"; }
 		if (Height.empty())	{ envInfo = 1; cout << "Height unspecified; defaulting to 700.\n"; Height = "700"; }
-		if (List.empty())	{ envInfo = 1; cout << ".list file unspecified.\n"; MsgSeen = 1;}
+		if (List.empty())	{ envInfo = 1; cout << ".list file unspecified. Plotting base route traces only.\n"; }
 		if (IncludeSys.empty())	{ envInfo = 2; cout << "Input CSV(s) unspecified.\n"; }
 		if (Output.empty())	{ envInfo += 1+(envInfo==0); cout << "Output filename unspecified.\n"; }
 		if (Repo.empty())	{ envInfo += 1+(envInfo==0); cout << "Repository location unspecified.\n"; }
@@ -190,6 +202,8 @@ class envV
 			cout << "For more info, use --help commandline option.\n";
 			if (envInfo > 1) return 0;
 		}
+
+		if (!List.empty()) SlurpList();
 		return 1;
 	}
 
@@ -197,6 +211,30 @@ class envV
 	{	for (unsigned int i = 0; i < GraySystems.size(); i++)
 		  if (SysCode == GraySystems[i]) return 1;
 		return 0;
+	}
+
+	void SlurpList()
+	{	ifstream list(List.data());
+		if (!list) { cout << "List file \"" << List << "\" not found. Plotting base route traces only.\n"; }
+	
+		string line;
+		while (getline(list, line))
+		{	while (line.back() == '\r' || line.back() == ' ' || line.back() == '\t') line.erase(line.end()-1);
+			if (line[0] != '#') try
+			{	char *LineArr = new char[line.size()+1];
+				strcpy(LineArr, line.data());
+				char *Region = strtok(LineArr, " \t");	if (!Region)	throw 'R';
+				char *Name = strtok(0, " \t");		if (!Name)	throw 'N';
+				char *pl1 = strtok(0, " \t");		if (!pl1)	throw '1';
+				char *pl2 = strtok(0, " \t");		if (!pl2)	throw '2';
+				if (strtok(0, " \t"))					throw '3';
+				while (pl1[0] == '+' || pl1[0] == '*') pl1++;
+				while (pl2[0] == '+' || pl2[0] == '*') pl2++;
+				TravList.emplace_back(caps(Region), caps(Name), pl1, pl2);
+			}
+			catch (char err) { if (err != 'R') cout << "Incorrect format .list line: " << line << '\n'; }
+		}
+		list.close();
 	}
 };
 
@@ -228,7 +266,7 @@ bool envV::ReadSysCSV(bool PushToVector)
 			while (i < CSVline.size() && CSVline[i] != ';') { Level.push_back(CSVline[i]); i++; } i++;
 			try {	unsigned short Tier = stoi(TierS);
 				if (Tier > MaxTier) MaxTier = Tier;
-				SysDeq.push_back(tmsystem(System, CountryCode, Name, Color, Tier, Level));
+				SysDeq.emplace_back(System, CountryCode, Name, Color, Tier, Level);
 				SysDeq.back().SetColors(N_Colors, UnColors, ClColors);
 				if (PushToVector) IncludeSys.push_back(Repo+"hwy_data/_systems/"+System+".csv");
 			    }
@@ -251,42 +289,29 @@ void GetColors(string &SysCode, envV &env, string &UnColor, string &ClColor)
 	UnColor = "aaaaaa";	ClColor = "555555";
 }
 
-void readlist(envV &env, ofstream &html, highway *hwy)
+void ProcList(envV &env, ofstream &html, highway *hwy)
 {	unsigned int pi1, pi2;
-	ifstream list(env.List.data());
-	if (!env.MsgSeen && !list) { cout << "List file \"" << env.List << "\" not found. Plotting base route traces only.\n"; env.MsgSeen = 1; }
 	bool comma = 0;
 
 	string line;
-	while (getline(list, line))
-	{	if (line[0] != '#') try
-		{	char *LineArr = new char[line.size()+1];
-			strcpy(LineArr, line.data());
-			char *Region = strtok(LineArr, " \t");	if (!Region)	throw 'R';
-			char *Name = strtok(0, " \t");		if (!Name)	throw 'N';
-			char *pl1 = strtok(0, " \t");		if (!pl1)	throw '1';
-			char *pl2 = strtok(0, " \t");		if (!pl2)	throw '2';
-			if (strtok(0, " \t"))					throw '3';
-
-			if (caps(Region) == caps(hwy->Region) && hwy->NameMatch(Name))
-			{	while (pl1[0] == '+' || pl1[0] == '*') pl1 = &pl1[1];
-				while (pl2[0] == '+' || pl2[0] == '*') pl2 = &pl2[1];
-				pi1 = hwy->GetIndByLabel(pl1);
-				pi2 = hwy->GetIndByLabel(pl2);
-				if (pi1 < hwy->pt.size() && pi2 < hwy->pt.size())
-				{	if (comma)
-						if (pi1 < pi2)	html << ", " << pi1 << ", " << pi2;
-						else		html << ", " << pi2 << ", " << pi1;
-					else	// write the first one
-						if (pi1 < pi2)	html << pi1 << ", " << pi2;
-						else		html << pi2 << ", " << pi1;
-					comma = 1;
-				}
+	for (list<ListEntry>::iterator LE = env.TravList.begin(); LE != env.TravList.end(); LE++)
+	{	if (LE->Region == hwy->Region && hwy->NameMatch(LE->Name))
+		{	pi1 = hwy->GetIndByLabel(LE->pl1);
+			pi2 = hwy->GetIndByLabel(LE->pl2);
+			if (pi1 < hwy->pt.size() && pi2 < hwy->pt.size())
+			{	if (comma)
+					if (pi1 < pi2)	html << ", " << pi1 << ", " << pi2;
+					else		html << ", " << pi2 << ", " << pi1;
+				else	// write the first one
+					if (pi1 < pi2)	html << pi1 << ", " << pi2;
+					else		html << pi2 << ", " << pi1;
+				comma = 1;
 			}
+			list<ListEntry>::iterator FinishedLine = LE;
+			LE--;
+			env.TravList.erase(FinishedLine);
 		}
-		catch (char err) { if (err != 'R') cout << "Incorrect format .list line: " << line << '\n'; }
 	}
-	list.close();
 }
 
 void HTML(vector<highway*> &hwy, envV &env)
@@ -342,7 +367,7 @@ void HTML(vector<highway*> &hwy, envV &env)
 		html << "],\n";
 
 		html << "//vdeane & EDB - indices to .listfile endpoints\ncliSegments:[";
-		readlist(env, html, hwy[num]);
+		ProcList(env, html, hwy[num]);
 		html << "]\n} //end object definition\n\n";
 	} //end for (route objects)
 
