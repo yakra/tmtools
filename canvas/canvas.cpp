@@ -19,7 +19,7 @@ class envV
 {	public:
 	string List, Colors, Output, Repo, Width, Height, UnStroke, ClStroke;
 	vector<string> N_Colors, UnColors, ClColors, GraySystems;
-	vector<string> ExcludeRg, InclCountry, IncludeRg, IncludeSys;
+	vector<string> ExclRg, InclCont, InclCtry, InclRg, InclSys;
 	deque<tmsystem> SysDeq;
 	list<ListEntry> TravList;
 	unsigned short BtmTier, MaxTier;
@@ -78,7 +78,7 @@ class envV
 			while (INI >> iniField)
 			{	if (iniField == "Input")
 				{	INI >> iniField;
-					IncludeSys.push_back(iniField);
+					InclSys.push_back(iniField);
 				}
 			}
 
@@ -87,25 +87,31 @@ class envV
 			  string eStr; INI >> eStr;
 			   char *eArr = new char[eStr.size()+1];
 			    strcpy(eArr, eStr.data());
-			     for (char *e = strtok(eArr, ","); e; e = strtok(0, ",")) ExcludeRg.push_back(e);
+			     for (char *e = strtok(eArr, ","); e; e = strtok(0, ",")) ExclRg.push_back(e);
+			INI.clear(); INI.seekg(0); iniField.clear();
+			 while (iniField != "Continent" && !INI.eof())	INI >> iniField;
+			  string CStr; INI >> CStr;
+			   char *CArr = new char[CStr.size()+1];
+			    strcpy(CArr, CStr.data());
+			     for (char *C = strtok(CArr, ","); C; C = strtok(0, ",")) InclCont.push_back(C);
 			INI.clear(); INI.seekg(0); iniField.clear();
 			 while (iniField != "Country" && !INI.eof())	INI >> iniField;
 			  string cStr; INI >> cStr;
 			   char *cArr = new char[cStr.size()+1];
 			    strcpy(cArr, cStr.data());
-			     for (char *c = strtok(cArr, ","); c; c = strtok(0, ",")) InclCountry.push_back(c);
+			     for (char *c = strtok(cArr, ","); c; c = strtok(0, ",")) InclCtry.push_back(c);
 			INI.clear(); INI.seekg(0); iniField.clear();
 			 while (iniField != "Region" && !INI.eof())	INI >> iniField;
 			  string rStr; INI >> rStr;
 			   char *rArr = new char[rStr.size()+1];
 			    strcpy(rArr, rStr.data());
-			     for (char *rg = strtok(rArr, ","); rg; rg = strtok(0, ",")) IncludeRg.push_back(rg);
+			     for (char *rg = strtok(rArr, ","); rg; rg = strtok(0, ",")) InclRg.push_back(rg);
 			INI.clear(); INI.seekg(0); iniField.clear();
 			 while (iniField != "System" && !INI.eof())	INI >> iniField;
 			  string sStr; INI >> sStr;
 			   char *sArr = new char[sStr.size()+1];
 			    strcpy(sArr, sStr.data());
-			     for (char *sys = strtok(sArr, ","); sys; sys = strtok(0, ",")) IncludeSys.push_back(Repo+"hwy_data/_systems/"+sys+".csv");
+			     for (char *sys = strtok(sArr, ","); sys; sys = strtok(0, ",")) InclSys.push_back(Repo+"hwy_data/_systems/"+sys+".csv");
 		     }
 
 		// commandline options:
@@ -123,14 +129,19 @@ class envV
 				ClColors.push_back(argv[a+3]);
 				a += 3;
 			} }
+			else if (!strcmp(argv[a], "--Continent"))
+			{ if (a+1 < argc)
+			  {	for (char *C = strtok(argv[a+1], ","); C; C = strtok(0, ",")) InclCont.push_back(C);
+				a++;
+			} }
 			else if (!strcmp(argv[a], "--Country"))
 			{ if (a+1 < argc)
-			  {	for (char *c = strtok(argv[a+1], ","); c; c = strtok(0, ",")) InclCountry.push_back(c);
+			  {	for (char *c = strtok(argv[a+1], ","); c; c = strtok(0, ",")) InclCtry.push_back(c);
 				a++;
 			} }
 			else if (!strcmp(argv[a], "--ExcludeRg"))
 			{ if (a+1 < argc)
-			  {	for (char *e = strtok(argv[a+1], ","); e; e = strtok(0, ",")) ExcludeRg.push_back(e);
+			  {	for (char *e = strtok(argv[a+1], ","); e; e = strtok(0, ",")) ExclRg.push_back(e);
 				a++;
 			} }
 			else if (!strcmp(argv[a], "-h") || !strcmp(argv[a], "--Height"))
@@ -140,7 +151,7 @@ class envV
 			} }
 			else if (!strcmp(argv[a], "-i") || !strcmp(argv[a], "--Input"))
 			{ if (a+1 < argc)
-			  {	IncludeSys.push_back(argv[a+1]);
+			  {	InclSys.push_back(argv[a+1]);
 				a++;
 			} }
 			else if (!strcmp(argv[a], "-l") || !strcmp(argv[a], "--List"))
@@ -169,7 +180,7 @@ class envV
 			} }
 			else if (!strcmp(argv[a], "-rg") || !strcmp(argv[a], "--Region"))
 			{ if (a+1 < argc)
-			  {	for (char *rg = strtok(argv[a+1], ","); rg; rg = strtok(0, ",")) IncludeRg.push_back(rg);
+			  {	for (char *rg = strtok(argv[a+1], ","); rg; rg = strtok(0, ",")) InclRg.push_back(rg);
 				a++;
 			} }
 			else if (!strcmp(argv[a], "-r") || !strcmp(argv[a], "--Repo"))
@@ -185,7 +196,7 @@ class envV
 			} }
 			else if (!strcmp(argv[a], "-sys") || !strcmp(argv[a], "--System"))
 			{ if (a+1 < argc)
-			  {	for (char *sys = strtok(argv[a+1], ","); sys; sys = strtok(0, ",")) IncludeSys.push_back(Repo+"hwy_data/_systems/"+sys+".csv");
+			  {	for (char *sys = strtok(argv[a+1], ","); sys; sys = strtok(0, ",")) InclSys.push_back(Repo+"hwy_data/_systems/"+sys+".csv");
 				a++;
 			} }
 			else if (!strcmp(argv[a], "-w") || !strcmp(argv[a], "--Width"))
@@ -199,8 +210,8 @@ class envV
 				cout << "  -b,   --Boundaries                 Show boundaries. No arguments required.\n";
 				cout << "  -C,   --Colors <ColorFile>         Color definitions file.\n";
 				cout << "  -c,   --Color <Name> <Base> <Clin> Single color definition.\n";
-				cout << "        --Country <Code,Code,Code>   Comma-separated multi-region\n";
-				cout << "                                     countries to include.\n";
+				cout << "        --Continent <Code,Code,Code> Comma-separated continents to include.\n";
+				cout << "        --Country <Code,Code,Code>   Comma-separated countries to include.\n";
 				cout << "        --ExcludeRg <Code,Code,Code> Comma-separated Regions to exclude.\n";
 				cout << "  -h,   --Height <Height>            Canvas height.\n";
 				cout << "  -i,   --Input <InputFile>          CSV file listing routes to be plotted.\n";
@@ -245,7 +256,7 @@ class envV
 		if (ClColors.size() != N_Colors.size())
 		   { cout << "Oh dear. ClColors.size() != N_Colors.size() in envV::set(). Terminating.\n"; return 0; }
 
-		ReadSysCSV(IncludeSys.empty());
+		ReadSysCSV(InclSys.empty());
 		// boundaries		  //System,      CountryCode,  Name,        Color,      Tier,       Level;
 		SysDeq.push_front(tmsystem("b_country", "boundaries", "b_country", "b_country", BtmTier+1, "boundaries"));
 		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
@@ -259,7 +270,7 @@ class envV
 		if (Width.empty())	{ envInfo = 1; cout << "Width unspecified; defaulting to 700.\n"; Width = "700"; }
 		if (Height.empty())	{ envInfo = 1; cout << "Height unspecified; defaulting to 700.\n"; Height = "700"; }
 		if (List.empty())	{ envInfo = 1; cout << ".list file unspecified. Plotting base route traces only.\n"; }
-		if (IncludeSys.empty())	{ envInfo = 2; cout << "Input CSV(s) unspecified.\n"; }
+		if (InclSys.empty())	{ envInfo = 2; cout << "Input CSV(s) unspecified.\n"; }
 		if (Output.empty())	{ envInfo += 1+(envInfo==0); cout << "Output filename unspecified.\n"; }
 		if (Repo.empty())	{ envInfo += 1+(envInfo==0); cout << "Repository location unspecified.\n"; }
 
@@ -270,24 +281,25 @@ class envV
 		}
 
 		if (!List.empty()) SlurpList();
-		for (unsigned int i = 0; i < InclCountry.size(); i++) IncludeCountry(InclCountry[i]);
+		if (!InclCtry.empty() || !InclCont.empty()) countries_continents();
 		return 1;
 	}
 
-	void IncludeCountry(string c)
+	void countries_continents()
 	{	ifstream regions(Repo+"regions.csv");
 		if (!regions) cout << Repo+"regions.csv not found!\n";
 		string CSVline;
 		getline(regions, CSVline); // skip header row
 		while (getline(regions, CSVline))
-		{	string code, name, country;
+		{	string code, name, country, continent;
 			unsigned int i = 0;
 			while (i < CSVline.size() && CSVline[i] != ';') { code.push_back(CSVline[i]); i++; } i++;
 			while (i < CSVline.size() && CSVline[i] != ';') { name.push_back(CSVline[i]); i++; } i++;
 			while (i < CSVline.size() && CSVline[i] != ';') { country.push_back(CSVline[i]); i++; } i++;
-			if (country == c && !RgIsExcluded(code))
-			{	IncludeRg.push_back(code);
-				cout << country << '\t' << code << '\t' << name << '\n';
+			while (i < CSVline.size() && CSVline[i] != ';') { continent.push_back(CSVline[i]); i++; } i++;
+			if ( (StrInVec(country, InclCtry) || InclCtry.empty()) && (StrInVec(continent, InclCont) || InclCont.empty()) && !StrInVec(code, ExclRg) )
+			{	InclRg.push_back(code);
+				cout << continent << '\t' << country << '\t' << code << '\t' << name << '\n';
 			}
 		}
 	}
@@ -298,9 +310,9 @@ class envV
 		return 0;
 	}
 
-	bool RgIsExcluded(std::string &Region)
-	{	for (unsigned int i = 0; i < ExcludeRg.size(); i++)
-			if (Region == ExcludeRg[i]) return 1;
+	bool StrInVec(string &needle, vector<string> haystack)
+	{	for (unsigned int i = 0; i < haystack.size(); i++)
+			if (needle == haystack[i]) return 1;
 		return 0;
 	}
 
@@ -360,7 +372,7 @@ bool envV::ReadSysCSV(bool PushToVector)
 				SysDeq.emplace_back(System, CountryCode, Name, Color, Tier, Level);
 				SysDeq.back().SetColors(N_Colors, UnColors, ClColors);
 				if (PushToVector && SysDeq.back().LevNum >= MinLevel && Tier <= MaxTier)
-					IncludeSys.push_back(Repo+"hwy_data/_systems/"+System+".csv");
+					InclSys.push_back(Repo+"hwy_data/_systems/"+System+".csv");
 			    }
 			catch (invalid_argument x) { cout << "Bad CSV line in " << SysCSV << ": \"" << CSVline << "\"\n"; }
 		}
@@ -543,8 +555,8 @@ int main(int argc, char *argv[])
 {	clock_t RunTime = clock();
 	envV env; if (!env.set(argc, argv)) return 0;
 	vector<highway*> HwyVec;
-	for (unsigned int i = 0; i < env.IncludeSys.size(); i++)
-		ChoppedRtesCSV(HwyVec, env.IncludeRg, env.IncludeSys[i], env.Repo+"hwy_data/", 1);
+	for (unsigned int i = 0; i < env.InclSys.size(); i++)
+		ChoppedRtesCSV(HwyVec, env.InclRg, env.InclSys[i], env.Repo+"hwy_data/", 1);
 	if (env.boundaries)
 	{	ChoppedRtesCSV(HwyVec, env.Repo+"boundaries/b_water.csv", env.Repo+"hwy_data/", 1);
 		ChoppedRtesCSV(HwyVec, env.Repo+"boundaries/b_country.csv", env.Repo+"hwy_data/", 1);
