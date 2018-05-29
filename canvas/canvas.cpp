@@ -19,14 +19,20 @@ class envV
 {	public:
 	string List, Colors, Output, Repo, Width, Height, UnStroke, ClStroke;
 	vector<string> N_Colors, UnColors, ClColors, GraySystems;
-	vector<string> IncludeRg, IncludeSys;
+	vector<string> ExcludeRg, InclCountry, IncludeRg, IncludeSys;
 	deque<tmsystem> SysDeq;
 	list<ListEntry> TravList;
-	unsigned short MaxTier = 0;
+	unsigned short BtmTier, MaxTier;
+	short MinLevel;
+	bool boundaries;
 	bool ReadSysCSV(bool);
 
 	bool set(int argc, char *argv[])
 	{	unsigned short envInfo = 0;
+		BtmTier = 0;
+		MaxTier = 255;
+		MinLevel = 1;
+		boundaries = 0;
 
 		// INI file options:
 		string iniField;
@@ -54,12 +60,40 @@ class envV
 			 while (iniField != "Stroke" && !INI.eof())	INI >> iniField;
 			  INI >> UnStroke >> ClStroke;
 			INI.clear(); INI.seekg(0); iniField.clear();
-			 while (INI >> iniField)
-			 {	if (iniField == "Input")
+			 while (iniField != "MaxTier" && !INI.eof())	INI >> iniField;
+			  INI >> MaxTier;
+			INI.clear(); INI.seekg(0); iniField.clear();
+			 while (iniField != "Boundaries" && !INI.eof())	INI >> iniField;
+			  if (iniField == "Boundaries") boundaries = 1;
+
+			INI.clear(); INI.seekg(0); iniField.clear();
+			while (iniField != "MinLevel" && !INI.eof())	INI >> iniField;
+			if (INI >> iniField)
+			{	if (iniField == "active")  MinLevel = 4;
+				if (iniField == "preview") MinLevel = 3;
+				if (iniField == "devel")   MinLevel = 2;
+			}
+
+			INI.clear(); INI.seekg(0); iniField.clear();
+			while (INI >> iniField)
+			{	if (iniField == "Input")
 				{	INI >> iniField;
 					IncludeSys.push_back(iniField);
 				}
-			 }
+			}
+
+			INI.clear(); INI.seekg(0); iniField.clear();
+			 while (iniField != "ExcludeRg" && !INI.eof())	INI >> iniField;
+			  string eStr; INI >> eStr;
+			   char *eArr = new char[eStr.size()+1];
+			    strcpy(eArr, eStr.data());
+			     for (char *e = strtok(eArr, ","); e; e = strtok(0, ",")) ExcludeRg.push_back(e);
+			INI.clear(); INI.seekg(0); iniField.clear();
+			 while (iniField != "Country" && !INI.eof())	INI >> iniField;
+			  string cStr; INI >> cStr;
+			   char *cArr = new char[cStr.size()+1];
+			    strcpy(cArr, cStr.data());
+			     for (char *c = strtok(cArr, ","); c; c = strtok(0, ",")) InclCountry.push_back(c);
 			INI.clear(); INI.seekg(0); iniField.clear();
 			 while (iniField != "Region" && !INI.eof())	INI >> iniField;
 			  string rStr; INI >> rStr;
@@ -76,7 +110,8 @@ class envV
 
 		// commandline options:
 		for (int a = 1; a < argc; a++)
-		{	if (!strcmp(argv[a], "-C") || !strcmp(argv[a], "--Colors"))
+		{	if (!strcmp(argv[a], "-b") || !strcmp(argv[a], "--Boundaries")) boundaries = 1;
+			else if (!strcmp(argv[a], "-C") || !strcmp(argv[a], "--Colors"))
 			{ if (a+1 < argc)
 			  {	Colors = argv[a+1];
 				a++;
@@ -87,6 +122,16 @@ class envV
 				UnColors.push_back(argv[a+2]);
 				ClColors.push_back(argv[a+3]);
 				a += 3;
+			} }
+			else if (!strcmp(argv[a], "--Country"))
+			{ if (a+1 < argc)
+			  {	for (char *c = strtok(argv[a+1], ","); c; c = strtok(0, ",")) InclCountry.push_back(c);
+				a++;
+			} }
+			else if (!strcmp(argv[a], "--ExcludeRg"))
+			{ if (a+1 < argc)
+			  {	for (char *e = strtok(argv[a+1], ","); e; e = strtok(0, ",")) ExcludeRg.push_back(e);
+				a++;
 			} }
 			else if (!strcmp(argv[a], "-h") || !strcmp(argv[a], "--Height"))
 			{ if (a+1 < argc)
@@ -101,6 +146,20 @@ class envV
 			else if (!strcmp(argv[a], "-l") || !strcmp(argv[a], "--List"))
 			{ if (a+1 < argc)
 			  {	List = argv[a+1];
+				a++;
+			} }
+			else if (!strcmp(argv[a], "--MaxTier"))
+			{ if (a+1 < argc)
+			  {	try	{ MaxTier = stoi(argv[a+1]); }
+				catch	( invalid_argument x )
+					{ cout << '\"' << argv[a+1] << "\" cannot be converted to integer; ignoring.\n"; }
+				a++;
+			} }
+			else if (!strcmp(argv[a], "--MinLevel"))
+			{ if (a+1 < argc)
+			  {	if (!strcmp(argv[a+1], "active"))  MinLevel = 4;
+				if (!strcmp(argv[a+1], "preview")) MinLevel = 3;
+				if (!strcmp(argv[a+1], "devel"))   MinLevel = 2;
 				a++;
 			} }
 			else if (!strcmp(argv[a], "-o") || !strcmp(argv[a], "--Output"))
@@ -137,11 +196,18 @@ class envV
 			else if (!strcmp(argv[a], "-?") || !strcmp(argv[a], "--help") || !strcmp(argv[a], "--Help"))
 			{	cout << "Options:\n";
 				cout << "Mandatory arguments to long options are mandatory for short options too.\n";
+				cout << "  -b,   --Boundaries                 Show boundaries. No arguments required.\n";
 				cout << "  -C,   --Colors <ColorFile>         Color definitions file.\n";
 				cout << "  -c,   --Color <Name> <Base> <Clin> Single color definition.\n";
+				cout << "        --Country <Code,Code,Code>   Comma-separated multi-region\n";
+				cout << "                                     countries to include.\n";
+				cout << "        --ExcludeRg <Code,Code,Code> Comma-separated Regions to exclude.\n";
 				cout << "  -h,   --Height <Height>            Canvas height.\n";
 				cout << "  -i,   --Input <InputFile>          CSV file listing routes to be plotted.\n";
 				cout << "  -l,   --List <ListFile>            Filename of .list file to process.\n";
+				cout << "        --MaxTier <Tier>             Maximum Tier to include.\n";
+				cout << "        --MinLevel <Level>           Minimum system level to include.\n";
+				cout << "                                     Can be active, preview, or devel.\n";
 				cout << "  -o,   --Output <OutputFile>        Filename of output HTML file.\n";
 				cout << "  -r,   --Repo <Repo>                Path of HighwayData repository.\n";
 				cout << "                                     Trailing slash required.\n";
@@ -180,12 +246,12 @@ class envV
 		   { cout << "Oh dear. ClColors.size() != N_Colors.size() in envV::set(). Terminating.\n"; return 0; }
 
 		ReadSysCSV(IncludeSys.empty());
-		// boundaries		    System,      CountryCode,  Name,        Color,       Tier,      Level;
-		SysDeq.push_front(tmsystem("b_country", "boundaries", "b_country", "b_country", MaxTier+1, "boundaries"));
+		// boundaries		  //System,      CountryCode,  Name,        Color,      Tier,       Level;
+		SysDeq.push_front(tmsystem("b_country", "boundaries", "b_country", "b_country", BtmTier+1, "boundaries"));
 		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
-		SysDeq.push_front(tmsystem("b_subdiv", "boundaries", "b_subdiv", "b_subdiv", MaxTier+1, "boundaries"));
+		SysDeq.push_front(tmsystem("b_subdiv", "boundaries", "b_subdiv", "b_subdiv", BtmTier+1, "boundaries"));
 		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
-		SysDeq.push_front(tmsystem("b_water", "boundaries", "b_water", "b_water", MaxTier+1, "boundaries"));
+		SysDeq.push_front(tmsystem("b_water", "boundaries", "b_water", "b_water", BtmTier+1, "boundaries"));
 		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
 
 		if (UnStroke.empty())	{ envInfo = 1; cout << "Base stroke thickness unspecified; defaulting to 1.\n"; UnStroke = "1"; }
@@ -204,12 +270,37 @@ class envV
 		}
 
 		if (!List.empty()) SlurpList();
+		for (unsigned int i = 0; i < InclCountry.size(); i++) IncludeCountry(InclCountry[i]);
 		return 1;
+	}
+
+	void IncludeCountry(string c)
+	{	ifstream regions(Repo+"regions.csv");
+		if (!regions) cout << Repo+"regions.csv not found!\n";
+		string CSVline;
+		getline(regions, CSVline); // skip header row
+		while (getline(regions, CSVline))
+		{	string code, name, country;
+			unsigned int i = 0;
+			while (i < CSVline.size() && CSVline[i] != ';') { code.push_back(CSVline[i]); i++; } i++;
+			while (i < CSVline.size() && CSVline[i] != ';') { name.push_back(CSVline[i]); i++; } i++;
+			while (i < CSVline.size() && CSVline[i] != ';') { country.push_back(CSVline[i]); i++; } i++;
+			if (country == c && !RgIsExcluded(code))
+			{	IncludeRg.push_back(code);
+				cout << country << '\t' << code << '\t' << name << '\n';
+			}
+		}
 	}
 
 	bool IsGray(string SysCode)
 	{	for (unsigned int i = 0; i < GraySystems.size(); i++)
 		  if (SysCode == GraySystems[i]) return 1;
+		return 0;
+	}
+
+	bool RgIsExcluded(std::string &Region)
+	{	for (unsigned int i = 0; i < ExcludeRg.size(); i++)
+			if (Region == ExcludeRg[i]) return 1;
 		return 0;
 	}
 
@@ -265,10 +356,11 @@ bool envV::ReadSysCSV(bool PushToVector)
 			while (i < CSVline.size() && CSVline[i] != ';') { TierS.push_back(CSVline[i]); i++; } i++;
 			while (i < CSVline.size() && CSVline[i] != ';') { Level.push_back(CSVline[i]); i++; } i++;
 			try {	unsigned short Tier = stoi(TierS);
-				if (Tier > MaxTier) MaxTier = Tier;
+				if (Tier > BtmTier) BtmTier = Tier;
 				SysDeq.emplace_back(System, CountryCode, Name, Color, Tier, Level);
 				SysDeq.back().SetColors(N_Colors, UnColors, ClColors);
-				if (PushToVector) IncludeSys.push_back(Repo+"hwy_data/_systems/"+System+".csv");
+				if (PushToVector && SysDeq.back().LevNum >= MinLevel && Tier <= MaxTier)
+					IncludeSys.push_back(Repo+"hwy_data/_systems/"+System+".csv");
 			    }
 			catch (invalid_argument x) { cout << "Bad CSV line in " << SysCSV << ": \"" << CSVline << "\"\n"; }
 		}
@@ -371,10 +463,10 @@ void HTML(vector<highway*> &hwy, envV &env)
 		html << "]\n} //end object definition\n\n";
 	} //end for (route objects)
 
-	html << "var MinLat = rte[rte.length-1].lat[0];\n";
-	html << "var MinLon = rte[rte.length-1].lon[0];\n";
-	html << "var MaxLat = rte[rte.length-1].lat[0];\n";
-	html << "var MaxLon = rte[rte.length-1].lon[0];\n";
+	html << "var MinLat = rte[0].lat[0];\n";
+	html << "var MinLon = rte[0].lon[0];\n";
+	html << "var MaxLat = rte[0].lat[0];\n";
+	html << "var MaxLon = rte[0].lon[0];\n";
 	html << "var i, j, k;\n\n";
 
 	html << "function merc(lat)\n";
@@ -453,6 +545,11 @@ int main(int argc, char *argv[])
 	vector<highway*> HwyVec;
 	for (unsigned int i = 0; i < env.IncludeSys.size(); i++)
 		ChoppedRtesCSV(HwyVec, env.IncludeRg, env.IncludeSys[i], env.Repo+"hwy_data/", 1);
+	if (env.boundaries)
+	{	ChoppedRtesCSV(HwyVec, env.Repo+"boundaries/b_water.csv", env.Repo+"hwy_data/", 1);
+		ChoppedRtesCSV(HwyVec, env.Repo+"boundaries/b_country.csv", env.Repo+"hwy_data/", 1);
+		ChoppedRtesCSV(HwyVec, env.Repo+"boundaries/b_subdiv.csv", env.Repo+"hwy_data/", 1);
+	}
 	HTML(HwyVec, env);
 	RunTime = clock() - RunTime;
 	cout << "Total run time: " << float(RunTime)/CLOCKS_PER_SEC << '\n';

@@ -6,10 +6,10 @@ class tmsystem
 {	public:
 	std::string System, CountryCode, Name, Color;	// CSV data
 	  std::string UnColor, ClColor;			// hex codes for canvas
-	unsigned short Tier;				// CSV data
-	unsigned short SubTier;				// color hierarchy for canvas
+	unsigned char Tier;				// CSV data
+	unsigned char SubTier;				// color hierarchy for canvas
 	std::string Level;				// CSV data
-	  short LevNum;					// numeric level representation
+	  char LevNum;					// numeric level representation
 		// 0:	boundaries
 		// 1:	unrecognized system code
 		// 2:	devel
@@ -18,7 +18,7 @@ class tmsystem
 		// Negative numbers are reserved for representing commented out systems.
 		// Boundaries are not included in systems.csv & thus can't be commented out. Thus no need to distinguish +/- 0.
 
-	tmsystem(std::string S, std::string CC, std::string N, std::string Co, unsigned short T, std::string L)
+	tmsystem(std::string S, std::string CC, std::string N, std::string Co, unsigned char T, std::string L)
 	{	System = S;
 		CountryCode = CC;
 		Name = N;
@@ -29,7 +29,7 @@ class tmsystem
 		SetLevNum();
 	}
 
-	tmsystem(std::string S, std::string CC, std::string N, std::string Co, std::string Un, std::string Cl, unsigned short T, std::string L)
+	tmsystem(std::string S, std::string CC, std::string N, std::string Co, std::string Un, std::string Cl, unsigned char T, std::string L)
 	{	System = S;
 		CountryCode = CC;
 		Name = N;
@@ -119,8 +119,8 @@ class tmsystem
 	}
 
 	void SetSubTier()
-	{	if (Color == "b_water")		{ SubTier = 12; return; }
-		if (Color == "b_subdiv")	{ SubTier = 10; return; }
+	{	if (Color == "b_water")		{ SubTier = 10; return; }
+		if (Color == "b_subdiv")	{ SubTier = 12; return; }
 		if (Color == "b_country")	{ SubTier = 11; return; }
 		if (Color == "yellow")		{ SubTier = 8; return; }
 		if (Color == "brown")		{ SubTier = 7; return; }
