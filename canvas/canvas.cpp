@@ -131,17 +131,20 @@ class envV
 			} }
 			else if (!strcmp(argv[a], "--Continent"))
 			{ if (a+1 < argc)
-			  {	for (char *C = strtok(argv[a+1], ","); C; C = strtok(0, ",")) InclCont.push_back(C);
+			  {	InclCont.clear();
+				for (char *C = strtok(argv[a+1], ","); C; C = strtok(0, ",")) InclCont.push_back(C);
 				a++;
 			} }
 			else if (!strcmp(argv[a], "--Country"))
 			{ if (a+1 < argc)
-			  {	for (char *c = strtok(argv[a+1], ","); c; c = strtok(0, ",")) InclCtry.push_back(c);
+			  {	InclCtry.clear();
+				for (char *c = strtok(argv[a+1], ","); c; c = strtok(0, ",")) InclCtry.push_back(c);
 				a++;
 			} }
 			else if (!strcmp(argv[a], "--ExcludeRg"))
 			{ if (a+1 < argc)
-			  {	for (char *e = strtok(argv[a+1], ","); e; e = strtok(0, ",")) ExclRg.push_back(e);
+			  {	ExclRg.clear();
+				for (char *e = strtok(argv[a+1], ","); e; e = strtok(0, ",")) ExclRg.push_back(e);
 				a++;
 			} }
 			else if (!strcmp(argv[a], "-h") || !strcmp(argv[a], "--Height"))
@@ -180,7 +183,8 @@ class envV
 			} }
 			else if (!strcmp(argv[a], "-rg") || !strcmp(argv[a], "--Region"))
 			{ if (a+1 < argc)
-			  {	for (char *rg = strtok(argv[a+1], ","); rg; rg = strtok(0, ",")) InclRg.push_back(rg);
+			  {	InclRg.clear();
+				for (char *rg = strtok(argv[a+1], ","); rg; rg = strtok(0, ",")) InclRg.push_back(rg);
 				a++;
 			} }
 			else if (!strcmp(argv[a], "-r") || !strcmp(argv[a], "--Repo"))
