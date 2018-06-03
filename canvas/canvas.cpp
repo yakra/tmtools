@@ -22,14 +22,13 @@ class envV
 	vector<string> ExclRg, InclCont, InclCtry, InclRg, InclSys;
 	deque<tmsystem> SysDeq;
 	list<ListEntry> TravList;
-	unsigned short BtmTier, MaxTier;
+	unsigned short MaxTier;
 	short MinLevel;
 	bool boundaries;
 	bool ReadSysCSV(bool);
 
 	bool set(int argc, char *argv[])
 	{	unsigned short envInfo = 0;
-		BtmTier = 0;
 		MaxTier = 255;
 		MinLevel = 1;
 		boundaries = 0;
@@ -261,12 +260,12 @@ class envV
 		   { cout << "Oh dear. ClColors.size() != N_Colors.size() in envV::set(). Terminating.\n"; return 0; }
 
 		ReadSysCSV(InclSys.empty());
-		// boundaries		  //System,      CountryCode,  Name,        Color,      Tier,       Level;
-		SysDeq.push_front(tmsystem("b_country", "boundaries", "b_country", "b_country", BtmTier+1, "boundaries"));
+		// boundaries		  //System,      CountryCode,  Name,        Color,      Tier, Level;
+		SysDeq.push_front(tmsystem("b_country", "boundaries", "b_country", "b_country", 255, "boundaries"));
 		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
-		SysDeq.push_front(tmsystem("b_subdiv", "boundaries", "b_subdiv", "b_subdiv", BtmTier+1, "boundaries"));
+		SysDeq.push_front(tmsystem("b_subdiv", "boundaries", "b_subdiv", "b_subdiv", 255, "boundaries"));
 		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
-		SysDeq.push_front(tmsystem("b_water", "boundaries", "b_water", "b_water", BtmTier+1, "boundaries"));
+		SysDeq.push_front(tmsystem("b_water", "boundaries", "b_water", "b_water", 255, "boundaries"));
 		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
 
 		if (UnStroke.empty())	{ envInfo = 1; cout << "Base stroke thickness unspecified; defaulting to 1.\n"; UnStroke = "1"; }
@@ -314,12 +313,6 @@ class envV
 		return 0;
 	}
 
-	bool StrInVec(string &needle, vector<string> haystack)
-	{	for (unsigned int i = 0; i < haystack.size(); i++)
-			if (needle == haystack[i]) return 1;
-		return 0;
-	}
-
 	void SlurpList()
 	{	ifstream list(List.data());
 		if (!list) { cout << "List file \"" << List << "\" not found. Plotting base route traces only.\n"; }
@@ -327,10 +320,10 @@ class envV
 		string line;
 		while (getline(list, line))
 		{	while (line.back() == '\r' || line.back() == ' ' || line.back() == '\t') line.erase(line.end()-1);
-			if (line[0] != '#') try
-			{	char *LineArr = new char[line.size()+1];
+			try {	char *LineArr = new char[line.size()+1];
 				strcpy(LineArr, line.data());
-				char *Region = strtok(LineArr, " \t");	if (!Region)	throw 'R';
+				char *Region = strtok(LineArr, " \t");
+					if (!Region || Region[0] == '#')		throw 'R';
 				char *Name = strtok(0, " \t");		if (!Name)	throw 'N';
 				char *pl1 = strtok(0, " \t");		if (!pl1)	throw '1';
 				char *pl2 = strtok(0, " \t");		if (!pl2)	throw '2';
@@ -338,7 +331,7 @@ class envV
 				while (pl1[0] == '+' || pl1[0] == '*') pl1++;
 				while (pl2[0] == '+' || pl2[0] == '*') pl2++;
 				TravList.emplace_back(caps(Region), caps(Name), pl1, pl2);
-			}
+			    }
 			catch (char err) { if (err != 'R') cout << "Incorrect format .list line: " << line << '\n'; }
 		}
 		list.close();
@@ -372,7 +365,6 @@ bool envV::ReadSysCSV(bool PushToVector)
 			while (i < CSVline.size() && CSVline[i] != ';') { TierS.push_back(CSVline[i]); i++; } i++;
 			while (i < CSVline.size() && CSVline[i] != ';') { Level.push_back(CSVline[i]); i++; } i++;
 			try {	unsigned short Tier = stoi(TierS);
-				if (Tier > BtmTier) BtmTier = Tier;
 				SysDeq.emplace_back(System, CountryCode, Name, Color, Tier, Level);
 				SysDeq.back().SetColors(N_Colors, UnColors, ClColors);
 				if (PushToVector && SysDeq.back().LevNum >= MinLevel && Tier <= MaxTier)
@@ -567,6 +559,12 @@ int main(int argc, char *argv[])
 		ChoppedRtesCSV(HwyVec, env.Repo+"boundaries/b_subdiv.csv", env.Repo+"hwy_data/", 1);
 	}
 	HTML(HwyVec, env);
+
+	/*if (!env.TravList.empty()) cout << "Unprocessed .list lines:\n";
+	for (list<ListEntry>::iterator LE = env.TravList.begin(); LE != env.TravList.end(); LE++)
+	{	cout << LE->Region << ' ' << LE->Name << ' ' << LE->pl1 << ' ' << LE->pl2 << '\n';
+	}//*/
+
 	RunTime = clock() - RunTime;
 	cout << "Total run time: " << float(RunTime)/CLOCKS_PER_SEC << '\n';
 }
