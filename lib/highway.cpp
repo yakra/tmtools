@@ -105,24 +105,20 @@ highway* BuildRte(std::string filename, std::string Sys, std::string Reg, std::s
 	{	std::cout << filename << " file not found\n";
 		return 0;
 	}
-	WPT.seekg(0, std::ios::end); unsigned int EoF = WPT.tellg(); WPT.seekg(0);
 	highway *hwy = new highway(Sys, Reg, Rte, Ban, Abb, City, Root, Alts);
 
-	while (WPT.tellg() < EoF) // step thru each WPT line
-	{	std::string WPTline; // read individual line
-		for (char charlie = 0; charlie != '\n' && WPT.tellg() < EoF; WPTline.push_back(charlie)) WPT.get(charlie);
-		while (WPTline.back() == 0x0A || WPTline.back() == 0x0D)	// either DOS or UNIX...
-			WPTline.erase(WPTline.end()-1);				// strip out terminal '\n'
-		// parse WPT line
+	std::string WPTline;
+	while (getline(WPT, WPTline))
+	{	while (WPTline.back() == 0x0D) WPTline.erase(WPTline.end()-1);	// trim DOS newlines
 		waypoint point(hwy, WPTline);
 		if (!point.label.empty()) hwy->pt.push_back(point);
-	} //end while (step thru each WPT line)
+	}
 	return hwy;
 }
 
-bool RgIsIncluded(std::vector<std::string> &IncludeRg, std::string &Region)
-{	for (unsigned int i = 0; i < IncludeRg.size(); i++)
-		if (Region == IncludeRg[i]) return 1;
+bool StrInVec(std::string &needle, std::vector<std::string> haystack)
+{	for (unsigned int i = 0; i < haystack.size(); i++)
+		if (needle == haystack[i]) return 1;
 	return 0;
 }
 
@@ -132,15 +128,12 @@ bool ChoppedRtesCSV(std::vector<highway*> &HwyVec, std::vector<std::string> &Inc
 	{	std::cout << "InputFile \"" << input << "\" not found!" << '\n';
 		return 0;
 	}
-	CSV.seekg(0, std::ios::end); unsigned int EoF = CSV.tellg(); CSV.seekg(0);
-	while (CSV.get() != '\n' && CSV.tellg() < EoF); //skip header row
+	std::string CSVline;
+	getline(CSV, CSVline); //skip header row
 
-	while (CSV.tellg() < EoF) // build hwy list
+	while (getline(CSV, CSVline)) // build hwy vector
 	{	std::string System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames;
-		std::string CSVline; // read individual line
-		for (char charlie = 0; charlie != '\n' && CSV.tellg() < EoF; CSVline.push_back(charlie)) CSV.get(charlie);
-		while (CSVline.back() == 0x0A || CSVline.back() == 0x0D)	// either DOS or UNIX...
-			CSVline.erase(CSVline.end()-1);				// strip out terminal '\n'
+		while (CSVline.back() == 0x0D) CSVline.erase(CSVline.end()-1);	// trim DOS newlines
 		// parse CSV line
 		unsigned int i = 0;
 		while (i < CSVline.size() && CSVline[i] != ';') { System.push_back(CSVline[i]); i++; } i++;
@@ -153,14 +146,14 @@ bool ChoppedRtesCSV(std::vector<highway*> &HwyVec, std::vector<std::string> &Inc
 		while (i < CSVline.size() && CSVline[i] != ';') { AltRouteNames.push_back(CSVline[i]); i++; } i++;
 
 		if (Root.empty()) std::cout << "Bad CSV line in " << input << ": \"" << CSVline << "\"\n";
-		else if (IncludeRg.empty() || RgIsIncluded(IncludeRg, Region))
+		else if (IncludeRg.empty() || StrInVec(Region, IncludeRg))
 		     {	std::string wptFile = path;
 			if (RepoDirs) wptFile += Region+"/"+System+"/";
 			wptFile += Root+".wpt";
 			highway *hwy = BuildRte(wptFile, System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames);
 			if (hwy) HwyVec.push_back(hwy);
 		     }
-	} // end while (build hwy list)
+	} // end while (build hwy vector)
 	return 1;
 }
 
