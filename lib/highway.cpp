@@ -12,8 +12,10 @@ class highway
 	std::string System, Region, Route, Banner, Abbrev, City, Root;
 	std::vector<std::string> AltRouteNames;
 	std::list<waypoint> pt;
+	bool error;
 
-	highway(std::string SysIn, std::string RegIn, std::string RteIn, std::string BanIn, std::string AbbIn, std::string CityIn, std::string RootIn, std::string AltsIn)
+	highway(std::string filename, std::string SysIn, std::string RegIn, std::string RteIn,
+		std::string BanIn, std::string AbbIn, std::string CityIn, std::string RootIn, std::string AltsIn)
 	{	System = SysIn;
 		Region = RegIn;
 		Route = RteIn;
@@ -25,6 +27,20 @@ class highway
 		char *Alts = new char[AltsIn.size()+1];
 		strcpy(Alts, AltsIn.data());
 		for (char *ARN = strtok(Alts, ","); ARN; ARN = strtok(0, ",")) AltRouteNames.push_back(ARN);
+
+		// Build route from .wpt file
+		std::ifstream WPT (filename);
+		if (!WPT)
+		{	std::cout << filename << " file not found\n";
+			error = 1; return;
+		}
+		error = 0;
+		std::string WPTline;
+		while (getline(WPT, WPTline))
+		{	while (WPTline.back() == 0x0D) WPTline.erase(WPTline.end()-1);	// trim DOS newlines
+			waypoint point(this, WPTline);
+			if (!point.label.empty()) pt.push_back(point);
+		}
 	}
 
 	~highway()
@@ -99,30 +115,13 @@ class highway
 	}
 };
 
-highway* BuildRte(std::string filename, std::string Sys, std::string Reg, std::string Rte, std::string Ban, std::string Abb, std::string City, std::string Root, std::string Alts)
-{	std::ifstream WPT (filename);
-	if (!WPT)
-	{	std::cout << filename << " file not found\n";
-		return 0;
-	}
-	highway *hwy = new highway(Sys, Reg, Rte, Ban, Abb, City, Root, Alts);
-
-	std::string WPTline;
-	while (getline(WPT, WPTline))
-	{	while (WPTline.back() == 0x0D) WPTline.erase(WPTline.end()-1);	// trim DOS newlines
-		waypoint point(hwy, WPTline);
-		if (!point.label.empty()) hwy->pt.push_back(point);
-	}
-	return hwy;
-}
-
 bool StrInVec(std::string &needle, std::vector<std::string> haystack)
 {	for (unsigned int i = 0; i < haystack.size(); i++)
 		if (needle == haystack[i]) return 1;
 	return 0;
 }
 
-bool ChoppedRtesCSV(std::vector<highway*> &HwyVec, std::vector<std::string> &IncludeRg, std::string input, std::string path, bool RepoDirs)
+bool ChoppedRtesCSV(std::list<highway> &HwyList, std::vector<std::string> &IncludeRg, std::string input, std::string path, bool RepoDirs)
 {	std::ifstream CSV(input.data());
 	if (!CSV)
 	{	std::cout << "InputFile \"" << input << "\" not found!" << '\n';
@@ -131,7 +130,7 @@ bool ChoppedRtesCSV(std::vector<highway*> &HwyVec, std::vector<std::string> &Inc
 	std::string CSVline;
 	getline(CSV, CSVline); //skip header row
 
-	while (getline(CSV, CSVline)) // build hwy vector
+	while (getline(CSV, CSVline)) // build hwy list
 	{	std::string System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames;
 		while (CSVline.back() == 0x0D) CSVline.erase(CSVline.end()-1);	// trim DOS newlines
 		// parse CSV line
@@ -150,14 +149,14 @@ bool ChoppedRtesCSV(std::vector<highway*> &HwyVec, std::vector<std::string> &Inc
 		     {	std::string wptFile = path;
 			if (RepoDirs) wptFile += Region+"/"+System+"/";
 			wptFile += Root+".wpt";
-			highway *hwy = BuildRte(wptFile, System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames);
-			if (hwy) HwyVec.push_back(hwy);
+			HwyList.emplace_back(wptFile, System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames);
+			if (HwyList.back().error) HwyList.pop_back();
 		     }
-	} // end while (build hwy vector)
+	} // end while (build hwy list)
 	return 1;
 }
 
-bool ChoppedRtesCSV(std::vector<highway*> &HwyVec, std::string input, std::string path, bool RepoDirs)
+bool ChoppedRtesCSV(std::list<highway> &HwyList, std::string input, std::string path, bool RepoDirs)
 {	std::vector<std::string> dummy;
-	return ChoppedRtesCSV(HwyVec, dummy, input, path, RepoDirs);
+	return ChoppedRtesCSV(HwyList, dummy, input, path, RepoDirs);
 }
