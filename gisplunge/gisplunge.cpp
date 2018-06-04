@@ -1,3 +1,4 @@
+#include <mutex>
 #include <thread>		// requires -std=c++11 -pthread on compile.
 #include "../lib/dbf.cpp"	// includes cstring, fstream, iostream
 #include "../lib/waypoint.cpp"	// includes cstring, fstream, iostream, list, string, vector
@@ -171,19 +172,19 @@ bool ShpTypeSup(unsigned int ShpType)
 	}
 }
 
-int ProcRte(envV &env, DBF &dbf, highway *hwy)
+int ProcRte(envV &env, DBF &dbf, highway &hwy)
 // returns 0: fatal error; program terminates // 1: success // 2: error; skips to next route
 {	char zero = 0;
 	bool KeyFound = 0;
 	double shpLat,shpLon,shpDist;
 	string segfn, KeyValue;
-	if (env.CSVflag) KeyValue.assign(&hwy->Route[env.CharSkip]);
+	if (env.CSVflag) KeyValue.assign(&hwy.Route[env.CharSkip]);
 	else KeyValue = env.KeyValue;
 	ifstream DBFf(env.DBFname.data());
 	ifstream SHP(env.SHPname.data());
 	ifstream SHX(env.SHXname.data());
 
-	cout << hwy->Root << ".wpt\n";
+	cout << hwy.Root << ".wpt\n";
 
 	// search for each record of KeyValue
 	for (DBFf.seekg(dbf.HeaLen + dbf.KeyOffset + 1); DBFf.tellg() < dbf.size; DBFf.seekg(dbf.RecLen, ios::cur))
@@ -228,7 +229,7 @@ int ProcRte(envV &env, DBF &dbf, highway *hwy)
 				}
 
 				// Compare shapefile point coords against coords of each WPT point
-				for (list<waypoint>::iterator ptI = hwy->pt.begin(); ptI != hwy->pt.end(); ptI++)
+				for (list<waypoint>::iterator ptI = hwy.pt.begin(); ptI != hwy.pt.end(); ptI++)
 				{	shpDist = measure(shpLat, shpLon, ptI->Lat, ptI->Lon);
 					if (shpDist < ptI->OffDist)
 					{	ptI->OffDist = shpDist;
@@ -254,23 +255,29 @@ int ProcRte(envV &env, DBF &dbf, highway *hwy)
 		cout << "Skipping this file." << endl << endl;
 		return 2;
 	}
-	hwy->write(env.WriteMe, env.DoubleBug);
-	delete hwy;
+	hwy.write(env.WriteMe, env.DoubleBug);
 	return 1;
 }
 
-void ProcList(envV env, DBF dbf, vector<highway*> HwyVec, unsigned int ThreadNum)
-{	for (unsigned int n = ThreadNum; n < HwyVec.size(); n += env.Threads) ProcRte(env, dbf, HwyVec[n]);
+void ProcList(envV env, DBF dbf, list<highway> *HwyList, mutex *HwyListLock)
+{	while (HwyList->size())
+	{	HwyListLock->lock();
+		highway hwy(HwyList->front());
+		HwyList->pop_front();
+		HwyListLock->unlock();
+		ProcRte(env, dbf, hwy);
+	}
 }
 
 bool CSVmode(envV &env, DBF &dbf)
-{	vector<highway*> HwyVec;
-	ChoppedRtesCSV(HwyVec, env.InputFile, env.SourceDir, 0);
+{	list<highway> HwyList;
+	ChoppedRtesCSV(HwyList, env.InputFile, env.SourceDir, 0);
+	mutex HwyListLock;
 
-	if (env.Threads > HwyVec.size() || !env.Threads) env.Threads = HwyVec.size();
+	if (env.Threads > HwyList.size() || !env.Threads) env.Threads = HwyList.size();
 	thread **thr = new thread*[env.Threads];
 	for (unsigned int t = 0; t < env.Threads; t++)
-	{	thr[t] = new thread(ProcList, env, dbf, HwyVec, t);
+	{	thr[t] = new thread(ProcList, env, dbf, &HwyList, &HwyListLock);
 	}
 	for (unsigned int t = 0; t < env.Threads; t++)
 	{	thr[t]->join();
@@ -289,8 +296,8 @@ int main()
 	{	string Root = &env.InputFile[env.InputFile.find_last_of("/\\")+1];
 		if (!strcmp(&Root[Root.size()-4], ".wpt")) Root.erase(Root.size()-4, 4);
 
-		highway *hwy = BuildRte(env.InputFile.data(), "\0", "\0", "\0", "\0", "\0", "\0", Root.data(), "\0");
-		if (hwy) ProcRte(env, dbf, hwy);
+		highway hwy(env.InputFile, "", "", "", "", "", "", Root, "");
+		if (!hwy.error) ProcRte(env, dbf, hwy);
 	}
 	return 0;
 }
