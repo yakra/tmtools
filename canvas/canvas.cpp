@@ -338,7 +338,7 @@ class envV
 	}
 };
 
-bool envV::ReadSysCSV(bool PushToVector)
+bool envV::ReadSysCSV(bool PushToList)
 {	string SysCSV = Repo+"systems.csv";
 	ifstream CSV(SysCSV);
 	if (!CSV)
@@ -367,7 +367,7 @@ bool envV::ReadSysCSV(bool PushToVector)
 			try {	unsigned short Tier = stoi(TierS);
 				SysDeq.emplace_back(System, CountryCode, Name, Color, Tier, Level);
 				SysDeq.back().SetColors(N_Colors, UnColors, ClColors);
-				if (PushToVector && SysDeq.back().LevNum >= MinLevel && Tier <= MaxTier)
+				if (PushToList && SysDeq.back().LevNum >= MinLevel && Tier <= MaxTier)
 					InclSys.push_back(Repo+"hwy_data/_systems/"+System+".csv");
 			    }
 			catch (invalid_argument x) { cout << "Bad CSV line in " << SysCSV << ": \"" << CSVline << "\"\n"; }
@@ -389,16 +389,16 @@ void GetColors(string &SysCode, envV &env, string &UnColor, string &ClColor)
 	UnColor = "aaaaaa";	ClColor = "555555";
 }
 
-void ProcList(envV &env, ofstream &html, highway *hwy)
+void ProcList(envV &env, ofstream &html, highway &hwy)
 {	unsigned int pi1, pi2;
 	bool comma = 0;
 
 	string line;
 	for (list<ListEntry>::iterator LE = env.TravList.begin(); LE != env.TravList.end(); LE++)
-	{	if (LE->Region == hwy->Region && hwy->NameMatch(LE->Name))
-		{	pi1 = hwy->GetIndByLabel(LE->pl1);
-			pi2 = hwy->GetIndByLabel(LE->pl2);
-			if (pi1 < hwy->pt.size() && pi2 < hwy->pt.size())
+	{	if (LE->Region == hwy.Region && hwy.NameMatch(LE->Name))
+		{	pi1 = hwy.GetIndByLabel(LE->pl1);
+			pi2 = hwy.GetIndByLabel(LE->pl2);
+			if (pi1 < hwy.pt.size() && pi2 < hwy.pt.size())
 			{	if (comma)
 					if (pi1 < pi2)	html << ", " << pi1 << ", " << pi2;
 					else		html << ", " << pi2 << ", " << pi1;
@@ -414,7 +414,7 @@ void ProcList(envV &env, ofstream &html, highway *hwy)
 	}
 }
 
-void HTML(vector<highway*> &hwy, envV &env)
+void HTML(list<highway> &HwyList, envV &env)
 {	string UnColor, ClColor;
 	ofstream html(env.Output.data());
 
@@ -437,38 +437,41 @@ void HTML(vector<highway*> &hwy, envV &env)
 	html << "var rte = [];\n\n";
 
 	// route objects
-	for (unsigned int num = 0; num < hwy.size(); num++)
+	unsigned int num = 0;
+	for (list<highway>::iterator hwy = HwyList.begin(); hwy != HwyList.end(); hwy++)
 	{	// not all of this may be necessary but leaving it in nonetheless.
 		html << "rte[" << num << "] = {\n";
-		html << "System:\"" << hwy[num]->System << "\", ";
-		html << "Region:\"" << hwy[num]->Region << "\", ";
-		html << "Route:\"" << hwy[num]->Route << "\", ";
-		html << "Banner:\"" << hwy[num]->Banner << "\", ";
-		html << "Abbrev:\"" << hwy[num]->Abbrev << "\", ";
-		html << "City:\"" << hwy[num]->City << "\",\n";
+		html << "System:\"" << hwy->System << "\", ";
+		html << "Region:\"" << hwy->Region << "\", ";
+		html << "Route:\"" << hwy->Route << "\", ";
+		html << "Banner:\"" << hwy->Banner << "\", ";
+		html << "Abbrev:\"" << hwy->Abbrev << "\", ";
+		html << "City:\"" << hwy->City << "\",\n";
 
-		GetColors(hwy[num]->System, env, UnColor, ClColor);
+		GetColors(hwy->System, env, UnColor, ClColor);
 		html << "UnColor:'#" << UnColor << "', ClColor:'#" << ClColor << "',\n";
 
 		html << "//EDB - point latitudes\n";
 		html << "lat:[";
-		list<waypoint>::iterator point = hwy[num]->pt.begin();
+		list<waypoint>::iterator point = hwy->pt.begin();
 			html << to_string(point->Lat);
-		for (point++; point != hwy[num]->pt.end(); point++)
+		for (point++; point != hwy->pt.end(); point++)
 			html << ", " << to_string(point->Lat);
 		html << "],\n";
 
 		html << "//EDB - point longitudes\n";
 		html << "lon:[";
-		point = hwy[num]->pt.begin();
+		point = hwy->pt.begin();
 			html << to_string(point->Lon);
-		for (point++; point != hwy[num]->pt.end(); point++)
+		for (point++; point != hwy->pt.end(); point++)
 			html << ", " << to_string(point->Lon);
 		html << "],\n";
 
 		html << "//vdeane & EDB - indices to .listfile endpoints\ncliSegments:[";
-		ProcList(env, html, hwy[num]);
+		ProcList(env, html, *hwy);
 		html << "]\n} //end object definition\n\n";
+
+		num++;
 	} //end for (route objects)
 
 	html << "var MinLat = rte[0].lat[0];\n";
@@ -550,15 +553,15 @@ void HTML(vector<highway*> &hwy, envV &env)
 int main(int argc, char *argv[])
 {	clock_t RunTime = clock();
 	envV env; if (!env.set(argc, argv)) return 0;
-	vector<highway*> HwyVec;
+	list<highway> HwyList;
 	for (unsigned int i = 0; i < env.InclSys.size(); i++)
-		ChoppedRtesCSV(HwyVec, env.InclRg, env.InclSys[i], env.Repo+"hwy_data/", 1);
+		ChoppedRtesCSV(HwyList, env.InclRg, env.InclSys[i], env.Repo+"hwy_data/", 1);
 	if (env.boundaries)
-	{	ChoppedRtesCSV(HwyVec, env.Repo+"boundaries/b_water.csv", env.Repo+"hwy_data/", 1);
-		ChoppedRtesCSV(HwyVec, env.Repo+"boundaries/b_country.csv", env.Repo+"hwy_data/", 1);
-		ChoppedRtesCSV(HwyVec, env.Repo+"boundaries/b_subdiv.csv", env.Repo+"hwy_data/", 1);
+	{	ChoppedRtesCSV(HwyList, env.Repo+"boundaries/b_water.csv", env.Repo+"hwy_data/", 1);
+		ChoppedRtesCSV(HwyList, env.Repo+"boundaries/b_country.csv", env.Repo+"hwy_data/", 1);
+		ChoppedRtesCSV(HwyList, env.Repo+"boundaries/b_subdiv.csv", env.Repo+"hwy_data/", 1);
 	}
-	HTML(HwyVec, env);
+	HTML(HwyList, env);
 
 	/*if (!env.TravList.empty()) cout << "Unprocessed .list lines:\n";
 	for (list<ListEntry>::iterator LE = env.TravList.begin(); LE != env.TravList.end(); LE++)
