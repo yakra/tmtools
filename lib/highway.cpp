@@ -7,16 +7,25 @@
 #include "dbltext.cpp"	// includes string
 #include "waypoint.h"	// includes deque, string
 
+#ifndef tmtools_tmsystem_cpp
+class tmsystem
+{
+};
+#endif
+
 class highway
 {	public:
+	tmsystem *HwySys;
 	std::string System, Region, Route, Banner, Abbrev, City, Root;
 	std::vector<std::string> AltRouteNames;
 	std::list<waypoint> pt;
 	bool error;
 
-	highway(std::string filename, std::string SysIn, std::string RegIn, std::string RteIn,
-		std::string BanIn, std::string AbbIn, std::string CityIn, std::string RootIn, std::string AltsIn)
-	{	System = SysIn;
+	highway(std::string filename, tmsystem *SysPtr,
+		std::string SysIn, std::string RegIn, std::string RteIn, std::string BanIn,
+		std::string AbbIn, std::string CityIn, std::string RootIn, std::string AltsIn)
+	{	HwySys = SysPtr;
+		System = SysIn;
 		Region = RegIn;
 		Route = RteIn;
 		Banner = BanIn;
@@ -47,6 +56,22 @@ class highway
 	{	AltRouteNames.clear();
 		pt.clear();
 	}
+
+    #ifdef tmtools_tmsystem_cpp
+	bool operator < (highway &other)
+	{	if (*HwySys < *other.HwySys) return 1;
+		if (*HwySys > *other.HwySys) return 0;
+		if (Root < other.Root) return 1;
+		return 0;
+	}
+
+	bool operator > (highway &other)
+	{	if (*HwySys > *other.HwySys) return 1;
+		if (*HwySys < *other.HwySys) return 0;
+		if (Root > other.Root) return 1;
+		return 0;
+	}
+    #endif
 
 	std::string CSVline()
 	{	std::string CSVline = System + ";" + Region + ";" + Route + ";" + Banner + ";" + Abbrev + ";" + City + ";" + Root + ";";
@@ -121,11 +146,17 @@ bool StrInVec(std::string &needle, std::vector<std::string> haystack)
 	return 0;
 }
 
-bool ChoppedRtesCSV(std::list<highway> &HwyList, std::vector<std::string> &IncludeRg, std::string input, std::string path, bool RepoDirs)
+tmsystem *NullSysPtr(tmsystem &sys, std::deque<tmsystem> &SysDeq, std::string &SysCode)
+{	return 0;
+}
+
+void ChoppedRtesCSV(std::list<highway> &HwyList, std::vector<std::string> &IncludeRg, std::string input, std::string path, bool RepoDirs,
+		    tmsystem &sys, std::deque<tmsystem> &SysDeq,
+		    tmsystem *(*GetSysPtr)(tmsystem&, std::deque<tmsystem>&, std::string&))
 {	std::ifstream CSV(input.data());
 	if (!CSV)
 	{	std::cout << "InputFile \"" << input << "\" not found!" << '\n';
-		return 0;
+		return;
 	}
 	std::string CSVline;
 	getline(CSV, CSVline); //skip header row
@@ -149,14 +180,15 @@ bool ChoppedRtesCSV(std::list<highway> &HwyList, std::vector<std::string> &Inclu
 		     {	std::string wptFile = path;
 			if (RepoDirs) wptFile += Region+"/"+System+"/";
 			wptFile += Root+".wpt";
-			HwyList.emplace_back(wptFile, System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames);
+			HwyList.emplace_back(wptFile, GetSysPtr(sys, SysDeq, System), System, Region, Route, Banner, Abbrev, City, Root, AltRouteNames);
 			if (HwyList.back().error) HwyList.pop_back();
 		     }
 	} // end while (build hwy list)
-	return 1;
 }
 
-bool ChoppedRtesCSV(std::list<highway> &HwyList, std::string input, std::string path, bool RepoDirs)
-{	std::vector<std::string> dummy;
-	return ChoppedRtesCSV(HwyList, dummy, input, path, RepoDirs);
-}
+void ChoppedRtesCSV(std::list<highway> &HwyList, std::string input, std::string path, bool RepoDirs)
+{	std::vector<std::string> IncludeRg;	// dummy
+	std::deque<tmsystem> SysDeq;		// dummy
+	tmsystem DummySys;			// dummy
+	ChoppedRtesCSV(HwyList, IncludeRg, input, path, RepoDirs, DummySys, SysDeq, NullSysPtr);
+}//*/
