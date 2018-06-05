@@ -115,7 +115,9 @@ class tmsystem
 			{	std::cout << "blue color code unspecified; defaulting to 6464FF & 0000DC\n";
 				UnColor = "6464FF";	ClColor = "0000DC";	return;
 			}
-			std::cout << "Unrecognized Color code \"" << Color << "\" will be colored gray. (System = " << System << ")\n";
+			std::cout << "Unrecognized Color code \"" << Color << "\" will be colored gray. (System = ";
+			if (System.empty()) std::cout << filename << ")\n";
+			else std::cout << System << ")\n";
 				UnColor = "aaaaaa";	ClColor = "555555";
 		}
 	}
