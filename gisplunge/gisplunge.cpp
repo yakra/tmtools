@@ -296,7 +296,7 @@ int main()
 	{	string Root = &env.InputFile[env.InputFile.find_last_of("/\\")+1];
 		if (!strcmp(&Root[Root.size()-4], ".wpt")) Root.erase(Root.size()-4, 4);
 
-		highway hwy(env.InputFile, "", "", "", "", "", "", Root, "");
+		highway hwy(env.InputFile, new tmsystem, "", "", "", "", "", "", Root, "");
 		if (!hwy.error) ProcRte(env, dbf, hwy);
 	}
 	return 0;
