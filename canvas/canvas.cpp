@@ -1,6 +1,6 @@
 #include <ctime>
+#include "../lib/tmsystem.cpp"	// includes deque, string, vector
 #include "../lib/waypoint.cpp"	// includes cmath, cstring, deque, fstream, iostream, list, string, vector
-#include "../lib/tmsystem.cpp"	// includes string, vector
 using namespace std;
 
 class ListEntry
@@ -19,8 +19,8 @@ class envV
 {	public:
 	string List, Colors, Output, Repo, Width, Height, UnStroke, ClStroke;
 	vector<string> N_Colors, UnColors, ClColors, GraySystems;
-	vector<string> ExclRg, InclCont, InclCtry, InclRg, InclSys;
-	deque<tmsystem> SysDeq;
+	vector<string> ExclRg, InclCont, InclCtry, InclRg, InclSysCode;
+	deque<tmsystem> SysDeq, InclSysObj;
 	list<ListEntry> TravList;
 	unsigned short MaxTier;
 	short MinLevel;
@@ -77,7 +77,7 @@ class envV
 			while (INI >> iniField)
 			{	if (iniField == "Input")
 				{	INI >> iniField;
-					InclSys.push_back(iniField);
+					InclSysObj.emplace_back(iniField);
 				}
 			}
 
@@ -110,7 +110,7 @@ class envV
 			  string sStr; INI >> sStr;
 			   char *sArr = new char[sStr.size()+1];
 			    strcpy(sArr, sStr.data());
-			     for (char *sys = strtok(sArr, ","); sys; sys = strtok(0, ",")) InclSys.push_back(Repo+"hwy_data/_systems/"+sys+".csv");
+			     for (char *sys = strtok(sArr, ","); sys; sys = strtok(0, ",")) InclSysCode.emplace_back(sys);
 		     }
 
 		// commandline options:
@@ -153,7 +153,7 @@ class envV
 			} }
 			else if (!strcmp(argv[a], "-i") || !strcmp(argv[a], "--Input"))
 			{ if (a+1 < argc)
-			  {	InclSys.push_back(argv[a+1]);
+			  {	InclSysObj.emplace_back(argv[a+1]);
 				a++;
 			} }
 			else if (!strcmp(argv[a], "-l") || !strcmp(argv[a], "--List"))
@@ -199,7 +199,7 @@ class envV
 			} }
 			else if (!strcmp(argv[a], "-sys") || !strcmp(argv[a], "--System"))
 			{ if (a+1 < argc)
-			  {	for (char *sys = strtok(argv[a+1], ","); sys; sys = strtok(0, ",")) InclSys.push_back(Repo+"hwy_data/_systems/"+sys+".csv");
+			  {	for (char *sys = strtok(argv[a+1], ","); sys; sys = strtok(0, ",")) InclSysCode.emplace_back(sys);
 				a++;
 			} }
 			else if (!strcmp(argv[a], "-w") || !strcmp(argv[a], "--Width"))
@@ -259,21 +259,30 @@ class envV
 		if (ClColors.size() != N_Colors.size())
 		   { cout << "Oh dear. ClColors.size() != N_Colors.size() in envV::set(). Terminating.\n"; return 0; }
 
-		ReadSysCSV(InclSys.empty());
-		// boundaries		  //System,      CountryCode,  Name,        Color,      Tier, Level;
-		SysDeq.push_front(tmsystem("b_country", "boundaries", "b_country", "b_country", 255, "boundaries"));
-		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
-		SysDeq.push_front(tmsystem("b_subdiv", "boundaries", "b_subdiv", "b_subdiv", 255, "boundaries"));
-		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
-		SysDeq.push_front(tmsystem("b_water", "boundaries", "b_water", "b_water", 255, "boundaries"));
-		SysDeq.front().SetColors(N_Colors, UnColors, ClColors);
+		if (!List.empty()) SlurpList();
+		if (!InclCtry.empty() || !InclCont.empty()) countries_continents();
+
+		ReadSysCSV(InclSysCode.empty() && InclSysObj.empty());
+		if (boundaries)
+		{	// boundaries	    //System,      CountryCode,  Name,        Color,      Tier, Level;
+			SysDeq.emplace_back("b_country", "boundaries", "b_country", "b_country", 255, "boundaries", Repo+"boundaries/b_country.csv");
+			SysDeq.back().SetColors(N_Colors, UnColors, ClColors);
+			InclSysObj.push_back(SysDeq.back());
+			SysDeq.emplace_back("b_subdiv", "boundaries", "b_subdiv", "b_subdiv", 255, "boundaries", Repo+"boundaries/b_subdiv.csv");
+			SysDeq.back().SetColors(N_Colors, UnColors, ClColors);
+			InclSysObj.push_back(SysDeq.back());
+			SysDeq.emplace_back("b_water", "boundaries", "b_water", "b_water", 255, "boundaries", Repo+"boundaries/b_water.csv");
+			SysDeq.back().SetColors(N_Colors, UnColors, ClColors);
+			InclSysObj.push_back(SysDeq.back());
+			if (!InclRg.empty()) InclRg.push_back("_boundaries");
+		}
 
 		if (UnStroke.empty())	{ envInfo = 1; cout << "Base stroke thickness unspecified; defaulting to 1.\n"; UnStroke = "1"; }
 		if (ClStroke.empty())	{ envInfo = 1; cout << "Clinched stroke thickness unspecified; defaulting to 2.5.\n"; ClStroke = "2.5"; }
 		if (Width.empty())	{ envInfo = 1; cout << "Width unspecified; defaulting to 700.\n"; Width = "700"; }
 		if (Height.empty())	{ envInfo = 1; cout << "Height unspecified; defaulting to 700.\n"; Height = "700"; }
 		if (List.empty())	{ envInfo = 1; cout << ".list file unspecified. Plotting base route traces only.\n"; }
-		if (InclSys.empty())	{ envInfo = 2; cout << "Input CSV(s) unspecified.\n"; }
+		if (InclSysObj.empty())	{ envInfo = 2; cout << "Input CSV(s) unspecified.\n"; }
 		if (Output.empty())	{ envInfo += 1+(envInfo==0); cout << "Output filename unspecified.\n"; }
 		if (Repo.empty())	{ envInfo += 1+(envInfo==0); cout << "Repository location unspecified.\n"; }
 
@@ -282,9 +291,6 @@ class envV
 			cout << "For more info, use --help commandline option.\n";
 			if (envInfo > 1) return 0;
 		}
-
-		if (!List.empty()) SlurpList();
-		if (!InclCtry.empty() || !InclCont.empty()) countries_continents();
 		return 1;
 	}
 
@@ -338,7 +344,7 @@ class envV
 	}
 };
 
-bool envV::ReadSysCSV(bool PushToList)
+bool envV::ReadSysCSV(bool PushToDeque)
 {	string SysCSV = Repo+"systems.csv";
 	ifstream CSV(SysCSV);
 	if (!CSV)
@@ -365,10 +371,10 @@ bool envV::ReadSysCSV(bool PushToList)
 			while (i < CSVline.size() && CSVline[i] != ';') { TierS.push_back(CSVline[i]); i++; } i++;
 			while (i < CSVline.size() && CSVline[i] != ';') { Level.push_back(CSVline[i]); i++; } i++;
 			try {	unsigned short Tier = stoi(TierS);
-				SysDeq.emplace_back(System, CountryCode, Name, Color, Tier, Level);
+				SysDeq.emplace_back(System, CountryCode, Name, Color, Tier, Level, Repo+"hwy_data/_systems/"+System+".csv");
 				SysDeq.back().SetColors(N_Colors, UnColors, ClColors);
-				if (PushToList && SysDeq.back().LevNum >= MinLevel && Tier <= MaxTier)
-					InclSys.push_back(Repo+"hwy_data/_systems/"+System+".csv");
+				if (PushToDeque && SysDeq.back().LevNum >= MinLevel && Tier <= MaxTier || StrInVec(System, InclSysCode))
+					InclSysObj.push_back(SysDeq.back());
 			    }
 			catch (invalid_argument x) { cout << "Bad CSV line in " << SysCSV << ": \"" << CSVline << "\"\n"; }
 		}
@@ -438,7 +444,7 @@ void HTML(list<highway> &HwyList, envV &env)
 
 	// route objects
 	unsigned int num = 0;
-	for (list<highway>::iterator hwy = HwyList.begin(); hwy != HwyList.end(); hwy++)
+	for (list<highway>::reverse_iterator hwy = HwyList.rbegin(); hwy != HwyList.rend(); hwy++)
 	{	// not all of this may be necessary but leaving it in nonetheless.
 		html << "rte[" << num << "] = {\n";
 		html << "System:\"" << hwy->System << "\", ";
@@ -474,10 +480,10 @@ void HTML(list<highway> &HwyList, envV &env)
 		num++;
 	} //end for (route objects)
 
-	html << "var MinLat = rte[0].lat[0];\n";
-	html << "var MinLon = rte[0].lon[0];\n";
-	html << "var MaxLat = rte[0].lat[0];\n";
-	html << "var MaxLon = rte[0].lon[0];\n";
+	html << "var MinLat = rte[rte.length-1].lat[0];\n";
+	html << "var MinLon = rte[rte.length-1].lon[0];\n";
+	html << "var MaxLat = rte[rte.length-1].lat[0];\n";
+	html << "var MaxLon = rte[rte.length-1].lon[0];\n";
 	html << "var i, j, k;\n\n";
 
 	html << "function merc(lat)\n";
@@ -554,13 +560,9 @@ int main(int argc, char *argv[])
 {	clock_t RunTime = clock();
 	envV env; if (!env.set(argc, argv)) return 0;
 	list<highway> HwyList;
-	for (unsigned int i = 0; i < env.InclSys.size(); i++)
-		ChoppedRtesCSV(HwyList, env.InclRg, env.InclSys[i], env.Repo+"hwy_data/", 1);
-	if (env.boundaries)
-	{	ChoppedRtesCSV(HwyList, env.Repo+"boundaries/b_water.csv", env.Repo+"hwy_data/", 1);
-		ChoppedRtesCSV(HwyList, env.Repo+"boundaries/b_country.csv", env.Repo+"hwy_data/", 1);
-		ChoppedRtesCSV(HwyList, env.Repo+"boundaries/b_subdiv.csv", env.Repo+"hwy_data/", 1);
-	}
+	for (unsigned int i = 0; i < env.InclSysObj.size(); i++) //   TODO is filename necessary?
+		ChoppedRtesCSV(HwyList, env.InclRg, env.InclSysObj[i].filename, env.Repo+"hwy_data/", 1, env.InclSysObj[i], env.SysDeq, tmSysPtr);
+	HwyList.sort();
 	HTML(HwyList, env);
 
 	/*if (!env.TravList.empty()) cout << "Unprocessed .list lines:\n";
