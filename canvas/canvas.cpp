@@ -18,7 +18,7 @@ class ListEntry
 class envV
 {	public:
 	string List, Colors, Output, Repo, Width, Height, UnStroke, ClStroke;
-	vector<string> N_Colors, UnColors, ClColors, GraySystems;
+	vector<string> N_Colors, UnColors, ClColors;
 	vector<string> ExclRg, InclCont, InclCtry, InclRg, InclSysCode;
 	deque<tmsystem> SysDeq, InclSysObj;
 	list<ListEntry> TravList;
@@ -258,6 +258,7 @@ class envV
 		   { cout << "Oh dear. UnColors.size() != ClColors.size() in envV::set(). Terminating.\n"; return 0; }
 		if (ClColors.size() != N_Colors.size())
 		   { cout << "Oh dear. ClColors.size() != N_Colors.size() in envV::set(). Terminating.\n"; return 0; }
+		for (unsigned int i = 0; i < InclSysObj.size(); i++) InclSysObj[i].SetColors(N_Colors, UnColors, ClColors);
 
 		if (!List.empty()) SlurpList();
 		if (!InclCtry.empty() || !InclCont.empty()) countries_continents();
@@ -311,12 +312,6 @@ class envV
 				cout << continent << '\t' << country << '\t' << code << '\t' << name << '\n';
 			}
 		}
-	}
-
-	bool IsGray(string SysCode)
-	{	for (unsigned int i = 0; i < GraySystems.size(); i++)
-		  if (SysCode == GraySystems[i]) return 1;
-		return 0;
 	}
 
 	void SlurpList()
@@ -381,20 +376,6 @@ bool envV::ReadSysCSV(bool PushToDeque)
 	}
 }
 
-void GetColors(string &SysCode, envV &env, string &UnColor, string &ClColor)
-{	for (unsigned int i = 0; i < env.SysDeq.size(); i++)
-	  if	(SysCode == env.SysDeq[i].System)
-	  {	UnColor = env.SysDeq[i].UnColor;
-		ClColor = env.SysDeq[i].ClColor;
-		return;
-	  }
-	if (!env.IsGray(SysCode))
-	{	cout << "Unrecognized System code \"" << SysCode << "\" will be colored gray.\n";
-		env.GraySystems.push_back(SysCode);
-	}
-	UnColor = "aaaaaa";	ClColor = "555555";
-}
-
 void ProcList(envV &env, ofstream &html, highway &hwy)
 {	unsigned int pi1, pi2;
 	bool comma = 0;
@@ -454,8 +435,7 @@ void HTML(list<highway> &HwyList, envV &env)
 		html << "Abbrev:\"" << hwy->Abbrev << "\", ";
 		html << "City:\"" << hwy->City << "\",\n";
 
-		GetColors(hwy->System, env, UnColor, ClColor);
-		html << "UnColor:'#" << UnColor << "', ClColor:'#" << ClColor << "',\n";
+		html << "UnColor:'#" << hwy->HwySys->UnColor << "', ClColor:'#" << hwy->HwySys->ClColor << "',\n";
 
 		html << "//EDB - point latitudes\n";
 		html << "lat:[";
