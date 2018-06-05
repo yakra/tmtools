@@ -1,9 +1,13 @@
+#ifndef tmtools_tmsystem_cpp
+#define tmtools_tmsystem_cpp
+#include <deque>
 #include <iostream>
 #include <string>
 #include <vector>
 
 class tmsystem
 {	public:
+	std::string filename;
 	std::string System, CountryCode, Name, Color;	// CSV data
 	  std::string UnColor, ClColor;			// hex codes for canvas
 	unsigned char Tier;				// CSV data
@@ -18,7 +22,7 @@ class tmsystem
 		// Negative numbers are reserved for representing commented out systems.
 		// Boundaries are not included in systems.csv & thus can't be commented out. Thus no need to distinguish +/- 0.
 
-	tmsystem(std::string S, std::string CC, std::string N, std::string Co, unsigned char T, std::string L)
+	tmsystem(std::string S, std::string CC, std::string N, std::string Co, unsigned char T, std::string L, std::string FN)
 	{	System = S;
 		CountryCode = CC;
 		Name = N;
@@ -27,20 +31,18 @@ class tmsystem
 		SetSubTier();
 		Level = L;
 		SetLevNum();
+		filename = FN;
 	}
 
-	tmsystem(std::string S, std::string CC, std::string N, std::string Co, std::string Un, std::string Cl, unsigned char T, std::string L)
-	{	System = S;
-		CountryCode = CC;
-		Name = N;
-		Color = Co;
-		UnColor = Un;
-		ClColor = Cl;
-		Tier = T;
-		SetSubTier();
-		Level = L;
-		SetLevNum();
+	tmsystem(std::string FN)
+	{	Color = "default";
+		Tier = 255;
+		SubTier = 9;
+		LevNum = 5; // Yes, five. Hail Eris!
+		filename = FN;
 	}
+
+	tmsystem(){}
 
 	bool operator < (tmsystem &other)
 	{	if (Tier < other.Tier) return 1;
@@ -140,4 +142,15 @@ class tmsystem
 	   else if (Level == "boundaries" || Level == "_boundaries") LevNum = 0;
 	   else LevNum = 1;
 	}
+
 };
+
+tmsystem* tmSysPtr(tmsystem &sys, std::deque<tmsystem> &SysDeq, std::string &SysCode)
+{	if (sys.System.empty()) // IE, custom system CSV
+	  for (unsigned int i = 0; i < SysDeq.size(); i++)
+	    if (SysDeq[i].System == SysCode)
+	      return &SysDeq[i];
+	    // unrecognized codes fall thru...
+	return &sys;
+}
+#endif
