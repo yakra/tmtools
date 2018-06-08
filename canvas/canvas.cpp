@@ -297,7 +297,7 @@ class envV
 
 	void countries_continents()
 	{	ifstream regions(Repo+"regions.csv");
-		if (!regions) cout << Repo+"regions.csv not found!\n";
+		if (!regions) { cout << Repo+"regions.csv not found!\n"; return; }
 		string CSVline;
 		getline(regions, CSVline); // skip header row
 		while (getline(regions, CSVline))
