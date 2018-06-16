@@ -405,19 +405,60 @@ void HTML(list<highway> &HwyList, envV &env)
 {	string UnColor, ClColor;
 	ofstream html(env.Output.data());
 
+	// html elements
 	html << "<!doctype html>\n";
 	html << "<html>\n";
 	html << "<head>\n";
 	html << "	<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />\n";
 	html << "	<title>Clinched Highway Map</title>\n";
+	html << "	<style type=\"text/css\">\n";
+	html << "	body { font-family:verdana,helvetica,arial,sans-serif; }\n\n";
+
+	html << "	.button\n";
+	html << "	{	color:black;\n";
+	html << "		background-color: #FFD864;\n";
+	html << "		border: 1px solid black;\n";
+	html << "		padding: 2px 5px;\n";
+	html << "	}\n\n";
+
+	html << "	a.button:hover,  a.button:active\n";
+	html << "	{	color:black;\n";
+	html << "		background-color: #E8B000;\n";
+	html << "		border: 1px solid black;\n";
+	html << "		cursor:pointer;\n";
+	html << "	}\n\n";
+
+	html << "	</style>\n";
 	html << "</head>\n\n";
 
-	html << "<body>\n";
-	html << "<canvas width=" << env.Width << " height=" << env.Height << ">\n\n";
+	html << "<body style=\"margin:0px;\" bgcolor=\"#F0F0F0\">\n\n";
 
-	html << "(To see Map, upgrade browser.)\n\n";
-
+	html << "<canvas width=" << env.Width << " height=" << env.Height << " style=\"float:left\" draggable=\"true\"\n";
+	html << "	onclick=\"PanClick(event)\"\n";
+	html << "	ondragstart=\"PanDrag(event)\"\n";
+	html << "	onmousemove=\"ShowCoords(event)\"\n";
+	html << "	onwheel=\"ZoomWheel(event)\">\n";
+	html << "(To see Map, upgrade browser.)\n";
 	html << "</canvas>\n\n";
+
+	html << "<div id=\"CoordDisp\"><br><br></div>\n";
+	html << "<br>\n";
+	html << "<a onclick=\"ZoomIn();\" class=\"button\"><b>+</b></a>\n";
+	html << "<a onclick=\"ZoomOut();\" class=\"button\"><b>-</b></a>\n";
+	html << "<a onclick=\"ClearCanvas();\" class=\"button\">Clear</a>\n";
+	html << "<a onclick=\"RenderMap();\" class=\"button\">Render</a>\n";
+	html << "<a onclick=\"reset();\" class=\"button\"><u>R</u>eset</a>\n";
+	html << "<a onclick=\"NullXform();\" class=\"button\">NullXform</a>\n";
+	html << "<a onclick=\"BoundBox();\" class=\"button\">BoundBox</a>\n";
+	html << "<br>\n";
+	html << "<div id=\"bounds\"><br><br><br><br></div>\n";
+	html << "<br>\n";
+	html << "<table bgcolor=D0D0D0 width=*>\n";
+	html << "<tr><td><b><u>Debug Widget</u></b>\n";
+	html << "    <a onclick=\"CopyBounds();\" class=\"button\">Bounds</a>\n";
+	html << "    <a onclick=\"ClearDebug();\" class=\"button\">Clear</a></td></tr>\n";
+	html << "<tr><td><div id=\"debug\"></div></td></tr>\n";
+	html << "</table>\n\n";
 
 	html << "<script> // JavaScript starts here\n";
 	html << "//EDB - route objects\n";
@@ -460,75 +501,239 @@ void HTML(list<highway> &HwyList, envV &env)
 		num++;
 	} //end for (route objects)
 
-	html << "var MinLat = rte[rte.length-1].lat[0];\n";
-	html << "var MinLon = rte[rte.length-1].lon[0];\n";
-	html << "var MaxLat = rte[rte.length-1].lat[0];\n";
-	html << "var MaxLon = rte[rte.length-1].lon[0];\n";
-	html << "var i, j, k;\n\n";
+	// javascript functions
+	html << "var MinLat, MinLon, MaxLat, MaxLon;\n";
+	html << "var MinMerc, ScaleFac;\n";
+	html << "var PanDragX = -1;\n";
+	html << "var PanDragY = -1;\n\n";
 
-	html << "function merc(lat)\n";
-	html << "{	return Math.log(Math.tan(0.785398163+lat*3.1415926535898/360))*180/3.1415926535898;\n";
+	html << "document.addEventListener(\"keypress\", function(event)\n";
+	html << "{	if (event.key == \"+\") ZoomIn();\n";
+	html << "	if (event.key == \"-\") ZoomOut();\n";
+	html << "	if (event.key == \"r\" || event.key == \"R\") reset();\n";
+	html << "	if (event.keyCode == 37) PanToXY(canvas.width/4, canvas.height/2);\n";
+	html << "	if (event.keyCode == 38) PanToXY(canvas.width/2, canvas.height/4);\n";
+	html << "	if (event.keyCode == 39) PanToXY(canvas.width*0.75, canvas.height/2);\n";
+	html << "	if (event.keyCode == 40) PanToXY(canvas.width/2, canvas.height*0.75);\n";
+	html << "});\n\n";
+
+	html << "function BoundBox()\n";
+	html << "{	c = canvas.getContext(\"2d\");\n";
+	html << "	c.save();\n";
+	html << "	c.beginPath();\n";
+	html << "	c.strokeStyle = \"#FF0000\";\n";
+	html << "	c.moveTo(LonToX(MinLon), LatToY(MinLat));\n";
+	html << "	c.lineTo(LonToX(MinLon), LatToY(MaxLat));\n";
+	html << "	c.lineTo(LonToX(MaxLon), LatToY(MaxLat));\n";
+	html << "	c.lineTo(LonToX(MaxLon), LatToY(MinLat));\n";
+	html << "	c.lineTo(LonToX(MinLon), LatToY(MinLat));\n";
+	html << "	c.moveTo(Math.round(canvas.width/2), Math.round(canvas.height/2)-7);\n";
+	html << "	c.lineTo(Math.round(canvas.width/2), Math.round(canvas.height/2)+7);\n";
+	html << "	c.moveTo(Math.round(canvas.width/2-7), Math.round(canvas.height/2));\n";
+	html << "	c.lineTo(Math.round(canvas.width/2+7), Math.round(canvas.height/2));\n";
+	html << "	c.stroke();\n";
+	html << "	c.restore();\n";
+	html << "}\n\n";
+
+	html << "function ClearCanvas()\n";
+	html << "{	c = canvas.getContext(\"2d\");\n";
+	html << "	c.fillStyle = \"#FFFFFF\";\n";
+	html << "	c.fillRect(0,0,canvas.width,canvas.height);\n";
+	html << "}\n\n";
+
+	html << "function ClearDebug()	{ document.getElementById(\"debug\").innerHTML = \"\"; }\n";
+	html << "function CopyBounds()	{ document.getElementById(\"debug\").innerHTML += document.getElementById(\"bounds\").innerHTML; }\n\n";
+
+	html << "function InitBounds()\n";
+	html << "//EDB - get max/min lat/lon for a quick-n-dirty scale of routes trace to fill canvas\n";
+	html << "{	MinLat = 90;\n";
+	html << "	MinLon = 180;\n";
+	html << "	MaxLat = -90;\n";
+	html << "	MaxLon = -180;\n";
+	html << "	for (RtNum = 0; RtNum < rte.length; RtNum++)\n";
+	html << "	{	for (PtNum = 0; PtNum < rte[RtNum].lat.length; PtNum++)\n";
+	html << "		{	if (!(rte[RtNum].Region == \"B\" || rte[RtNum].Region == \"b\" || rte[RtNum].Region == \"_boundaries\"))\n";
+	html << "			{	if (rte[RtNum].lat[PtNum] < MinLat) MinLat = rte[RtNum].lat[PtNum];\n";
+	html << "				if (rte[RtNum].lon[PtNum] < MinLon) MinLon = rte[RtNum].lon[PtNum];\n";
+	html << "				if (rte[RtNum].lat[PtNum] > MaxLat) MaxLat = rte[RtNum].lat[PtNum];\n";
+	html << "				if (rte[RtNum].lon[PtNum] > MaxLon) MaxLon = rte[RtNum].lon[PtNum];\n";
+	html << "			}\n";
+	html << "		}\n";
+	html << "	}//*/\n";
+	html << "	SetScaleFac();\n";
+	html << "	MinMerc = merc(MinLat);\n";
+	html << "	ShowBounds();\n";
+	html << "}\n\n";
+
+	html << "function LatToY(lat)	{ return canvas.height-1-(merc(lat)-MinMerc)*ScaleFac; }\n";
+	html << "function LonToX(lon)	{ return (lon-MinLon)*ScaleFac; }\n";
+	html << "function merc(lat)	{ return Math.log(Math.tan(0.785398163+lat*3.1415926535898/360))*180/3.1415926535898; }\n";
+	html << "function amerc(y)	{ return (Math.atan(Math.pow(2.718281828459, y/180*3.1415926535898))-0.785398163)/3.1415926535898*360 }\n\n";
+
+	html << "function NullXform()\n";
+	html << "{	MinLat = YToLat(canvas.height-1);\n";
+	html << "	MaxLat = YToLat(0);\n";
+	html << "	MinLon = XToLon(0);\n";
+	html << "	MaxLon = XToLon(canvas.width-1);\n";
+	html << "	SetScaleFac();\n";
+	html << "	MinMerc = merc(MinLat);\n";
+	html << "	ShowBounds();\n";
+	html << "	ClearCanvas();\n";
+	html << "	RenderMap();\n";
+	html << "}\n\n";
+
+	html << "function PanClick(e)\n";
+	html << "{	if (PanDragX < 0 || PanDragY < 0)\n";
+	html << "		PanToXY(e.clientX,e.clientY);\n";
+	html << "	else {	PanToXY(Math.round(canvas.width/2)+PanDragX-e.clientX, Math.round(canvas.height/2)+PanDragY-e.clientY);\n";
+	html << "		PanDragX = -1;\n";
+	html << "		PanDragY = -1;\n";
+	html << "	     }\n";
+	html << "}\n\n";
+
+	html << "function PanDrag(e)\n";
+	html << "{	PanDragX = e.clientX;\n";
+	html << "	PanDragY = e.clientY;\n";
+	html << "}\n\n";
+
+	html << "function PanToXY(x,y)\n";
+	html << "{	MinLat = YToLat(y+canvas.height/2-1);\n";
+	html << "	MaxLat = YToLat(y-canvas.height/2);\n";
+	html << "	MaxLon = XToLon(x+canvas.width/2-1);\n";
+	html << "	MinLon = XToLon(x-canvas.width/2);\n";
+	html << "	SetScaleFac();\n";
+	html << "	MinMerc = merc(MinLat);\n";
+	html << "	ShowBounds();\n";
+	html << "	ClearCanvas();\n";
+	html << "	RenderMap();\n";
+	html << "}\n\n";
+
+	html << "function reset()\n";
+	html << "{	InitBounds();\n";
+	html << "	ClearCanvas();\n";
+	html << "	RenderMap();\n";
+	html << "}\n\n";
+
+	html << "function SetScaleFac()\n";
+	html << "{	ScaleFac = Math.min((canvas.width-1)/(MaxLon-MinLon), (canvas.height-1)/(merc(MaxLat)-merc(MinLat)));\n";
+	html << "}\n\n";
+
+	html << "function ShowBounds()\n";
+	html << "{	document.getElementById(\"bounds\").innerHTML=\n";
+	html << "	\"<br><table border=1 cellspacing=0>\"+\n";
+	html << "	\"<tr><td>MinLat: </td><td>\" + MinLat.toFixed(6)+ \"</td><td>(\"+ LatToY(MinLat).toFixed(0)+ \")</td><td>\"+ merc(MinLat).toFixed(6)+\n";
+	html << "	\"<tr><td>MaxLat: </td><td>\" + MaxLat.toFixed(6)+ \"</td><td>(\"+ LatToY(MaxLat).toFixed(0)+ \")</td><td>\"+ merc(MaxLat).toFixed(6)+\n";
+	html << "	\"<tr><td>MinLon: </td><td>\" + MinLon.toFixed(6)+ \"</td><td colspan=2>(\"+ LonToX(MinLon).toFixed(0)+ \")\"+\n";
+	html << "	\"<tr><td>MaxLon: </td><td>\" + MaxLon.toFixed(6)+ \"</td><td colspan=2>(\"+ LonToX(MaxLon).toFixed(0)+ \")\"+\n";
+	html << "	\"<tr><td>ScaleFac: </td><td colspan=3>\" + ScaleFac.toFixed(4)+\n";
+	html << "	\"</table>\";\n";
+	html << "}\n\n";
+
+	html << "function ShowCoords(e)\n";
+	html << "{	lon = XToLon(e.clientX);\n";
+	html << "	lat = YToLat(e.clientY);\n";
+	html << "	document.getElementById(\"CoordDisp\").innerHTML=\"Mouse: \" + lat.toFixed(6) + \",\" + lon.toFixed(6) +\n";
+	html << "	\" (y:\" + e.clientY + \", x:\" + e.clientX + \")<br>\"+\n";
+	html << "	\"<a href=http://www.openstreetmap.org/?lat=\"+lat.toFixed(6)+\"&lon=\"+lon.toFixed(6)+\"&zoom=15>OSM</a> \"+\n";
+	html << "	\"<a href=http://maps.google.com/?ll=\"+lat.toFixed(6)+\",\"+lon.toFixed(6)+\"&z=15>Google</a>\";\n";
+	html << "}\n\n";
+
+	html << "function XToLon(x)	{ return x/ScaleFac+MinLon; }\n";
+	html << "function YToLat(y)	{ return amerc((canvas.height-y-1)/ScaleFac+MinMerc); }\n\n";
+
+	html << "function ZoomIn()\n";
+	html << "{	MinLat = YToLat(0.75*canvas.height-0.5);\n";
+	html << "	MaxLat = YToLat(0.25*canvas.height);\n";
+	html << "	MaxLon = XToLon(0.75*canvas.width-0.5);\n";
+	html << "	MinLon = XToLon(0.25*canvas.width);\n";
+	html << "	SetScaleFac();\n";
+	html << "	MinMerc = merc(MinLat);\n";
+	html << "	ShowBounds();\n";
+	html << "	ClearCanvas();\n";
+	html << "	RenderMap();\n";
+	html << "}\n\n";
+
+	html << "function ZoomOut()\n";
+	html << "{	MinLat = YToLat(1.5*canvas.height-2);\n";
+	html << "	MaxLat = YToLat(-0.5*canvas.height);\n";
+	html << "	MaxLon = XToLon(1.5*canvas.width-2);\n";
+	html << "	MinLon = XToLon(-0.5*canvas.width);\n";
+	html << "	SetScaleFac();\n";
+	html << "	MinMerc = merc(MinLat);\n";
+	html << "	ShowBounds();\n";
+	html << "	ClearCanvas();\n";
+	html << "	RenderMap();\n";
+	html << "}\n\n";
+
+	html << "function ZoomWheel(e)\n";
+	html << "{	e.preventDefault();\n\n";
+
+	html << "	if (e.deltaY > 0) // zoom out\n";
+	html << "	{	MinLat = YToLat(2*canvas.height-e.clientY-2);\n";
+	html << "		MaxLat = YToLat(0-e.clientY);\n";
+	html << "		MaxLon = XToLon(2*canvas.width-e.clientX-2);\n";
+	html << "		MinLon = XToLon(0-e.clientX);\n";
+	html << "	}\n";
+	html << "	if (e.deltaY < 0) // zoom in\n";
+	html << "	{	MinLat = YToLat(0.5*(canvas.height+e.clientY)-0.5);\n";
+	html << "		MaxLat = YToLat(e.clientY/2);\n";
+	html << "		MaxLon = XToLon(0.5*(canvas.width+e.clientX)-0.5);\n";
+	html << "		MinLon = XToLon(e.clientX/2);\n";
+	html << "	}\n\n";
+
+	html << "	SetScaleFac();\n";
+	html << "	MinMerc = merc(MinLat);\n";
+	html << "	ShowBounds();\n";
+	html << "	ClearCanvas();\n";
+	html << "	RenderMap();\n";
+	html << "}\n\n";
+
+	html << "function RenderMap()\n";
+	html << "{	//vdeane & EDB - base route line traces\n";
+	html << "	for (RtNum = 0; RtNum < rte.length; RtNum++)\n";
+	html << "	{	c = canvas.getContext(\"2d\");\n";
+	html << "		c.save();\n";
+	html << "		c.beginPath();\n";
+	html << "		c.strokeStyle = rte[RtNum].UnColor;\n";
+	html << "		c.lineWidth=" << env.UnStroke << ";\n";
+	html << "		c.moveTo(LonToX(rte[RtNum].lon[0]), LatToY(rte[RtNum].lat[0]));\n";
+	html << "		for (PtNum = 1; PtNum < rte[RtNum].lat.length; PtNum++)\n";
+	html << "			c.lineTo(LonToX(rte[RtNum].lon[PtNum]), LatToY(rte[RtNum].lat[PtNum]));\n";
+	html << "		c.stroke();\n";
+	html << "		c.restore();\n";
+	html << "	}\n\n";
+
+	html << "	//vdeane & EDB - begin drawing segments\n";
+	html << "	for (RtNum = 0; RtNum < rte.length; RtNum++)\n";
+	html << "	{	for (ClSeg = 0; ClSeg < rte[RtNum].cliSegments.length; ClSeg+=2)\n";
+	html << "		{	var CliPt = false; //vdeane - track if start or end of segment\n";
+	html << "			c = canvas.getContext(\"2d\");\n";
+	html << "			c.save();\n";
+	html << "			c.beginPath();\n";
+	html << "			c.strokeStyle = rte[RtNum].ClColor;\n";
+	html << "			c.lineWidth=" << env.ClStroke << ";\n\n";
+
+	html << "			for (PtNum = 0; PtNum < rte[RtNum].lat.length; PtNum++)\n";
+	html << "			{	if (rte[RtNum].cliSegments[ClSeg] === PtNum)\n";
+	html << "				{	c.moveTo(LonToX(rte[RtNum].lon[PtNum]), LatToY(rte[RtNum].lat[PtNum]));\n";
+	html << "					CliPt = true;\n";
+	html << "				}\n";
+	html << "				if (CliPt === true && PtNum !== 0)\n";
+	html << "					c.lineTo(LonToX(rte[RtNum].lon[PtNum]), LatToY(rte[RtNum].lat[PtNum]));\n";
+	html << "				if (rte[RtNum].cliSegments[ClSeg+1] === PtNum)\n";
+	html << "				{	c.stroke();\n";
+	html << "					c.restore();\n";
+	html << "					CliPt = false;\n";
+	html << "				} //end if (Does label end cliSegment?)\n";
+	html << "			} //end for (step thru point coords in route)\n";
+	html << "		} // end for (step thru clinched segments)\n";
+	html << "	} //end for (step thru routes)//*/\n";
 	html << "}\n\n";
 
 	html << "//John Pound - initialize canvas\n";
 	html << "var canvas = document.getElementsByTagName(\"canvas\")[0];\n\n";
 
-	html << "//EDB - get maximum and minimum latitude and longitude for a quick-n-dirty scale of the route trace to fill the canvas\n";
-	html << "for (j = 0; j < rte.length; j++)\n";
-	html << "{	for (i = 0; i < rte[j].lat.length; i++)\n";
-	html << "	{	if (!(rte[j].Region == \"B\" || rte[j].Region == \"b\" || rte[j].Region == \"_boundaries\"))\n";
-	html << "		{	if (rte[j].lat[i] < MinLat) MinLat = rte[j].lat[i];\n";
-	html << "			if (rte[j].lon[i] < MinLon) MinLon = rte[j].lon[i];\n";
-	html << "			if (rte[j].lat[i] > MaxLat) MaxLat = rte[j].lat[i];\n";
-	html << "			if (rte[j].lon[i] > MaxLon) MaxLon = rte[j].lon[i];\n";
-	html << "		}\n";
-	html << "	}\n";
-	html << "}//*/\n";
-	html << "document.write(\"<br> MinLat: \"); document.write(MinLat);\n";
-	html << "document.write(\"<br> MinLon: \"); document.write(MinLon);\n";
-	html << "document.write(\"<br> MaxLat: \"); document.write(MaxLat);\n";
-	html << "document.write(\"<br> MaxLon: \"); document.write(MaxLon);\n";
-	html << "var ScaleFac = Math.min((canvas.width-1)/(MaxLon-MinLon), (canvas.height-1)/(merc(MaxLat)-merc(MinLat)));\n";
-	html << "var MinMerc = merc(MinLat);\n\n";
-
-	html << "//vdeane & EDB - base route line traces\n";
-	html << "for (k = 0; k < rte.length; k++)\n";
-	html << "{	c = canvas.getContext(\"2d\");\n";
-	html << "	c.save();\n";
-	html << "	c.beginPath();\n";
-	html << "	c.strokeStyle = rte[k].UnColor;\n";
-	html << "	c.lineWidth=" << env.UnStroke << ";\n";
-	html << "	c.moveTo((rte[k].lon[0]-MinLon)*ScaleFac, canvas.height-1-(merc(rte[k].lat[0])-MinMerc)*ScaleFac);\n";
-	html << "	for (i = 1; i < rte[k].lat.length; i++) c.lineTo((rte[k].lon[i]-MinLon)*ScaleFac, canvas.height-1-(merc(rte[k].lat[i])-MinMerc)*ScaleFac);\n";
-	html << "	c.stroke();\n";
-	html << "	c.restore();\n";
-	html << "}\n\n";
-
-	html << "//vdeane & EDB - begin drawing segments\n";
-	html << "for (k = 0; k < rte.length; k++)\n";
-	html << "{	for (i = 0; i < rte[k].cliSegments.length; i+=2)\n";
-	html << "	{	var CliPt = false; //vdeane - track if start or end of segment\n";
-	html << "		c = canvas.getContext(\"2d\");\n";
-	html << "		c.save();\n";
-	html << "		c.beginPath();\n";
-	html << "		c.strokeStyle = rte[k].ClColor;\n";
-	html << "		c.lineWidth=" << env.ClStroke << ";\n\n";
-
-	html << "		for (j = 0; j < rte[k].lat.length; j++)\n";
-	html << "		{	if (rte[k].cliSegments[i] === j)\n";
-	html << "			{	c.moveTo((rte[k].lon[j]-MinLon)*ScaleFac, canvas.height-1-(merc(rte[k].lat[j])-MinMerc)*ScaleFac);\n";
-	html << "				CliPt = true;\n";
-	html << "			}\n";
-	html << "			if (CliPt === true && j !== 0)\n";
-	html << "				c.lineTo((rte[k].lon[j]-MinLon)*ScaleFac, canvas.height-1-(merc(rte[k].lat[j])-MinMerc)*ScaleFac);\n";
-	html << "			if (rte[k].cliSegments[i+1] === j)\n";
-	html << "			{	c.stroke();\n";
-	html << "				c.restore();\n";
-	html << "				CliPt = false;\n";
-	html << "			} //end if (Does label end cliSegment?)\n";
-	html << "		} //end for (step thru point coords in route)\n";
-	html << "	} // end for (step thru clinched segments)\n";
-	html << "} //end for (step thru routes)//*/\n\n";
+	html << "reset();\n\n";
 
 	html << "// JavaScript ends here\n";
 	html << "</script>\n";
