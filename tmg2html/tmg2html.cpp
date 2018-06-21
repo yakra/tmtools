@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 	unsigned int NumVertices, NumEdges;
 	string tmgline;
 	getline(tmg, tmgline);
-	if (tmgline != "TMG 1.0 collapsed") { cout << '\"' << tmgline << "\" unsupported.\n"; return 0; } //FIXME
+	if (tmgline.substr(0, 7) != "TMG 1.0") { cout << '\"' << tmgline << "\" unsupported.\n"; return 0; }
 	tmg >> NumVertices;
 	tmg >> NumEdges;
 	vertex **vertices = new vertex*[NumVertices];
