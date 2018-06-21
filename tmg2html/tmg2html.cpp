@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 	html << "<html>\n";
 	html << "<head>\n";
 	html << "	<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />\n";
-	html << "	<title>yakra's HDX-Lite: " << filename << "</title>\n"; //FIXME
+	html << "	<title>yakra's HDX-Lite: " << filename << "</title>\n";
 	html << "	<style type=\"text/css\">\n";
 	html << "	body\n";
 	html << "	{	font-family:verdana,helvetica,arial,sans-serif;\n";
