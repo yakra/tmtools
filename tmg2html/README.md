@@ -19,6 +19,6 @@ tmg2html.cpp is all you need; no other files from the `tmtools` repository are r
 * Clicking a vertex or edge in the table will highlight & pan to it, and display its info.
 
 **Compatibility:**<br>
-* **Firefox:** Works OK.
-* **Chrome & Chromium:** Panning by arrow keys or dragging the map do not work. Redrawing the map, or getting results after clicking a vertex or edge are considerably slower.
+* **Firefox** is recommended.
+* **Chrome & Chromium:** Rendering & redrawing the map, or getting results after clicking a vertex or edge are considerably slower, especially with larger data sets or more data on screen.
 * **Other browsers** have not been tested.
