@@ -128,6 +128,7 @@ int main(int argc, char *argv[])
 	html << "<canvas width=700 height=700 style=\"float:left\" draggable=\"true\"\n";
 	html << "	onclick=\"ClickMap(event)\"\n";
 	html << "	ondblclick=\"PanToXY(event.clientX, event.clientY)\"\n";
+	html << "	ondragend=\"ClickMap(event)\"\n";
 	html << "	ondragstart=\"PanDrag(event)\"\n";
 	html << "	onmousemove=\"ShowCoords(event)\"\n";
 	html << "	onwheel=\"ZoomWheel(event)\">\n";
@@ -186,7 +187,7 @@ int main(int argc, char *argv[])
 	html << "var PanDragX = -1;\n";
 	html << "var PanDragY = -1;\n";
 	html << "\n";
-	html << "document.addEventListener(\"keypress\", function(event)\n";
+	html << "document.addEventListener(\"keydown\", function(event)\n";
 	html << "{	if (event.key == \"+\") ZoomIn();\n";
 	html << "	if (event.key == \"-\") ZoomOut();\n";
 	html << "	if (event.key == \"r\" || event.key == \"R\") reset();\n";
