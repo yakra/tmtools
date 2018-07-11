@@ -328,7 +328,8 @@ class envV
 				char *Name = strtok(0, " \t");		if (!Name)	throw 'N';
 				char *pl1 = strtok(0, " \t");		if (!pl1)	throw '1';
 				char *pl2 = strtok(0, " \t");		if (!pl2)	throw '2';
-				if (strtok(0, " \t"))					throw '3';
+				char *field5 = strtok(0, " \t");
+					if (field5 && field5[0] != '#')			throw '3';
 				while (pl1[0] == '+' || pl1[0] == '*') pl1++;
 				while (pl2[0] == '+' || pl2[0] == '*') pl2++;
 				TravList.emplace_back(caps(Region), caps(Name), pl1, pl2);
