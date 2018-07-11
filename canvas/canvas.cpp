@@ -461,15 +461,12 @@ void HTML(list<highway> &HwyList, envV &env)
 	html << "</table>\n\n";
 
 	html << "<script> // JavaScript starts here\n";
-	html << "//EDB - route objects\n";
-	html << "var rte = [];\n\n";
+	html << "var rte = [";
 
 	// route objects
-	unsigned int num = 0;
 	for (list<highway>::reverse_iterator hwy = HwyList.rbegin(); hwy != HwyList.rend(); hwy++)
 	{	// not all of this may be necessary but leaving it in nonetheless.
-		html << "rte[" << num << "] = {\n";
-		html << "System:\"" << hwy->System << "\", ";
+		html << "\n\n{System:\"" << hwy->System << "\", ";
 		html << "Region:\"" << hwy->Region << "\", ";
 		html << "Route:\"" << hwy->Route << "\", ";
 		html << "Banner:\"" << hwy->Banner << "\", ";
@@ -478,7 +475,6 @@ void HTML(list<highway> &HwyList, envV &env)
 
 		html << "UnColor:'#" << hwy->HwySys->UnColor << "', ClColor:'#" << hwy->HwySys->ClColor << "',\n";
 
-		html << "//EDB - point latitudes\n";
 		html << "lat:[";
 		list<waypoint>::iterator point = hwy->pt.begin();
 			html << to_string(point->Lat);
@@ -486,7 +482,6 @@ void HTML(list<highway> &HwyList, envV &env)
 			html << ", " << to_string(point->Lat);
 		html << "],\n";
 
-		html << "//EDB - point longitudes\n";
 		html << "lon:[";
 		point = hwy->pt.begin();
 			html << to_string(point->Lon);
@@ -494,12 +489,12 @@ void HTML(list<highway> &HwyList, envV &env)
 			html << ", " << to_string(point->Lon);
 		html << "],\n";
 
-		html << "//vdeane & EDB - indices to .listfile endpoints\ncliSegments:[";
+		html << "ClSeg:[";
 		ProcList(env, html, *hwy);
-		html << "]\n} //end object definition\n\n";
-
-		num++;
+		html << "]},";
 	} //end for (route objects)
+	html.seekp(-1, ios::cur);
+	html << "\n];\n\n";
 
 	// javascript functions
 	html << "var MinLat, MinLon, MaxLat, MaxLon;\n";
@@ -545,7 +540,7 @@ void HTML(list<highway> &HwyList, envV &env)
 	html << "function CopyBounds()	{ document.getElementById(\"debug\").innerHTML += document.getElementById(\"bounds\").innerHTML; }\n\n";
 
 	html << "function InitBounds()\n";
-	html << "//EDB - get max/min lat/lon for a quick-n-dirty scale of routes trace to fill canvas\n";
+	html << "//EDB - get max/min lat/lon for a quick-n-dirty scale of route traces to fill canvas\n";
 	html << "{	MinLat = 90;\n";
 	html << "	MinLon = 180;\n";
 	html << "	MaxLat = -90;\n";
@@ -705,7 +700,7 @@ void HTML(list<highway> &HwyList, envV &env)
 
 	html << "	//vdeane & EDB - begin drawing segments\n";
 	html << "	for (RtNum = 0; RtNum < rte.length; RtNum++)\n";
-	html << "	{	for (ClSeg = 0; ClSeg < rte[RtNum].cliSegments.length; ClSeg+=2)\n";
+	html << "	{	for (seg = 0; seg < rte[RtNum].ClSeg.length; seg+=2)\n";
 	html << "		{	var CliPt = false; //vdeane - track if start or end of segment\n";
 	html << "			c = canvas.getContext(\"2d\");\n";
 	html << "			c.save();\n";
@@ -714,13 +709,13 @@ void HTML(list<highway> &HwyList, envV &env)
 	html << "			c.lineWidth=" << env.ClStroke << ";\n\n";
 
 	html << "			for (PtNum = 0; PtNum < rte[RtNum].lat.length; PtNum++)\n";
-	html << "			{	if (rte[RtNum].cliSegments[ClSeg] === PtNum)\n";
+	html << "			{	if (rte[RtNum].ClSeg[seg] === PtNum)\n";
 	html << "				{	c.moveTo(LonToX(rte[RtNum].lon[PtNum]), LatToY(rte[RtNum].lat[PtNum]));\n";
 	html << "					CliPt = true;\n";
 	html << "				}\n";
 	html << "				if (CliPt === true && PtNum !== 0)\n";
 	html << "					c.lineTo(LonToX(rte[RtNum].lon[PtNum]), LatToY(rte[RtNum].lat[PtNum]));\n";
-	html << "				if (rte[RtNum].cliSegments[ClSeg+1] === PtNum)\n";
+	html << "				if (rte[RtNum].ClSeg[seg+1] === PtNum)\n";
 	html << "				{	c.stroke();\n";
 	html << "					c.restore();\n";
 	html << "					CliPt = false;\n";
