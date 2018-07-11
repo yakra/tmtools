@@ -402,8 +402,7 @@ void ProcList(envV &env, ofstream &html, highway &hwy)
 }
 
 void HTML(list<highway> &HwyList, envV &env)
-{	string UnColor, ClColor;
-	ofstream html(env.Output.data());
+{	ofstream html(env.Output.data());
 
 	// html elements
 	html << "<!doctype html>\n";
