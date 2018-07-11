@@ -42,7 +42,7 @@ class edge
 
 int main(int argc, char *argv[])
 {	ifstream tmg(argv[1]);
-	if (argc < 3)	{ cout << "usage: ./tmg2htm <InputFile> <OutputFile>\n"; return 0; }
+	if (argc < 3)	{ cout << "usage: ./tmg2html <InputFile> <OutputFile>\n"; return 0; }
 	if (!tmg)	{ cout << argv[1] << " not found.\n"; return 0; }
 
 	const char *filename = &argv[1][string(argv[1]).find_last_of("/\\")+1];
