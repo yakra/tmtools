@@ -157,30 +157,33 @@ int main(int argc, char *argv[])
 	html << "<script>\n";
 
 	// vertices
-	html << "var vertex = [];\n";
+	html << "var vertex = [";
 	for (int vNum = 0; vNum < NumVertices; vNum++)
-		html << "vertex[" << vNum << "] = {lat:"\
-		 << to_string(vertices[vNum]->lat) << ",lon:"\
-		 << to_string(vertices[vNum]->lon) << ",label:'"\
-		 << vertices[vNum]->label << "'}\n";
+		html << "\n{lat:" << to_string(vertices[vNum]->lat)\
+		     << ",lon:" << to_string(vertices[vNum]->lon)\
+		     << ",label:'" << vertices[vNum]->label << "'},";
+	html.seekp(-1, ios::cur);
+	html << "\n];\n\n";
 
 	// edges
-	html << "var edge = [];\n";
+	html << "var edge = [";
 	for (int eNum = 0; eNum < NumEdges; eNum++)
-	{	html << "edge[" << eNum << "] = {begin:"\
-		 << edges[eNum]->BegI << ",end:"\
-		 << edges[eNum]->EndI << ",qty:"\
-		 << edges[eNum]->qty << ",label:'"\
-		 << edges[eNum]->label << "',shape:[";
+	{	html << "\n{begin:" << edges[eNum]->BegI\
+		     << ",end:" << edges[eNum]->EndI\
+		     << ",qty:" << edges[eNum]->qty\
+		     << ",label:'" << edges[eNum]->label\
+		     << "',shape:[";
 		for (unsigned int sNum = 0; sNum < edges[eNum]->shape.size(); sNum++)
 		{	html << to_string(edges[eNum]->shape[sNum]);
 			if (sNum < edges[eNum]->shape.size()-1) html << ", ";
 		}
-		html << "]}\n";
+		html << "]},";
 	}
+	html.seekp(-1, ios::cur);
+	html << "\n];\n\n";
 
 	// javascript functions
-	html << "\nvar MinLat, MinLon, MaxLat, MaxLon;\n";
+	html << "var MinLat, MinLon, MaxLat, MaxLon;\n";
 	html << "var MinMerc, ScaleFac;\n";
 	html << "var selectedV = -1;\n";
 	html << "var selectedE = -1;\n";
