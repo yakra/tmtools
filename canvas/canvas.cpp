@@ -261,7 +261,7 @@ class envV
 		for (unsigned int i = 0; i < InclSysObj.size(); i++) InclSysObj[i].SetColors(N_Colors, UnColors, ClColors);
 
 		if (!List.empty()) SlurpList();
-		if (!InclCtry.empty() || !InclCont.empty()) countries_continents();
+		if (!InclCtry.empty() || !InclCont.empty() || !ExclRg.empty()) countries_continents();
 
 		ReadSysCSV(InclSysCode.empty() && InclSysObj.empty());
 		if (boundaries)
@@ -402,6 +402,13 @@ void ProcList(envV &env, ofstream &html, highway &hwy)
 	}
 }
 
+string SlaQuo(string str)
+// add escape character; convert " to \"
+{	for (int i = str.size()-1; i >= 0; i--)
+		if (str[i] == '\"') str.insert(i, 1, '\\');
+	return str;
+}
+
 void HTML(list<highway> &HwyList, envV &env)
 {	ofstream html(env.Output.data());
 
@@ -471,7 +478,7 @@ void HTML(list<highway> &HwyList, envV &env)
 		html << "Route:\"" << hwy->Route << "\", ";
 		html << "Banner:\"" << hwy->Banner << "\", ";
 		html << "Abbrev:\"" << hwy->Abbrev << "\", ";
-		html << "City:\"" << hwy->City << "\",\n";
+		html << "City:\"" << SlaQuo(hwy->City) << "\",\n";
 
 		html << "UnColor:'#" << hwy->HwySys->UnColor << "', ClColor:'#" << hwy->HwySys->ClColor << "',\n";
 
