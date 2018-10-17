@@ -12,7 +12,9 @@ class waypoint
 	double Lat, Lon, OffLat, OffLon, OnLat, OnLon, OffDist, OnDist;
 
 	waypoint(highway *, std::string &);
+	waypoint(highway *, std::string, double, double);
 	~waypoint();
+	void CoordCheck();
 	void demote(std::string);
 	void InitCoords();
 	inline char* NakedLabel (unsigned int);
