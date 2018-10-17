@@ -30,23 +30,21 @@ waypoint::waypoint(highway *rte, std::string &WPTline)
 	}
 }
 
+waypoint::waypoint(highway *rte, std::string PriLabel, double lat, double lon)
+{	hwy = rte;
+	label.push_front(PriLabel);
+	Lat = lat; Lon = lon;
+	CoordCheck();
+	URL = "http://www.openstreetmap.org/?lat="+std::to_string(Lat)+"&lon="+std::to_string(Lon);
+}
+
 waypoint::~waypoint()
 {	label.clear();
 	URL.clear();
 }
 
-void waypoint::demote(std::string NewPriLbl)
-{	if (label.size()) label.at(0) = "+" + label.at(0);
-	label.push_front(NewPriLbl);
-}
-
-void waypoint::InitCoords()
-{	// parse URL
-	size_t latBeg = URL.find("lat=")+4;	if (latBeg == 3) latBeg = URL.size();
-	size_t lonBeg = URL.find("lon=")+4;	if (lonBeg == 3) lonBeg = URL.size();
-	Lat = strtod(&URL[latBeg], 0);
-	Lon = strtod(&URL[lonBeg], 0);
-	// check for out-of-bounds coords
+void waypoint::CoordCheck()
+{	// check for out-of-bounds coords
 	if (Lat > 90)
 	{	std::cout << "Warning: latitude > 90 in " << Root() << " @ " << label[0] << "\n";
 		std::cout << "         " << std::to_string(Lat) << " converted to ";
@@ -75,6 +73,22 @@ void waypoint::InitCoords()
 		while (Lon < -180)	Lon += 360;
 		std::cout << std::to_string(Lon) << '\n';
 	}//*/
+}
+
+void waypoint::demote(std::string NewPriLbl)
+{	if (label.size()) label.at(0) = "+" + label.at(0);
+	label.push_front(NewPriLbl);
+}
+
+void waypoint::InitCoords()
+{	// parse URL
+	size_t latBeg = URL.find("lat=")+4;	if (latBeg == 3) latBeg = URL.size();
+	size_t lonBeg = URL.find("lon=")+4;	if (lonBeg == 3) lonBeg = URL.size();
+	Lat = strtod(&URL[latBeg], 0);
+	Lon = strtod(&URL[lonBeg], 0);
+
+	CoordCheck();
+
 	// "Worst First" for gisplunge coords, so everything after will be an improvement
 	OnLat = Lat * -1; OffLat = OnLat;
 	OnLon = Lon + 180; OffLon = OnLon;
