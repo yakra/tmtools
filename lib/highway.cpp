@@ -95,6 +95,19 @@ class highway
 		return p;
 	}
 
+	std::list<waypoint>::iterator GetItByLabel(std::string lbl) // returning pt.end() == fail.
+	{	for (std::list<waypoint>::iterator point = pt.begin(); point != pt.end(); point++)
+		{	for (unsigned int l = 0; l < point->label.size(); l++)
+				if (caps(lbl) == caps(point->NakedLabel(l)))
+				{	if (l)	std::cout << Region << ' ' << Route+Banner+Abbrev << ' ' << lbl \
+						<< ": deprecated in favor of " << point->label[0] << '\n';
+					return point;
+				}
+		}
+		std::cout << Region << ' ' << Route+Banner+Abbrev << ' ' << lbl << ": point label not recognized\n";
+		return pt.end();
+	}
+
 	bool NameMatch(std::string ListName)
 	{	if (ListName == caps(Route+Banner+Abbrev)) return 1;
 		for (unsigned short i = 0; i < AltRouteNames.size(); i++)
@@ -102,7 +115,7 @@ class highway
 		return 0;
 	}
 
-	void write(std::string OrigName, unsigned char OrgBy)	{ write(OrigName, 1, OrgBy, 0); }		// general purpose usage
+	void write(std::string path, unsigned char OrgBy)	{ write(path, 1, OrgBy, 0); }			// general purpose usage
 	void write(unsigned char WriteMe, bool B)		{ write("output/orig/", WriteMe, 0, B); }	// gisplunge usage
 	void write(std::string OrigName, unsigned char WriteMe, unsigned char OrgBy, bool B)
 	{	std::string OffName = "output/off/";
