@@ -330,8 +330,6 @@ class envV
 				char *pl2 = strtok(0, " \t");		if (!pl2)	throw '2';
 				char *field5 = strtok(0, " \t");
 					if (field5 && field5[0] != '#')			throw '3';
-				while (pl1[0] == '+' || pl1[0] == '*') pl1++;
-				while (pl2[0] == '+' || pl2[0] == '*') pl2++;
 				TravList.emplace_back(caps(Region), caps(Name), pl1, pl2);
 			    }
 			catch (char err) { if (err != 'R') cout << "Incorrect format .list line: " << line << '\n'; }
@@ -384,8 +382,8 @@ void ProcList(envV &env, ofstream &html, highway &hwy)
 	string line;
 	for (list<ListEntry>::iterator LE = env.TravList.begin(); LE != env.TravList.end(); LE++)
 	{	if (LE->Region == hwy.Region && hwy.NameMatch(LE->Name))
-		{	pi1 = hwy.GetIndByLabel(LE->pl1);
-			pi2 = hwy.GetIndByLabel(LE->pl2);
+		{	pi1 = hwy.label2index(LE->pl1);
+			pi2 = hwy.label2index(LE->pl2);
 			if (pi1 < hwy.pt.size() && pi2 < hwy.pt.size())
 			{	if (comma)
 					if (pi1 < pi2)	html << ", " << pi1 << ", " << pi2;
