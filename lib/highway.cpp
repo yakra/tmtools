@@ -80,8 +80,9 @@ class highway
 		return CSVline;
 	}
 
-	unsigned int GetIndByLabel(std::string lbl) // returning a value >= pt.size() == fail.
+	unsigned int label2index(std::string lbl) // returning a value >= pt.size() == fail.
 	{	unsigned int p = 0;
+		while (lbl[0] == '+' || lbl[0] == '*') lbl.erase(0, 1);
 		for (std::list<waypoint>::iterator point = pt.begin(); p < pt.size(); p++)
 		{	for (unsigned int l = 0; l < point->label.size(); l++)
 				if (caps(lbl) == caps(point->NakedLabel(l)))
@@ -95,8 +96,9 @@ class highway
 		return p;
 	}
 
-	std::list<waypoint>::iterator GetItByLabel(std::string lbl) // returning pt.end() == fail.
-	{	for (std::list<waypoint>::iterator point = pt.begin(); point != pt.end(); point++)
+	std::list<waypoint>::iterator label2iter(std::string lbl) // returning pt.end() == fail.
+	{	while (lbl[0] == '+' || lbl[0] == '*') lbl.erase(0, 1);
+		for (std::list<waypoint>::iterator point = pt.begin(); point != pt.end(); point++)
 		{	for (unsigned int l = 0; l < point->label.size(); l++)
 				if (caps(lbl) == caps(point->NakedLabel(l)))
 				{	if (l)	std::cout << Region << ' ' << Route+Banner+Abbrev << ' ' << lbl \
