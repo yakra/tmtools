@@ -10,7 +10,7 @@ With GCC, I use the commandline `g++ autoshape.cpp -std=c++11 -o autoshape`
 
 **Usage:**<br>
 `autoshape HwyDataDir IniFile (-n or --NoNMPs)`<br>
-* `HwyDataDir` is the directory containing the WPT file(s), organized by Region/System as the hwy/data directory in the HighwayData repo is.
+* `HwyDataDir` is the directory containing the WPT file(s), organized by Region/System as the hwy/data directory in the HighwayData repo is. The trailing slash (or backslash in Windows) is required.
 * `IniFile` is a text file containing a list of files and waypoints to process, descibed in more detail below.
 * `-n` or `--NoNMPs` switch is optional. This will only add the nearest shaping point outside a 0.000500° threshold from the target waypoints. If the target waypoints are already < 0.001000° apart in both latitude & langitude, then no shaping point will be added.
 * Nota bene: WPTs should already have their waypoint locations lined up to eliminate NMPs before starting the *autoshape* process.
