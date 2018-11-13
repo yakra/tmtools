@@ -45,18 +45,10 @@ waypoint::~waypoint()
 
 void waypoint::CoordCheck()
 {	// check for out-of-bounds coords
-	if (Lat > 90)
-	{	std::cout << "Warning: latitude > 90 in " << Root() << " @ " << label[0] << "\n";
+	if (abs(Lat) > 90)
+	{	std::cout << "Warning: out-of-bounds latitude in " << Root() << " @ " << label[0] << "\n";
 		std::cout << "         " << std::to_string(Lat) << " converted to ";
-		while (Lat > 360)	Lat -= 360;
-		if (Lat > 90)		Lat = 180-Lat;
-		if (Lat < -90)		Lat = -180-Lat;
-		std::cout << std::to_string(Lat) << '\n';
-	}
-	if (Lat < -90)
-	{	std::cout << "Warning: latitude < -90 in " << Root() << " @ " << label[0] << "\n";
-		std::cout << "         " << std::to_string(Lat) << " converted to ";
-		while (Lat < -360)	Lat += 360;
+		Lat = remainder(Lat, 360);
 		if (Lat < -90)		Lat = -180-Lat;
 		if (Lat > 90)		Lat = 180-Lat;
 		std::cout << std::to_string(Lat) << '\n';
@@ -64,13 +56,14 @@ void waypoint::CoordCheck()
 	if (Lon > 180)
 	{	std::cout << "Warning: longitude > 180 in " << Root() << " @ " << label[0] << "\n";
 		std::cout << "         " << std::to_string(Lon) << " converted to ";
-		while (Lon > 180)	Lon -= 360;
+		Lon = remainder(Lon, 360);
 		std::cout << std::to_string(Lon) << '\n';
 	}
 	if (Lon < -180)
 	{	std::cout << "Warning: longitude < -180 in " << Root() << " @ " << label[0] << "\n";
 		std::cout << "         " << std::to_string(Lon) << " converted to ";
-		while (Lon < -180)	Lon += 360;
+		while (Lon < -180)	// using while loop instead of remainder here
+			Lon += 360;	// to avoid -180 being "corrected" to 180
 		std::cout << std::to_string(Lon) << '\n';
 	}//*/
 }
@@ -87,7 +80,7 @@ void waypoint::InitCoords()
 	Lat = strtod(&URL[latBeg], 0);
 	Lon = strtod(&URL[lonBeg], 0);
 
-	CoordCheck();
+	//CoordCheck(); // commented out because Fiji. Possibly re-implement as an option in the future.
 
 	// "Worst First" for gisplunge coords, so everything after will be an improvement
 	OnLat = Lat * -1; OffLat = OnLat;
