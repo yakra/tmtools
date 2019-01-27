@@ -4,8 +4,8 @@
 Trims unused empty space from data fields in a DBF file.<br>
 This often results in substantial file size savings, which in turn can lead to faster rendering and seeking times in a GIS application.
 
-**Compiling:**
-* C++11 and thread support are required.<br>
+**Compiling:**<br>
+C++11 and thread support are required.<br>
 With GCC, I use the commandline `g++ DBFtrim.cpp -std=c++11 -pthread -o DBFtrim`
 
 **Usage:**<br>
