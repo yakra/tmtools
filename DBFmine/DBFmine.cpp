@@ -1,4 +1,5 @@
 #include <list>
+#include <unordered_set>
 #include "../lib/dbf.cpp"	// includes cstring, fstream, iostream
 using namespace std;
 
@@ -10,8 +11,7 @@ void mine(DBF& rDBF, const char *filename)
 {	cout << "Mining...\n";
 
 	char *KFieldVal;
-	list<char*> ValList(1, (char*)"\0");
-	list<char*>::iterator it;
+	unordered_set<string> values;
 
 	ofstream file(filename, ios::app);
 	ifstream fDBF(rDBF.name);
@@ -24,24 +24,14 @@ void mine(DBF& rDBF, const char *filename)
 		KFieldVal[rDBF.KeyLen] = 0;
 		fDBF.read(KFieldVal, rDBF.KeyLen);
 		fDBF.seekg(rDBF.RecLen-rDBF.KeyLen, ios::cur);
-		// scan thru asciibetical list
-		for (it = ValList.begin(); it != ValList.end(); it++)
-		{	if (strcmp(KFieldVal, *it) < 0)
-			{	ValList.insert(it, KFieldVal);
-				break;
-			}
-			if (strcmp(KFieldVal, *it) == 0)
-			{	delete KFieldVal;
-				break;
-			}
-		}
-		if (it == ValList.end()) ValList.insert(it, KFieldVal);
-
+		values.emplace(KFieldVal);
+		delete KFieldVal;
 		ProgBar(RecNum+1, rDBF.NumRec); //zeroth vs first
 	}
 	fDBF.close();
-	it = ValList.begin();
-	for (it++; it != ValList.end(); it++) file << *it << endl;
+	list<string> ValList(values.begin(), values.end());
+	ValList.sort();
+	for (string &entry : ValList) file << entry << endl;
 	cout << endl;
 }
 
@@ -59,7 +49,8 @@ int main(int argc, char *argv[])
 	filename += argv[2];
 	filename += ".txt";
 
-	ofstream file(filename.data()); // write commandline
+	// write commandline
+	ofstream file(filename.data());
 	  for (int i = 0; i < argc; i++) file << argv[i] << ' ';
 	  file << endl;
 	  file.close();
