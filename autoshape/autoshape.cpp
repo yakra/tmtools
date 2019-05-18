@@ -3,8 +3,8 @@
 #include "../lib/waypoint.cpp"	// includes cmath, cstring, fstream, iostream, list, string, vector
 using namespace std;
 
-long double merc(long double lat) { return log(tan(0.785398163+lat*3.1415926535898/360))*180/3.1415926535898; }
-long double amerc(long double y)	{ return (atan(pow(2.718281828459, y/180*3.1415926535898))-0.785398163)/3.1415926535898*360; }
+long double merc(long double lat) { return logl(tanl(0.785398163+lat*3.1415926535898/360))*180/3.1415926535898; }
+long double amerc(long double y)  { return (atanl(powl(2.718281828459, y/180*3.1415926535898))-0.785398163)/3.1415926535898*360; }
 
 void AddPoint(highway &hwy, list<waypoint>::iterator post, long double Lat, long double Lon)
 {	list<waypoint>::iterator NewPt = hwy.pt.emplace(post, &hwy, "+x4u70-"+to_string(rand()%1000000), Lat, Lon);
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 					if (hdiff == 0) AddPoint(hwy, post, amerc((merc(south)+merc(north))/2), pre->Lon);
 					long double m1 = (merc(post->Lat)-merc(pre->Lat))/(post->Lon-pre->Lon);
 					long double b1 = merc(pre->Lat)-m1*pre->Lon;
-					long double BestDist = hypot(hdiff, merc(north)-merc(south));
+					long double BestDist = hypotl(hdiff, merc(north)-merc(south));
 					long double BestLat, BestLon;
 					long double thresh = 0.000001;
 					if (argc >= 4) if (!strcmp(argv[3], "-n") || !strcmp(argv[3], "--NoNMPs")) thresh = 0.000500;
