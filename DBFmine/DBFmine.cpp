@@ -56,5 +56,6 @@ int main(int argc, char *argv[])
 	  file.close();
 
 	mine(rDBF, filename.data());
+	cout << filename << endl;
 	return 0;
 }
