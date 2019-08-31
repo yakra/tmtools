@@ -1,7 +1,7 @@
 # autoshape
 
 **Purpose:**<br>
-Adds shaping points after specified points in WPT files, in order to break false-positive concurrencies.<br>
+Adds hidden points after specified points in WPT files, in order to break false-positive concurrencies.<br>
 Coordinates are chosen to six demical places so that the lateral distance from the line directly connecting the points on either side, on a Mercator map, is minimized.
 
 **Compiling:**<br>
@@ -12,7 +12,7 @@ With GCC, I use the commandline `g++ autoshape.cpp -std=c++11 -o autoshape`
 `autoshape HwyDataDir IniFile (-n or --NoNMPs)`<br>
 * `HwyDataDir` is the directory containing the WPT file(s), organized by Region/System as the hwy/data directory in the HighwayData repo is. The trailing slash (or backslash in Windows) is required.
 * `IniFile` is a text file containing a list of files and waypoints to process, descibed in more detail below.
-* `-n` or `--NoNMPs` switch is optional. This will only add the nearest shaping point outside a 0.000500° threshold from the target waypoints. If the target waypoints are already < 0.001000° apart in both latitude & langitude, then no shaping point will be added.
+* `-n` or `--NoNMPs` switch is optional. This will only add the nearest hidden point outside a 0.000500° threshold from the target waypoints. If the target waypoints are already < 0.001000° apart in both latitude & langitude, then no hidden point will be added.
 * Nota bene: WPTs should already have their waypoint locations lined up to eliminate NMPs before starting the *autoshape* process.
 
 **INI file:**<br>
@@ -20,7 +20,7 @@ Each line describes a single highway file to process, and shall contain the foll
 * Region
 * System
 * Root
-* Waypoint(s) *after which* new shaping points are to be inserted
+* Waypoint(s) *after which* new hidden points are to be inserted
 * An example file is below:
 ```INI
 NS cannst ns.ns007 NS111(6A)
