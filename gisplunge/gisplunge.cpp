@@ -160,15 +160,15 @@ bool ShpTypeSup(unsigned int ShpType)
 	  case 15: return 1;
 	  case 23: return 1;
 	  case 25: return 1;
-	  case 0: cout << "Unsupported Shape type: 0 = Null shape\nSkipping this file.\n"; return 0;
-	  case 1: cout << "Unsupported Shape type: 1 = Point\nSkipping this file.\n"; return 0;
-	  case 8: cout << "Unsupported Shape type: 8 = MultiPoint\nSkipping this file.\n"; return 0;
-	  case 11: cout << "Unsupported Shape type: 11 = PointZ\nSkipping this file.\n"; return 0;
-	  case 18: cout << "Unsupported Shape type: 18 = MultiPointZ\nSkipping this file.\n"; return 0;
-	  case 21: cout << "Unsupported Shape type: 21 = PointM\nSkipping this file.\n"; return 0;
-	  case 28: cout << "Unsupported Shape type: 28 = MultiPointM\nSkipping this file.\n"; return 0;
-	  case 31: cout << "Unsupported Shape type: 31 = MultiPatch\nSkipping this file.\n"; return 0;
-	  default: cout << "Unsupported Shape type: " << ShpType << " = (unknown)\nSkipping this file.\n"; return 0;
+	  case 0: cout << "Unsupported Shape type: 0 = Null shape\nSkipping this record.\n"; return 0;
+	  case 1: cout << "Unsupported Shape type: 1 = Point\nSkipping this record.\n"; return 0;
+	  case 8: cout << "Unsupported Shape type: 8 = MultiPoint\nSkipping this record.\n"; return 0;
+	  case 11: cout << "Unsupported Shape type: 11 = PointZ\nSkipping this record.\n"; return 0;
+	  case 18: cout << "Unsupported Shape type: 18 = MultiPointZ\nSkipping this record.\n"; return 0;
+	  case 21: cout << "Unsupported Shape type: 21 = PointM\nSkipping this record.\n"; return 0;
+	  case 28: cout << "Unsupported Shape type: 28 = MultiPointM\nSkipping this record.\n"; return 0;
+	  case 31: cout << "Unsupported Shape type: 31 = MultiPatch\nSkipping this record.\n"; return 0;
+	  default: cout << "Unsupported Shape type: " << ShpType << " = (unknown)\nSkipping this record.\n"; return 0;
 	}
 }
 
@@ -203,12 +203,12 @@ int ProcRte(envV &env, DBF &dbf, highway &hwy)
 			SHP.seekg(offset);
 			if (rec != SHP.get()*0x1000000 + SHP.get()*0x10000 + SHP.get()*0x100 + SHP.get())
 			{	cout << "It's raining cheese! Record number mismatch." << endl;
-				cout << "Skipping this file." << endl;
-				return 2;
+				cout << "Skipping this record." << endl;
+				continue;
 			}
 			SHP.seekg(4, ios::cur);		 // skip over Content Length
 			unsigned int ShpType;		 SHP.read((char*)&ShpType, 4);
-			if (!ShpTypeSup(ShpType))	 return 2;
+			if (!ShpTypeSup(ShpType))	 continue;
 			SHP.seekg(32, ios::cur);	 // skip over bounding box
 			unsigned int NumParts;		 SHP.read((char*)&NumParts, 4);
 			unsigned int NumPts;		 SHP.read((char*)&NumPts, 4);
