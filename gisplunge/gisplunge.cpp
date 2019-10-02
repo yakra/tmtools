@@ -238,7 +238,7 @@ int ProcRte(envV &env, DBF &dbf, highway &hwy)
 					}
 					if (shpDist < ptI->OnDist)
 					   if (	firstPt || (NumPts == 1) ||
-						(ptI->label[0][0] == '+' && ptI->label[0][ptI->label.size()-1] != 'x' && ptI->label[0][ptI->label.size()-1] != 'X')
+						(ptI->label[0][0] == '+' && ptI->label[0][ptI->label[0].size()-1] != 'x' && ptI->label[0][ptI->label[0].size()-1] != 'X')
 					      )
 					   {	ptI->OnDist = shpDist;
 						ptI->OnLat = shpLat;
