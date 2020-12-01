@@ -1,0 +1,71 @@
+if [ $# -lt 2 ]; then
+  echo "USAGE: whouses.sh <root> <label> [<label>...]"
+  exit 0
+fi
+
+root=$1
+shift
+labels=$@
+
+# find region & route for root
+systems=$(grep -v '^#' HighwayData/systems.csv | egrep 'active$|preview$' | cut -f1 -d';' | sed 's~.*~HighwayData/hwy_data/_systems/&.csv~')
+csvline=$(grep -h "$root;" $systems)
+rg=$(echo $csvline | cut -f2 -d';')
+rte=$(echo $csvline | sed -r 's~.*;.*;(.*);(.*);(.*);.*;.*;.*~\1\2\3~')
+
+# a few more variables to simplify some of the shell commands:
+r=$(echo -en "\r")
+t=$(echo -en "\t")
+d="[ $t]+"
+
+cd UserData/list_files
+
+# build a list of travelers using any of the specified labels
+echo -e "\n\e[1;4mAll travelers with broken .lists:\e[0m"
+AllBroken=\
+$(for label in $labels; do
+    grep -v '^#' * \
+    | sed -r -e 's~#.*~~' -e "s~:[ $t]+~:~" -e "s~[ $t$r]+$~~" \
+    | egrep -i ":$rg$d$rte$d$label$d.*|:$rg$d$rte$d.*$d$label$|:$rg$d$rte$d$label$d.*$d.*$d.*|:.*$d.*$d.*$d$rg$d$rte$d$label$"
+  done | cut -f1 -d. | sort | uniq)
+echo $AllBroken
+
+# who updates using GitHub? Which files have commits by someone other than Jim?
+echo -e "\n\e[1;4mThose who update via GitHub (TM usernames):\e[0m"
+
+# compile list
+GitHubURLs=\
+$(for u in $AllBroken; do
+    echo -en "$u\t"
+    echo \
+    $(git log $u.list \
+      | grep -v Teresco \
+      | grep -B 1 -m 1 'Author:' \
+      | head -n 1 | cut -f2 -d' ')
+  done \
+  | egrep "$t[0-9a-f]{40}$" \
+  | sed -r "s~(.*)$t(.*)~https://github.com/TravelMapping/UserData/commits/\2/list_files/\1.list~")
+
+cd - > /dev/null
+
+
+# TM usernames
+GitHub=$(for URL in $GitHubURLs; do echo $URL | sed -r 's~.*/(.*).list~\1~'; done)
+echo $GitHub
+
+# GitHub usernames
+echo -e "\n\e[1;4mGitHub usernames:\e[0m"
+for URL in $GitHubURLs; do
+  list=$(echo $URL | cut -f9 -d/)
+echo -n @\
+$(curl -qsLJ $URL \
+  | grep -m 1 'data-hovercard-url="/users/' \
+  | sed -r 's~.*data-hovercard-url="/users/~~' \
+  | cut -f1 -d/)' '
+done
+echo
+
+# email
+echo -e "\n\e[1;4mThose left over who update by email:\e[0m"
+diff <(echo $AllBroken | tr ' ' '\n') <(echo $GitHub | tr ' ' '\n') | grep '<' | sed 's~< ~~' | tr '\n' ' '
+echo; echo
