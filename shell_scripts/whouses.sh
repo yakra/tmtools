@@ -30,6 +30,23 @@ $(for label in $labels; do
   done | cut -f1 -d. | sort | uniq)
 echo $AllBroken
 
+echo -en "\nOpen in Firefox? (y/n) "
+read go
+if [ $go == y ]; then
+  for u in $AllBroken; do
+   echo $u | sed 's~.*~https://travelmapping.net/hb/showroute.php?r=$root\&u=&~'
+  done | xargs firefox
+fi
+if [ $go == n ]; then
+  echo -en "Display URLs? (y/n) "
+  read go
+  if [ $go == y ]; then
+    for u in $AllBroken; do
+     echo $u | sed 's~.*~https://travelmapping.net/hb/showroute.php?r=$root\&u=&~'
+    done
+  fi
+fi
+
 # who updates using GitHub? Which files have commits by someone other than Jim?
 echo -e "\n\e[1;4mThose who update via GitHub (TM usernames):\e[0m"
 
