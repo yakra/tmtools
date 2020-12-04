@@ -34,7 +34,7 @@ echo -en "\nOpen in Firefox? (y/n) "
 read go
 if [ $go == y ]; then
   for u in $AllBroken; do
-   echo $u | sed 's~.*~https://travelmapping.net/hb/showroute.php?r=$root\&u=&~'
+   echo $u | sed "s~.*~https://travelmapping.net/hb/showroute.php?r=$root\&u=&~"
   done | xargs firefox
 fi
 if [ $go == n ]; then
@@ -42,7 +42,7 @@ if [ $go == n ]; then
   read go
   if [ $go == y ]; then
     for u in $AllBroken; do
-     echo $u | sed 's~.*~https://travelmapping.net/hb/showroute.php?r=$root\&u=&~'
+     echo $u | sed "s~.*~https://travelmapping.net/hb/showroute.php?r=$root\&u=&~"
     done
   fi
 fi
