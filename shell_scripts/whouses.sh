@@ -16,7 +16,7 @@ rte=$(echo $csvline | sed -r 's~.*;.*;(.*);(.*);(.*);.*;.*;.*~\1\2\3~')
 # a few more variables to simplify some of the shell commands:
 r=$(echo -en "\r")
 t=$(echo -en "\t")
-d="[ $t]+"
+d="[ $t]\+"
 
 cd UserData/list_files
 
@@ -26,7 +26,7 @@ AllBroken=\
 $(for label in $labels; do
     grep -v '^#' * \
     | sed -r -e 's~#.*~~' -e "s~:[ $t]+~:~" -e "s~[ $t$r]+$~~" \
-    | egrep -i ":$rg$d$rte$d$label$d.*|:$rg$d$rte$d.*$d$label$|:$rg$d$rte$d$label$d.*$d.*$d.*|:.*$d.*$d.*$d$rg$d$rte$d$label$"
+    | grep -i ":$rg$d$rte$d$label$d.*\|:$rg$d$rte$d.*$d$label$\|:$rg$d$rte$d$label$d.*$d.*$d.*\|:.*$d.*$d.*$d$rg$d$rte$d$label$"
   done | cut -f1 -d. | sort | uniq)
 echo $AllBroken
 
@@ -34,7 +34,7 @@ echo -en "\nOpen in Firefox? (y/n) "
 read go
 if [ $go == y ]; then
   for u in $AllBroken; do
-   echo $u | sed "s~.*~https://travelmapping.net/hb/showroute.php?r=$root\&u=&~"
+   echo https://travelmapping.net/hb/showroute.php?r=$root\&u=$u
   done | xargs firefox
 fi
 if [ $go == n ]; then
@@ -42,7 +42,7 @@ if [ $go == n ]; then
   read go
   if [ $go == y ]; then
     for u in $AllBroken; do
-     echo $u | sed "s~.*~https://travelmapping.net/hb/showroute.php?r=$root\&u=&~"
+     echo https://travelmapping.net/hb/showroute.php?r=$root\&u=$u
     done
   fi
 fi
