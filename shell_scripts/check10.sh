@@ -7,6 +7,7 @@ fi
 host=$HOSTNAME
 MinThreads=1
 MaxThreads=`nproc`
+mtvertices=''
 passes=10
 execs=''
 regex=''
@@ -14,6 +15,7 @@ Python=''
 abort=0
 nmpflag='on by default'
 graphflag='on by default'
+errorflag=''
 timeflag='-T 2'
 
 # process commandline args
@@ -21,6 +23,7 @@ while  [ $# -gt 0 ]; do
   case $1 in
     --noisy) noisy=$2; shift;;
     -d) tmdir=$2;      shift;;
+    -e) errorflag='-e';;
     -h) host=$2;       shift;;
     -k) graphflag='-k';;
     -n) nmpflag='';;
@@ -29,6 +32,7 @@ while  [ $# -gt 0 ]; do
     -r) regex=$2;      shift;;
     -t) MinThreads=$2; shift;;
     -T) MaxThreads=$2; shift;;
+    -v) mtvertices='-v';;
     *)  execs="$execs $1";;
   esac
   shift
@@ -111,7 +115,7 @@ for e in $execs; do
       rm -rf ./$e/graphs/;		mkdir -p ./$e/graphs/
 
       # run siteupdate
-      $Python ./$exec $timeflag -t $thr $nmpflag $graphflag \
+      $Python ./$exec $timeflag -t $thr $nmpflag $graphflag $errorflag $mtvertices \
         -l ./$e/logs \
         -c ./$e/stats \
         -d ./$e/TravelMapping \
