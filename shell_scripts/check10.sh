@@ -8,13 +8,14 @@ host=$HOSTNAME
 MinThreads=1
 MaxThreads=`nproc`
 mtvertices=''
+mtcsvfiles=''
 passes=10
 execs=''
 regex=''
 Python=''
 abort=0
 nmpflag='on by default'
-graphflag='on by default'
+graphflag=''
 errorflag=''
 timeflag='-T 2'
 
@@ -22,6 +23,7 @@ timeflag='-T 2'
 while  [ $# -gt 0 ]; do
   case $1 in
     --noisy) noisy=$2; shift;;
+    --null) outdir='/dev/null';;
     -d) tmdir=$2;      shift;;
     -e) errorflag='-e';;
     -h) host=$2;       shift;;
@@ -33,6 +35,7 @@ while  [ $# -gt 0 ]; do
     -t) MinThreads=$2; shift;;
     -T) MaxThreads=$2; shift;;
     -v) mtvertices='-v';;
+    -C) mtcsvfiles='-C';;
     *)  execs="$execs $1";;
   esac
   shift
@@ -98,8 +101,8 @@ for e in $execs; do
     sum=0
     exec=siteupdate$e
     if [ "$Python" != '' ]; then exec="$exec.py"; fi
-    if [ "$nmpflag" != '' ];   then nmpflag="-n ./$e/nmp_merged"; fi
-    if [ "$graphflag" != '-k' ]; then graphflag="-g ./$e/graphs"; fi
+    if [ "$nmpflag" != '' ]; then nmpflag="-n ./$e/nmp_merged"; fi
+    if [ "$outdir" != '/dev/null' ]; then outdir=./$e; fi
 
     # timetable header
     echo "$host: siteupdate$e, $thr thread(s)"
@@ -115,10 +118,11 @@ for e in $execs; do
       rm -rf ./$e/graphs/;		mkdir -p ./$e/graphs/
 
       # run siteupdate
-      $Python ./$exec $timeflag -t $thr $nmpflag $graphflag $errorflag $mtvertices \
-        -l ./$e/logs \
-        -c ./$e/stats \
-        -d ./$e/TravelMapping \
+      $Python ./$exec $timeflag -t $thr $nmpflag $graphflag $errorflag $mtvertices $mtcsvfiles \
+        -l $outdir/logs \
+        -c $outdir/stats \
+        -d $outdir/TravelMapping \
+        -g $outdir/graphs \
         -u $tmdir/UserData/list_files \
         -w $tmdir/HighwayData > sulogs/siteupdate$e-$host-"$thr"t"$pass"p.log
 
