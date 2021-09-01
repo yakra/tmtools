@@ -6,7 +6,10 @@ else                                    tmdir=../../..
 fi
 host=$HOSTNAME
 MinThreads=1
-MaxThreads=`nproc`
+case `uname` in
+  Linux) MaxThreads=`nproc`;;
+  FreeBSD) MaxThreads=`sysctl hw.ncpu | cut -f2 -d' '`;;
+esac
 mtvertices=''
 mtcsvfiles=''
 passes=10
@@ -127,8 +130,9 @@ for e in $execs; do
         -w $tmdir/HighwayData > sulogs/siteupdate$e-$host-"$thr"t"$pass"p.log
 
       # timetable row
-      runtime=$(tac sulogs/siteupdate$e-$host-"$thr"t"$pass"p.log \
-        | egrep -m 1 '\[([0-9]+\.[0-9]+)\]' \
+      runtime=$(cat sulogs/siteupdate$e-$host-"$thr"t"$pass"p.log \
+        | egrep '\[([0-9]+\.[0-9]+)\]' \
+        | tail -n 1 \
         | sed -r 's~.*\[([0-9]+\.[0-9]+)\].*~\1~')
       if [ "$regex" != '' ]; then
         times=$(cat sulogs/siteupdate$e-$host-"$thr"t"$pass"p.log \
@@ -143,7 +147,10 @@ for e in $execs; do
       fi
       elapsed=$(echo $(date +%s) - $start | bc)
       echo -en $runtime'\teta='
-      date --date='@'$(echo "$(date +%s) + $elapsed * ($TotalPasses - $tpass) / $tpass" | bc)
+      case `uname` in
+        Linux)  date --date='@'$(echo "$(date +%s) + $elapsed * ($TotalPasses - $tpass) / $tpass" | bc);;
+        FreeBSD) date -j -f %s $(echo "$(date +%s) + $elapsed * ($TotalPasses - $tpass) / $tpass" | bc);;
+      esac
 
       pass=$(expr $pass + 1)
       tpass=$(expr $tpass + 1)
