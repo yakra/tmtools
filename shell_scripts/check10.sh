@@ -104,21 +104,23 @@ for e in $execs; do
     sum=0
     exec=siteupdate$e
     if [ "$Python" != '' ]; then exec="$exec.py"; fi
-    if [ "$nmpflag" != '' ]; then nmpflag="-n ./$e/nmp_merged"; fi
     if [ "$outdir" != '/dev/null' ]; then outdir=./$e; fi
+    if [ "$nmpflag" != '' ]; then nmpflag="-n $outdir/nmp_merged"; fi
 
     # timetable header
     echo "$host: siteupdate$e, $thr thread(s)"
 
     # individual passes
     while [[ $pass -le $passes ]]; do
-      # delete data from previous pass
-      rm -f sulogs/siteupdate$e-$host-"$thr"t"$pass"p.log
-      rm -f ./$e/TravelMapping.sql
-      rm -rf ./$e/logs/;		mkdir -p ./$e/logs/users/
-      rm -rf ./$e/nmp_merged/;		mkdir -p ./$e/nmp_merged/
-      rm -rf ./$e/stats/;		mkdir -p ./$e/stats/
-      rm -rf ./$e/graphs/;		mkdir -p ./$e/graphs/
+      if [ "$outdir" != '/dev/null' ]; then
+        # delete data from previous pass
+        rm -f sulogs/siteupdate$e-$host-"$thr"t"$pass"p.log
+        rm -f ./$e/TravelMapping.sql
+        rm -rf ./$e/logs/;		mkdir -p ./$e/logs/users/
+        rm -rf ./$e/nmp_merged/;	mkdir -p ./$e/nmp_merged/
+        rm -rf ./$e/stats/;		mkdir -p ./$e/stats/
+        rm -rf ./$e/graphs/;		mkdir -p ./$e/graphs/
+      fi
 
       # run siteupdate
       $Python ./$exec $timeflag -t $thr $nmpflag $graphflag $errorflag $mtvertices $mtcsvfiles \
