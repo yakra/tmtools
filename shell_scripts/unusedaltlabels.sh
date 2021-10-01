@@ -1,7 +1,13 @@
-RG=`pwd | sed s~.*/~~`
-rg=`echo $RG | tr -d '-' | tr [A-Z] [a-z]`
+if [ "$1" = "" ]; then
+  op=curl
+  ualfile="https://travelmapping.net/logs/unusedaltlabels.log"
+else
+  op=cat
+  ualfile="$1"
+fi
 
-for ualentry in `curl https://travelmapping.net/logs/unusedaltlabels.log | grep "^$rg\." | tr ' ' '%'`; do
+rg=`pwd | sed s~.*/~~ | tr -d '-' | tr [A-Z] [a-z]`
+for ualentry in `$op "$ualfile" | grep "^$rg\." | tr ' ' '%'`; do
   file=*/`echo "$ualentry" | cut -f1 -d'('`.wpt
   uals=`echo "$ualentry" | cut -f2 -d: | tr % '\n'`
   echo $file
