@@ -39,6 +39,7 @@ while  [ $# -gt 0 ]; do
     -T) MaxThreads=$2; shift;;
     -v) mtvertices='-v';;
     -C) mtcsvfiles='-C';;
+    -y) tmdir=$HOME/ytm;;
     *)  execs="$execs $1";;
   esac
   shift
