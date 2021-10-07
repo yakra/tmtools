@@ -6,7 +6,7 @@ if [[ $# < 2 ]]; then
 fi
 v1=$1
 v2=$2
-
+e=`echo -en '\e'`
 
 # do stats
   echo -e "comparing stats\e[31m"
@@ -24,11 +24,10 @@ v2=$2
         logdiffs=$(expr $logdiffs  + 1)
         echo -e "\e[31m$file:"
         diff <(tail -n +2 $v1/logs/users/$file) <(tail -n +2 $v2/logs/users/$file) \
-        | sed -e 's~^\([0-9]\+,\?[0-9]*[acd][0-9]\+,\?[0-9]*\)$~\\e[33m\1\\e[0m~' \
-              -e 's~^\(<.*\)~\\e[35m\1\\e[0m~' \
-              -e 's~^\(>.*\)~\\\e[34m\1\\e[0m~' \
-              -e 's~^---$~\\e[37m---\\e[0m~' \
-        | xargs -0 echo -e
+	| sed -r -e "s~^[0-9]+,?[0-9]*[acd][0-9]+,?[0-9]*$~$e[4m$e[33m&$e[0m~" \
+		 -e "s~^<.*~$e[31m&$e[0m~" \
+		 -e "s~^>.*~$e[32m&$e[0m~" \
+		 -e "s~^---$~$e[37m---$e[0m~"
         echo -e "__________________________________________________________________________________________________\e[0m\n"
       fi
     done
