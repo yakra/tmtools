@@ -21,6 +21,7 @@ nmpflag='on by default'
 graphflag=''
 errorflag=''
 timeflag='-T 2'
+quiet=0
 
 # process commandline args
 while  [ $# -gt 0 ]; do
@@ -31,12 +32,16 @@ while  [ $# -gt 0 ]; do
     -e) errorflag='-e';;
     -h) host=$2;       shift;;
     -k) graphflag='-k';;
+    -m) MinThreads=$MaxThreads;;
     -n) nmpflag='';;
     -p) passes=$2;     shift;;
     -P) Python=$2;     shift; timeflag='';;
+    -q) quiet=1;;
     -r) regex=$2;      shift;;
     -t) MinThreads=$2; shift;;
     -T) MaxThreads=$2; shift;;
+    -tt)MinThreads=$2; MaxThreads=$2; shift;;
+    -tp)timeflag="-T $2"; shift;;
     -v) mtvertices='-v';;
     -C) mtcsvfiles='-C';;
     -y) tmdir=$HOME/ytm;;
@@ -143,6 +148,7 @@ for e in $execs; do
           | sed -r 's~.*\[([0-9]+\.[0-9]+).*~\1~')
         beg=$(echo $times | cut -f1 -d' ')
         end=$(echo $times | cut -f2 -d' ')
+        if [ $quiet = 1 ]; then echo -en "$pass\t"; fi
         echo -en "$beg\t$end\t" $(echo $end - $beg | bc)'\t'
         sum=$(echo $sum-$beg+$end | bc)
       else
@@ -151,9 +157,10 @@ for e in $execs; do
       elapsed=$(echo $(date +%s) - $start | bc)
       echo -en $runtime'\teta='
       case `uname` in
-        Linux)  date --date='@'$(echo "$(date +%s) + $elapsed * ($TotalPasses - $tpass) / $tpass" | bc);;
-        FreeBSD) date -j -f %s $(echo "$(date +%s) + $elapsed * ($TotalPasses - $tpass) / $tpass" | bc);;
+        Linux)  echo -n $(date --date='@'$(echo "$(date +%s) + $elapsed * ($TotalPasses - $tpass) / $tpass" | bc));;
+        FreeBSD) echo -n $(date -j -f %s $(echo "$(date +%s) + $elapsed * ($TotalPasses - $tpass) / $tpass" | bc));;
       esac
+      if [ $quiet = 1 ]; then echo -en "        \r"; else echo '        '; fi
 
       pass=$(expr $pass + 1)
       tpass=$(expr $tpass + 1)
