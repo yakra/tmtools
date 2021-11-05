@@ -38,7 +38,7 @@ while [[ $t -le $T ]]; do
     pas=`ls $d/siteupdate$exec-$b-*.log | egrep "$d/siteupdate$exec-$b-"$t"t([0-9]+)p.log" | wc -l`
     TaskTotal=0
     # loop thru passes & get average
-    p=1; while [[ $p -le pas ]]; do
+    p=1; while [[ $p -le $pas ]]; do
       file=$d/siteupdate$exec-$b-"$t"t"$p"p.log
       begend=`cat $file | egrep '\[[0-9]+\.[0-9]+\]' | egrep "$regex" | sed -r 's~.*\[([0-9]+\.[0-9]+)\].*~\1~'`
       task=$(echo "scale=4; $(echo $begend | cut -f2 -d' ') - $(echo $begend | cut -f1 -d' ')" | bc)
