@@ -87,8 +87,8 @@ case $regex in
   ReadList)   regex='Processing traveler|traveler list files\.';;
   ConcAug)    regex='Augmenting|concurrencies.log|Computing stats';;
   CompStatsO) regex='Computing stats|Writing highway';;				# old
-  CompStatsB) regex='Computing stats per route|Writing highway';;		# new both
-  CompStatsR) regex='Computing stats per route|Computing stats per traveler';;	# new 1st
+  CompStatsB) regex='per.route|Writing highway';;				# new both
+  CompStatsR) regex='per.route|Computing stats per traveler';;			# new 1st
   CompStatsT) regex='Computing stats per traveler|Writing highway';;		# new 2nd
   UserLog)    regex='per-traveler|Writing stats';;
   Subgraph)   regex='continent graphs|Marking';;
