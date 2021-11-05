@@ -178,4 +178,15 @@ for e in $execs; do
     if [ "$noisy" != '' ]; then ssh $noisy cvlc $host.flac vlc://quit 2> /dev/null; fi
     thr=$(expr $thr + 1)
   done #while thr
+
+  if [ "$outdir" != '/dev/null' ]; then
+    # delete data from last pass
+    rm -f sulogs/siteupdate$e-$host-"$thr"t"$pass"p.log
+    rm -f ./$e/TravelMapping.sql
+    rm -rf ./$e/logs/;		mkdir -p ./$e/logs/users/
+    rm -rf ./$e/nmp_merged/;	mkdir -p ./$e/nmp_merged/
+    rm -rf ./$e/stats/;		mkdir -p ./$e/stats/
+    rm -rf ./$e/graphs/;	mkdir -p ./$e/graphs/
+  fi
+
 done #for e
