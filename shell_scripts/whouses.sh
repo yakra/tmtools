@@ -56,7 +56,7 @@ $(for u in $AllBroken; do
     echo -en "$u\t"
     echo \
     $(git log $u.list \
-      | grep -v Teresco \
+      | grep -iv Teresco \
       | grep -B 1 -m 1 'Author:' \
       | head -n 1 | cut -f2 -d' ')
   done \
