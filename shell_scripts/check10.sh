@@ -15,6 +15,7 @@ mtcsvfiles=''
 passes=10
 execs=''
 regex=''
+users=''
 Python=''
 abort=0
 nmpflag='on by default'
@@ -42,6 +43,7 @@ while  [ $# -gt 0 ]; do
     -T) MaxThreads=$2; shift;;
     -tt)MinThreads=$2; MaxThreads=$2; shift;;
     -tp)timeflag="-T $2"; shift;;
+    -U) users="-U $2";    shift;;
     -v) mtvertices='-v';;
     -C) mtcsvfiles='-C';;
     -y) tmdir=$HOME/ytm;;
@@ -129,7 +131,7 @@ for e in $execs; do
       fi
 
       # run siteupdate
-      $Python ./$exec $timeflag -t $thr $nmpflag $graphflag $errorflag $mtvertices $mtcsvfiles \
+      $Python ./$exec $timeflag -t $thr $nmpflag $graphflag $errorflag $mtvertices $mtcsvfiles $users \
         -l $outdir/logs \
         -c $outdir/stats \
         -d $outdir/TravelMapping \
