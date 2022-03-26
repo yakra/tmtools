@@ -93,7 +93,7 @@ case $regex in
   CompStatsR) regex='per.route|Computing stats per traveler';;			# new 1st
   CompStatsT) regex='Computing stats per traveler|Writing highway';;		# new 2nd
   UserLog)    regex='per-traveler|Writing stats';;
-  Subgraph)   regex='continent graphs|Marking';;
+  Subgraph)   regex='continent graphs|Clearing HighwayGraph';;
 esac
 # old regexes from before commandlines & presets
   #regex='Reading systems list|Checking for duplicate'
