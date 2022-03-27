@@ -24,7 +24,7 @@ execs=$@
 pipe=`echo "$regex" | grep -c '|'`
 
 # header lines
-echo "$execs" | tr ' ' '\t' | tr -d '_'
+echo -e "$execs\t" | tr ' ' '\t' | tr -d '_'
 for e in $execs; do
   echo -en "-------\t"
 done
