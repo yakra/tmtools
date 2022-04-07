@@ -161,7 +161,12 @@ int main(int argc, char *argv[])
 			compare(db1, db2);
 		     }	else
 		if (tablename == "clinchedSystemMileageByRegion"	// 45013
-		 || tablename == "clinchedOverallMileageByRegion"	// 11459
+		   ) {	xcommas(db1, db2);
+			round  (db1, db2, 9);
+			sort   (db1, db2);
+			compare(db1, db2);
+		     }	else
+		if (tablename == "clinchedOverallMileageByRegion"	// 11459
 		   ) {	xcommas(db1, db2);
 			round  (db1, db2, 10);
 			sort   (db1, db2);
