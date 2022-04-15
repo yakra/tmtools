@@ -9,13 +9,13 @@ struct DB
 	std::list<std::string> lines;
 	std::string line;
 	int beg;
+	int erasures;
 
-	DB(const char* path): beg(1)
-	{	file.open(path);
-	}
+	DB(const char* path): beg(1), erasures(0), file(path) {}
 
 	void read_table()
-	{	beg += lines.size();
+	{	beg += lines.size() + erasures;
+		erasures = 0;
 		lines.clear();
 		if (line.size()) lines.emplace_back(std::move(line));
 		while (getline(file, line) && strncmp(line.data(), "CREATE TABLE", 12))
@@ -68,7 +68,9 @@ struct DB
 	{	std::string insert("INSERT INTO "+table_name()+" VALUES");
 		for (auto it = lines.begin(); it != lines.end();)
 		  if (*it == ";" || *it == insert)
+		  {	++erasures;
 			it = lines.erase(it);
+		  }
 		  else	it++;
 	}
 };
