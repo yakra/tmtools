@@ -45,7 +45,7 @@ for t in `seq $t $T`; do
       if [ $pipe -gt 0 ]; then
         begend=`cat $file | egrep '\[[0-9]+\.[0-9]+\]' | egrep "$regex" | sed -r 's~.*\[([0-9]+\.[0-9]+)\].*~\1~'`
         task=$(echo "scale=4; $(echo $begend | cut -f2 -d' ') - $(echo $begend | cut -f1 -d' ')" | bc)
-      else task=$(echo 0-$(egrep '\[[0-9]+\.[0-9]+\]' $file | egrep -A 1 "$regex" | sed -r 's~.*\[([0-9]+\.[0-9]+)\].*~\1~' | tr '\n' +)0 | bc)
+      else task=$(echo 0-$(egrep '\[[0-9]+\.[0-9]+\]' $file | egrep -A 1 -m 1 "$regex" | sed -r 's~.*\[([0-9]+\.[0-9]+)\].*~\1~' | tr '\n' +)0 | bc)
       fi
       TaskTotal=$(echo $TaskTotal + $task | bc)
     done
