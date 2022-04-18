@@ -14,6 +14,7 @@ case $1 in
   CompStatsR) regex='per.route';;			# new 1st
   CompStatsT) regex='Computing stats per traveler';;	# new 2nd
   UserLog)    regex='per-traveler';;
+  StatsCsv)   regex='stats csv|Reading datacheckfps.csv';;
   HGVertex)   regex='unique';;
   Subgraph)   regex='continent graphs|Clearing HighwayGraph contents from memory';;
   Total)      regex='Reading region, country, and continent descriptions|Total';;
@@ -31,8 +32,8 @@ done
 echo
 
 # loop thru threads
-T=$(expr $(ls $d/*$b-*.log | sed "s~$d/~~" | cut -f3 -d- | sed -e 's~t.*~~' -e 's~^.$~0&~' | sort | uniq | tail -n 1) + 0)
-t=$(expr $(ls $d/*$b-*.log | sed "s~$d/~~" | cut -f3 -d- | sed -e 's~t.*~~' -e 's~^.$~0&~' | sort | uniq | head -n 1) + 0)
+T=$(expr $(echo $d/*$b-*.log | tr ' ' '\n' | sed "s~$d/~~" | cut -f3 -d- | sed -e 's~t.*~~' -e 's~^.$~0&~' | sort | uniq | tail -n 1) + 0)
+t=$(expr $(echo $d/*$b-*.log | tr ' ' '\n' | sed "s~$d/~~" | cut -f3 -d- | sed -e 's~t.*~~' -e 's~^.$~0&~' | sort | uniq | head -n 1) + 0)
 for t in `seq $t $T`; do
   # loop thru execs
   for exec in $execs; do
