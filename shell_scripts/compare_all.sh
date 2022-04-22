@@ -9,7 +9,8 @@ v2=$2
 e=`echo -en '\e'`
 
 detect () {
-  if [ `grep -c -m 1 'Searching for near-miss' $1/logs/siteupdate.log` = 1 ]
+  if [ `echo "$(grep -m 1 -n 'Processing traveler list files' $1/logs/siteupdate.log | cut -f1 -d:) \
+            > $(grep -m 1 -n  'Concurrent segment detection'  $1/logs/siteupdate.log | cut -f1 -d:)" | bc` = 1 ]
   then if [ `grep -c -m 1 'concurrencies\.log' $1/logs/siteupdate.log` = 1 ]
        then echo -en "\e[32mC++ (MT)\e[0m"
        else echo -en "\e[32mC++ (ST)\e[0m"
