@@ -17,6 +17,7 @@ rte=$(echo $csvline | sed -r 's~.*;.*;(.*);(.*);(.*);.*;.*;.*~\1\2\3~')
 r=$(echo -en "\r")
 t=$(echo -en "\t")
 d="[ $t]\+"
+x="[^ $t]\+"
 
 cd UserData/list_files
 
@@ -25,8 +26,8 @@ echo -e "\n\e[1;4mAll travelers with broken .lists:\e[0m"
 AllBroken=\
 $(for label in $labels; do
     grep -v '^#' * \
-    | sed -r -e 's~#.*~~' -e "s~:[ $t]+~:~" -e "s~[ $t$r]+$~~" \
-    | grep -i ":$rg$d$rte$d$label$d.*\|:$rg$d$rte$d.*$d$label$\|:$rg$d$rte$d$label$d.*$d.*$d.*\|:.*$d.*$d.*$d$rg$d$rte$d$label$"
+    | sed -r -e "s~[ $t]+#.*~~" -e "s~:[ $t]+~:~" -e "s~[ $t$r]+$~~" \
+    | grep -i ":$rg$d$rte$d$label$d$x$\|:$rg$d$rte$d$x$d$label$\|:$rg$d$rte$d$label$d$x$d$x$d$x$\|:$x$d$x$d$x$d$rg$d$rte$d$label$"
   done | cut -f1 -d. | sort | uniq)
 echo $AllBroken
 
