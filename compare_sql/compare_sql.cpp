@@ -147,6 +147,7 @@ int main(int argc, char *argv[])
 		 || tablename == "countries"				// 211
 		 || tablename == "DROP TABLE IF EXISTS"			// 19
 		 || tablename == "continents"				// 10
+		 || tablename == "graphArchiveSets"
 		   ) {	compare(db1, db2);
 		     }	else
 		if (tablename == "clinchedRoutes"			// 425822
@@ -180,6 +181,7 @@ int main(int argc, char *argv[])
 			compare(db1, db2);
 		     }	else
 		if (tablename == "graphs"				// 1227
+		 || tablename == "graphArchives"
 		 || tablename == "graphTypes"				// 11
 		   ) {	sort   (db1, db2);	// Python & C++
 			compare(db1, db2);	// in diff order
