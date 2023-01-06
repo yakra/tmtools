@@ -86,6 +86,7 @@ case $regex in
   NmpSearch)  regex='Searching|Near-miss|merged';;
   NmpMerged)  regex='merged|Concurrent';;
   LabelCon)   regex='unconnected|Reading updates file';;
+  RteInt)     regex='integrity|Reading updates file';;
   ReadList)   regex='Processing traveler|traveler list files\.';;
   ConcAug)    regex='Augmenting|concurrencies.log|Computing stats';;
   CompStatsO) regex='Computing stats|Writing highway';;				# old
@@ -93,6 +94,9 @@ case $regex in
   CompStatsR) regex='per.route|Computing stats per traveler';;			# new 1st
   CompStatsT) regex='Computing stats per traveler|Writing highway';;		# new 2nd
   UserLog)    regex='per-traveler|Writing stats';;
+  StatsCsv)   regex='stats csv|Reading datacheckfps.csv';;
+  HGVertex)   regex='unique|Creating edges';;
+  Graphs)     regex='master TM|Clearing HighwayGraph contents from memory';;
   Subgraph)   regex='continent graphs|Clearing HighwayGraph';;
 esac
 # old regexes from before commandlines & presets
