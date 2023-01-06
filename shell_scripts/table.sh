@@ -16,6 +16,7 @@ case $1 in
   UserLog)    regex='per-traveler';;
   StatsCsv)   regex='stats csv|Reading datacheckfps.csv';;
   HGVertex)   regex='unique';;
+  Graphs)     regex='master TM|Clearing HighwayGraph contents from memory';;
   Subgraph)   regex='continent graphs|Clearing HighwayGraph contents from memory';;
   Total)      regex='Reading region, country, and continent descriptions|Total';;
   *)          regex=$1;;
