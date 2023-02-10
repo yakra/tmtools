@@ -22,13 +22,13 @@ for ualentry in `$op "$ualfile" | grep "^$rg\." | tr ' ' '%'`; do
   for line in `cat $file | tr ' ' '%'`; do
     line_num=`expr $line_num + 1`
     label=`echo "$line" | sed 's~%.*~~'`
-    url=`echo "$line" | sed 's~.*%~~'`
+    url=`echo "$line" | sed -r 's~.*(%+[^%]+%*$)~\1~'`
     echo -n "$label" >> unusedaltlabels.tmp
-    for alt in `echo "$line" | sed -e "s~^$label~~" -e "s~$url$~~" | tr '%' ' '`; do
-      trim=`echo $alt | tr -d +`
-      if [ `echo "$uals" | grep -i "^+*$trim$" | wc -l` == 0 ]; then echo -n " $alt" >> unusedaltlabels.tmp; fi
+    for alt in `echo "$line" | sed -e "s~^$label~~" -e "s~$url$~~" | sed -r 's~(%+)~ \1~g'`; do
+      trim=`echo $alt | tr -d +%`
+      if [ `echo "$uals" | grep -i "^+*$trim$" | wc -l` == 0 ]; then echo -n "$alt" | tr '%' ' ' >> unusedaltlabels.tmp; fi
     done
-    echo -n " $url" >> unusedaltlabels.tmp
+    echo -n "$url" | tr '%' ' ' >> unusedaltlabels.tmp
     if [ $line_num != $num_lines ] || [ $term_crlf == 1 ]; then echo >> unusedaltlabels.tmp; fi
   done
   while [ $line_num -lt $num_lines ]; do
