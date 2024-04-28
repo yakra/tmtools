@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+# process commandline args
+while  [ $# -gt 2 ]; do
+  case $1 in
+    -g) canonicaltmg=1;;
+  esac
+  shift
+done
+
 if [[ $# < 2 ]]; then
   echo "Please specify two versions to be compared."
   exit
@@ -54,7 +62,7 @@ echo '<<' `detect $v1` '<< >>' `detect $v2` '>>'
   echo -en "\e[0m"
   # main logs with creation timestamp
   echo "comparing main logs with creation timestamp"
-  for file in datacheck.log highwaydatastats.log listnamesinuse.log nearmatchfps.log pointsinuse.log unmatchedfps.log unusedaltlabels.log unusedaltroutenames.log; do
+  for file in datacheck.log routedatastats.log listnamesinuse.log nearmatchfps.log pointsinuse.log unmatchedfps.log unusedaltlabels.log unusedaltroutenames.log; do
     echo -en "\e[2m$file\e[0m\t"
     result=`diff -q <(tail -n +2 $v1/logs/$file) <(tail -n +2 $v2/logs/$file)`
     if [[ $result = '' ]]; then
@@ -71,17 +79,23 @@ echo '<<' `detect $v1` '<< >>' `detect $v2` '>>'
 
 
 # do graphs
-  # create
-  rm -rf $v1/graphs.can; mkdir -p $v1/graphs.can
-  rm -rf $v2/graphs.can; mkdir -p $v2/graphs.can
-  echo "creating canonical $v1 graphs"
-  ../../canonicaltmg/canonicaltmg "$v1/graphs" "$v1/graphs.can" || exit 1
-  echo "creating canonical $v2 graphs"
-  ../../canonicaltmg/canonicaltmg "$v2/graphs" "$v2/graphs.can" || exit 1
-  # diff
-  echo -e "comparing graphs                                 \e[31m"
-  diff -q -r $v1/graphs.can/ $v2/graphs.can/
-  echo -en "\e[0m"
+  if [ "$canonicaltmg" = 1 ]; then
+    # create
+    rm -rf $v1/graphs.can; mkdir -p $v1/graphs.can
+    rm -rf $v2/graphs.can; mkdir -p $v2/graphs.can
+    echo "creating canonical $v1 graphs"
+    ../../canonicaltmg/canonicaltmg "$v1/graphs" "$v1/graphs.can" || exit 1
+    echo "creating canonical $v2 graphs"
+    ../../canonicaltmg/canonicaltmg "$v2/graphs" "$v2/graphs.can" || exit 1
+    # diff
+    echo -e "comparing graphs                                 \e[31m"
+    diff -q -r $v1/graphs.can/ $v2/graphs.can/
+    echo -en "\e[0m"
+  else
+    echo -e "comparing graphs                                 \e[31m"
+    diff -q -r $v1/graphs/ $v2/graphs/
+    echo -en "\e[0m"
+  fi
 
 
 # do nmp_merged
