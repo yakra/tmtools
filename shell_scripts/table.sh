@@ -14,7 +14,7 @@ case $1 in
   CompStatsR) regex='per.route';;			# new 1st
   CompStatsT) regex='Computing stats per traveler';;	# new 2nd
   UserLog)    regex='per-traveler';;
-  StatsCsv)   regex='stats csv|Reading datacheckfps.csv';;
+  StatsCsv)   regex='Writing stats csv files|Reading datacheckfps.csv';;
   HGVertex)   regex='unique';;
   Graphs)     regex='master TM|Clearing HighwayGraph contents from memory';;
   Subgraph)   regex='continent graphs|Clearing HighwayGraph contents from memory';;
