@@ -144,6 +144,7 @@ int main(int argc, char *argv[])
 		 || tablename == "connectedRouteRoots"			// 3103
 		 || tablename == "systemUpdates"			// 716
 		 || tablename == "systems"				// 494
+		 || tablename == "listEntries"				// 450
 		 || tablename == "countries"				// 211
 		 || tablename == "DROP TABLE IF EXISTS"			// 19
 		 || tablename == "continents"				// 10
