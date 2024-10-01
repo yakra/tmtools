@@ -23,12 +23,14 @@ graphflag=''
 errorflag=''
 timeflag='-T 2'
 quiet=0
+outdir='.'
 
 # process commandline args
 while  [ $# -gt 0 ]; do
   case $1 in
     --noisy) noisy=$2; shift;;
     --null) outdir='/dev/null';;
+    --ram)  outdir='tmrd';;
     -d) tmdir=$2;      shift;;
     -e) errorflag='-e';;
     -h) host=$2;       shift;;
@@ -116,8 +118,7 @@ for e in $execs; do
     sum=0
     exec=siteupdate$e
     if [ "$Python" != '' ]; then exec="$exec.py"; fi
-    if [ "$outdir" != '/dev/null' ]; then outdir=./$e; fi
-    if [ "$nmpflag" != '' ]; then nmpflag="-n $outdir/nmp_merged"; fi
+    if [ "$nmpflag" != '' ]; then nmpflag="-n $outdir/$e/nmp_merged"; fi
 
     # timetable header
     echo "$host: siteupdate$e, $thr thread(s)"
@@ -127,19 +128,19 @@ for e in $execs; do
       if [ "$outdir" != '/dev/null' ]; then
         # delete data from previous pass
         rm -f sulogs/siteupdate$e-$host-"$thr"t"$pass"p.log
-        rm -f ./$e/TravelMapping.sql
-        rm -rf ./$e/logs/;		mkdir -p ./$e/logs/users/
-        rm -rf ./$e/nmp_merged/;	mkdir -p ./$e/nmp_merged/
-        rm -rf ./$e/stats/;		mkdir -p ./$e/stats/
-        rm -rf ./$e/graphs/;		mkdir -p ./$e/graphs/
+        rm -f $outdir/$e/TravelMapping.sql
+        rm -rf $outdir/$e/logs/;		mkdir -p $outdir/$e/logs/users/
+        rm -rf $outdir/$e/nmp_merged/;		mkdir -p $outdir/$e/nmp_merged/
+        rm -rf $outdir/$e/stats/;		mkdir -p $outdir/$e/stats/
+        rm -rf $outdir/$e/graphs/;		mkdir -p $outdir/$e/graphs/
       fi
 
       # run siteupdate
       $Python ./$exec $timeflag -t $thr $nmpflag $graphflag $errorflag $mtvertices $mtcsvfiles $users \
-        -l $outdir/logs \
-        -c $outdir/stats \
-        -d $outdir/TravelMapping \
-        -g $outdir/graphs \
+        -l $outdir/$e/logs \
+        -c $outdir/$e/stats \
+        -d $outdir/$e/TravelMapping \
+        -g $outdir/$e/graphs \
         -u $tmdir/UserData/list_files \
         -w $tmdir/HighwayData > sulogs/siteupdate$e-$host-"$thr"t"$pass"p.log
 
@@ -188,11 +189,11 @@ for e in $execs; do
   if [ "$outdir" != '/dev/null' ]; then
     # delete data from last pass
     rm -f sulogs/siteupdate$e-$host-"$thr"t"$pass"p.log
-    rm -f ./$e/TravelMapping.sql
-    rm -rf ./$e/logs/;		mkdir -p ./$e/logs/users/
-    rm -rf ./$e/nmp_merged/;	mkdir -p ./$e/nmp_merged/
-    rm -rf ./$e/stats/;		mkdir -p ./$e/stats/
-    rm -rf ./$e/graphs/;	mkdir -p ./$e/graphs/
+    rm -f $outdir/$e/TravelMapping.sql
+    rm -rf $outdir/$e/logs/;
+    rm -rf $outdir/$e/nmp_merged/;
+    rm -rf $outdir/$e/stats/;
+    rm -rf $outdir/$e/graphs/;
   fi
 
 done #for e
