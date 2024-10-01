@@ -89,7 +89,7 @@ case $regex in
   RteInt)     regex='integrity|Reading updates file';;
   ReadList)   regex='Processing traveler|traveler list files\.';;
   ConcAug)    regex='Augmenting|concurrencies.log|Computing stats';;
-  CompStatsO) regex='Computing stats|Writing highway';;				# old
+  CompStatsO) regex='Computing stats|Writing .*datastats.log';;			# old
   CompStatsB) regex='per.route|Writing highway';;				# new both
   CompStatsR) regex='per.route|Computing stats per traveler';;			# new 1st
   CompStatsT) regex='Computing stats per traveler|Writing highway';;		# new 2nd
